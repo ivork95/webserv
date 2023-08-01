@@ -1,8 +1,10 @@
+VPATH		:= src
 NAME		:= webserv
 CXXFLAGS	?= -Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	main.o
-HEADERS		:=
+HEADERS		:=	TcpServer.hpp \
+				Client.hpp
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
 

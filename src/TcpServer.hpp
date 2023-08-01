@@ -8,6 +8,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstring>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 class TcpServer
 {
@@ -21,8 +23,6 @@ public:
     // destructor
     ~TcpServer(void);
 
-    // member functions
-    void sendData(void);
 };
 
 // default constructor
@@ -62,22 +62,6 @@ TcpServer::~TcpServer(void)
     std::cout << "TcpServer destructor called\n";
 
     close(m_serverSocket);
-}
-
-// member function
-void TcpServer::sendData(void)
-{
-    char buffer[BUFSIZE];
-    int clientSocket{};
-    socklen_t addrSize{};
-    struct sockaddr_in clientAddr;
-
-    addrSize = sizeof(clientAddr);
-    clientSocket = accept(m_serverSocket, (struct sockaddr *)&clientAddr, &addrSize);
-
-    std::strcpy(buffer, "Hello, Client!\n");
-    send(clientSocket, buffer, BUFSIZE, 0);
-    close(clientSocket);
 }
 
 #endif
