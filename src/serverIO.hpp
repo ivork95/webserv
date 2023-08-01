@@ -17,13 +17,13 @@ class ServerIO
 public:
     int m_fd{};
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
-    struct epoll_event m_events2[MAX_EVENTS]{};
 
     // default constructor
     ServerIO(void);
 
     // member functions
     void addSocketToEpollFd(int m_serverSocket);
+    void deleteSocketFromEpollFd(int m_clientSocket);
 };
 
 ServerIO::ServerIO(void)
@@ -45,6 +45,15 @@ void ServerIO::addSocketToEpollFd(int m_serverSocket)
     event.events = EPOLLIN;
     event.data.fd = m_serverSocket;
     if (epoll_ctl(m_fd, EPOLL_CTL_ADD, m_serverSocket, &event) == -1)
+    {
+        std::perror("epoll_ctl() failed");
+        throw std::runtime_error("Error: epoll_ctl() failed\n");
+    }
+}
+
+void ServerIO::deleteSocketFromEpollFd(int m_clientSocket)
+{
+    if (epoll_ctl(m_fd, EPOLL_CTL_DEL, m_clientSocket, NULL) == -1)
     {
         std::perror("epoll_ctl() failed");
         throw std::runtime_error("Error: epoll_ctl() failed\n");
