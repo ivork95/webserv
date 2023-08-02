@@ -5,7 +5,9 @@ class Client
 {
 public:
     int m_clientSocket{};
-    struct sockaddr_in m_clientAddr{};
+    struct sockaddr_in m_clientAddr
+    {
+    };
     socklen_t m_clientAddrSize{sizeof(m_clientAddr)};
 
     // default constructor
