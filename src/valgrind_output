@@ -1,0 +1,109 @@
+==116== Process terminating with default action of signal 2 (SIGINT)
+==116==    at 0x4CB5F9A: epoll_wait (epoll_wait.c:30)
+==116==    by 0x109954: main (main.cpp:19)
+==116== 
+==116== FILE DESCRIPTORS: 7 open (3 std) at exit.
+==116== Open AF_INET socket 6: 127.0.0.1:12345 <-> 127.0.0.1:51318
+==116==    at 0x4CB75D7: accept (accept.c:26)
+==116==    by 0x109A7E: main (main.cpp:32)
+==116== 
+==116== Open AF_INET socket 5: 127.0.0.1:12345 <-> 127.0.0.1:51316
+==116==    at 0x4CB75D7: accept (accept.c:26)
+==116==    by 0x109A7E: main (main.cpp:32)
+==116== 
+==116== Open file descriptor 4:
+==116==    at 0x4CB6CCB: epoll_create (syscall-template.S:120)
+==116==    by 0x10968A: ServerIO::ServerIO() (serverIO.hpp:36)
+==116==    by 0x1098E4: main (main.cpp:10)
+==116== 
+==116== Open AF_INET socket 3: 0.0.0.0:12345 <-> unbound
+==116==    at 0x4CB7CEB: socket (syscall-template.S:120)
+==116==    by 0x10936C: TcpServer::TcpServer() (TcpServer.hpp:37)
+==116==    by 0x1098CA: main (main.cpp:8)
+==116== 
+==116== 
+==116== HEAP SUMMARY:
+==116==     in use at exit: 73,728 bytes in 2 blocks
+==116==   total heap usage: 2 allocs, 0 frees, 73,728 bytes allocated
+==116== 
+==116== LEAK SUMMARY:
+==116==    definitely lost: 0 bytes in 0 blocks
+==116==    indirectly lost: 0 bytes in 0 blocks
+==116==      possibly lost: 0 bytes in 0 blocks
+==116==    still reachable: 73,728 bytes in 2 blocks
+==116==         suppressed: 0 bytes in 0 blocks
+==116== Rerun with --leak-check=full to see details of leaked memory
+==116== 
+==116== For lists of detected and suppressed errors, rerun with: -s
+==116== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+
+==123== Process terminating with default action of signal 2 (SIGINT)
+==123==    at 0x4CB5F9A: epoll_wait (epoll_wait.c:30)
+==123==    by 0x109954: main (main.cpp:19)
+==123== 
+==123== FILE DESCRIPTORS: 7 open (3 std) at exit.
+==123== Open AF_INET socket 6: 127.0.0.1:12345 <-> 127.0.0.1:51322
+==123==    at 0x4CB75D7: accept (accept.c:26)
+==123==    by 0x109A7E: main (main.cpp:32)
+==123== 
+==123== Open AF_INET socket 5: 127.0.0.1:12345 <-> 127.0.0.1:51320
+==123==    at 0x4CB75D7: accept (accept.c:26)
+==123==    by 0x109A7E: main (main.cpp:32)
+==123== 
+==123== Open file descriptor 4:
+==123==    at 0x4CB6CCB: epoll_create (syscall-template.S:120)
+==123==    by 0x10968A: ServerIO::ServerIO() (serverIO.hpp:36)
+==123==    by 0x1098E4: main (main.cpp:10)
+==123== 
+==123== Open AF_INET socket 3: 0.0.0.0:12345 <-> unbound
+==123==    at 0x4CB7CEB: socket (syscall-template.S:120)
+==123==    by 0x10936C: TcpServer::TcpServer() (TcpServer.hpp:37)
+==123==    by 0x1098CA: main (main.cpp:8)
+==123== 
+==123== 
+==123== HEAP SUMMARY:
+==123==     in use at exit: 73,728 bytes in 2 blocks
+==123==   total heap usage: 2 allocs, 0 frees, 73,728 bytes allocated
+==123== 
+==123== LEAK SUMMARY:
+==123==    definitely lost: 0 bytes in 0 blocks
+==123==    indirectly lost: 0 bytes in 0 blocks
+==123==      possibly lost: 0 bytes in 0 blocks
+==123==    still reachable: 73,728 bytes in 2 blocks
+==123==         suppressed: 0 bytes in 0 blocks
+==123== Rerun with --leak-check=full to see details of leaked memory
+==123== 
+==123== For lists of detected and suppressed errors, rerun with: -s
+==123== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+==133== Process terminating with default action of signal 2 (SIGINT)
+==133==    at 0x4CB5F9A: epoll_wait (epoll_wait.c:30)
+==133==    by 0x109964: main (main.cpp:19)
+==133== 
+==133== FILE DESCRIPTORS: 5 open (3 std) at exit.
+==133== Open file descriptor 4:
+==133==    at 0x4CB6CCB: epoll_create (syscall-template.S:120)
+==133==    by 0x10968A: ServerIO::ServerIO() (serverIO.hpp:36)
+==133==    by 0x1098F4: main (main.cpp:10)
+==133== 
+==133== Open AF_INET socket 3: 0.0.0.0:12345 <-> unbound
+==133==    at 0x4CB7CEB: socket (syscall-template.S:120)
+==133==    by 0x10936C: TcpServer::TcpServer() (TcpServer.hpp:37)
+==133==    by 0x1098DA: main (main.cpp:8)
+==133== 
+==133== 
+==133== HEAP SUMMARY:
+==133==     in use at exit: 73,728 bytes in 2 blocks
+==133==   total heap usage: 2 allocs, 0 frees, 73,728 bytes allocated
+==133== 
+==133== LEAK SUMMARY:
+==133==    definitely lost: 0 bytes in 0 blocks
+==133==    indirectly lost: 0 bytes in 0 blocks
+==133==      possibly lost: 0 bytes in 0 blocks
+==133==    still reachable: 73,728 bytes in 2 blocks
+==133==         suppressed: 0 bytes in 0 blocks
+==133== Rerun with --leak-check=full to see details of leaked memory
+==133== 
+==133== For lists of detected and suppressed errors, rerun with: -s
+==133== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

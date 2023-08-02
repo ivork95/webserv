@@ -15,49 +15,60 @@
 class ServerIO
 {
 public:
-    int m_fd{};
-    std::array<struct epoll_event, MAX_EVENTS> m_events{};
+    int m_epollFD{};
+    std::array<struct epoll_event, MAX_EVENTS> m_events{}; // Moet deze in de class?
 
     // default constructor
     ServerIO(void);
 
+    // destructor
+    ~ServerIO(void);
+
     // member functions
-    void addSocketToEpollFd(int m_serverSocket);
-    void deleteSocketFromEpollFd(int m_clientSocket);
+    void addSocketToEpollFd(int socket);
+    void deleteSocketFromEpollFd(int socket);
 };
 
 ServerIO::ServerIO(void)
 {
     std::cout << "ServerIO default constructor called\n";
 
-    m_fd = epoll_create(1);
-    if (m_fd == -1)
+    m_epollFD = epoll_create(1);
+    if (m_epollFD == -1)
     {
         std::perror("epoll_create() failed");
         throw std::runtime_error("Error: epoll_create() failed\n");
     }
 }
 
-void ServerIO::addSocketToEpollFd(int m_serverSocket)
+ServerIO::~ServerIO(void)
+{
+    std::cout << "ServerIO destructor called\n";
+
+    close(m_epollFD);
+}
+
+void ServerIO::addSocketToEpollFd(int socket)
 {
     struct epoll_event event;
 
     event.events = EPOLLIN;
-    event.data.fd = m_serverSocket;
-    if (epoll_ctl(m_fd, EPOLL_CTL_ADD, m_serverSocket, &event) == -1)
+    event.data.fd = socket;
+    if (epoll_ctl(m_epollFD, EPOLL_CTL_ADD, socket, &event) == -1)
     {
         std::perror("epoll_ctl() failed");
         throw std::runtime_error("Error: epoll_ctl() failed\n");
     }
 }
 
-void ServerIO::deleteSocketFromEpollFd(int m_clientSocket)
+void ServerIO::deleteSocketFromEpollFd(int socket)
 {
-    if (epoll_ctl(m_fd, EPOLL_CTL_DEL, m_clientSocket, NULL) == -1)
+    if (epoll_ctl(m_epollFD, EPOLL_CTL_DEL, socket, NULL) == -1)
     {
         std::perror("epoll_ctl() failed");
         throw std::runtime_error("Error: epoll_ctl() failed\n");
     }
+    close(socket);
 }
 
 #endif
