@@ -10,19 +10,21 @@
 #include <cstring>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <vector>
+#include "ClientSocket.hpp"
 
 class TcpServer
 {
 public:
     int m_serverSocket{};
     struct sockaddr_in m_serverAddr;
+    std::vector<ClientSocket> m_clientSockets;
 
     // default constructor
     TcpServer(void);
 
     // destructor
     ~TcpServer(void);
-
 };
 
 // default constructor

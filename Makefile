@@ -4,7 +4,7 @@ CXXFLAGS	?= -Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	main.o
 HEADERS		:=	TcpServer.hpp \
-				Client.hpp \
+				ClientSocket.hpp \
 				serverIO.hpp
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
@@ -27,6 +27,7 @@ re : fclean all
 
 docker-pwd:
 	docker run \
+	-p 12345:12345 \
 	--name $(CONTAINER) \
 	-it \
 	--rm \

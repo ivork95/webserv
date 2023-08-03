@@ -1,22 +1,18 @@
 #include "TcpServer.hpp"
-#include "Client.hpp"
+#include "ClientSocket.hpp"
 #include "serverIO.hpp"
 #include <sys/epoll.h>
-
-/*
-todo: remove Client class -> track int locally or in TcpServer class -> maybe push to vector in TcpServer class
-*/
 
 int main(void)
 {
     TcpServer t;
-    Client c;
     ServerIO s;
     int nReadyFds{};
     char buffer[BUFSIZE]{};
-    ssize_t numBytes;
+    ssize_t nBytesReceived;
+    int currEventFd;
 
-    s.addSocketToEpollFd(t.m_serverSocket); // We also need to call deleteSocketFromEpollFd(t.m_serverSocket) at some point
+    s.addSocketToEpollFd(t.m_serverSocket);
 
     while (true)
     {
@@ -31,33 +27,34 @@ int main(void)
         {
             if (s.m_events.at(i).data.fd == t.m_serverSocket)
             {
-                // Be carefull, every accept overwrites the previous m_clientSocket...
+                ClientSocket c;
+
                 c.m_clientSocket = accept(t.m_serverSocket, (struct sockaddr *)&c.m_clientAddr, &c.m_clientAddrSize);
                 if (c.m_clientSocket == -1)
                 {
                     std::perror("accept() failed");
                     throw std::runtime_error("Error: accept() failed\n");
                 }
-
+                t.m_clientSockets.push_back(c);
                 s.addSocketToEpollFd(c.m_clientSocket);
             }
             else
             {
-                int curr_fd = s.m_events.at(i).data.fd;
+                currEventFd = s.m_events.at(i).data.fd;
 
-                numBytes = recv(curr_fd, buffer, BUFSIZE, 0);
-                if (numBytes < 0)
+                nBytesReceived = recv(currEventFd, buffer, BUFSIZE, 0);
+                if (nBytesReceived < 0)
                     std::cerr << "Error: recv() failed\n";
-                else if (numBytes == 0)
+                else if (nBytesReceived == 0)
                 {
                     std::cout << "Client disconnected before sending data.\n";
-                    s.deleteSocketFromEpollFd(s.m_events.at(i).data.fd);
+                    s.deleteSocketFromEpollFd(currEventFd);
                 }
                 else
                 {
                     // Null-terminate the received data in case it's a string
-                    if (numBytes < BUFSIZE)
-                        buffer[numBytes] = '\0';
+                    if (nBytesReceived < BUFSIZE)
+                        buffer[nBytesReceived] = '\0';
                     else
                         buffer[BUFSIZE - 1] = '\0';
 
@@ -65,7 +62,7 @@ int main(void)
                     std::cout << "Received from client: " << buffer << "\n";
 
                     // Echo the data back to the client
-                    if (send(curr_fd, buffer, numBytes, 0) != numBytes)
+                    if (send(currEventFd, buffer, nBytesReceived, 0) != nBytesReceived)
                         std::cerr << "Error: send() failed\n";
                 }
             }

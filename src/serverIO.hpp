@@ -16,7 +16,7 @@ class ServerIO
 {
 public:
     int m_epollFD{};
-    std::array<struct epoll_event, MAX_EVENTS> m_events{}; // Moet deze in de class?
+    std::array<struct epoll_event, MAX_EVENTS> m_events{};
 
     // default constructor
     ServerIO(void);
