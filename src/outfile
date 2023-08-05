@@ -1,0 +1,292 @@
+#ifndef CLIENTSOCKET_HPP
+#define CLIENTSOCKET_HPP
+
+class ClientSocket
+{
+public:
+    int m_clientSocket{};
+    struct sockaddr_in m_clientAddr
+    {
+    };
+    socklen_t m_clientAddrSize{sizeof(m_clientAddr)};
+
+    // default constructor
+    ClientSocket(void);
+
+    // destructor
+    ~ClientSocket(void);
+};
+
+ClientSocket::ClientSocket(void)
+{
+    std::cout << "ClientSocket constructor called\n";
+}
+
+ClientSocket::~ClientSocket(void)
+{
+    std::cout << "ClientSocket destructor called\n";
+}
+
+#endif
+#ifndef TCPSERVER_HPP
+#define TCPSERVER_HPP
+
+#define BUFSIZE 1024
+
+#include <arpa/inet.h>
+#include <iostream>
+#include <unistd.h>
+#include <cstring>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <vector>
+#include "ClientSocket.hpp"
+
+class TcpServer
+{
+public:
+    int m_serverSocket{};
+    struct sockaddr_in m_serverAddr;
+    std::vector<ClientSocket> m_clientSockets;
+
+    // default constructor
+    TcpServer(void) = delete;
+
+    // port constructor
+    TcpServer(const unsigned int port);
+
+    // destructor
+    ~TcpServer(void);
+};
+
+/*
+// default constructor
+TcpServer::TcpServer(void)
+{
+    std::cout << "TcpServer default constructor called\n";
+
+    m_serverAddr.sin_family = AF_INET;
+    m_serverAddr.sin_port = htons(12345);
+    m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    m_serverSocket = socket(PF_INET, SOCK_STREAM, 0);
+    if (m_serverSocket < 0)
+    {
+        std::perror("socket() failed");
+        throw std::runtime_error("Error: socket() failed\n");
+    }
+
+    if (bind(m_serverSocket, (struct sockaddr *)&m_serverAddr, sizeof(m_serverAddr)) < 0)
+    {
+        std::perror("bind() failed");
+        throw std::runtime_error("bind() failed");
+    }
+
+    if (listen(m_serverSocket, 5) < 0)
+    {
+        std::perror("listen() failed");
+        throw std::runtime_error("Error: listen() failed\n");
+    }
+
+    std::cout << "TcpServer listening...\n";
+}
+*/
+
+// port constructor
+TcpServer::TcpServer(const unsigned int port)
+{
+    std::cout << "TcpServer port constructor called\n";
+
+    m_serverAddr.sin_family = AF_INET;
+    m_serverAddr.sin_port = htons(port);
+    m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    m_serverSocket = socket(PF_INET, SOCK_STREAM, 0);
+    if (m_serverSocket < 0)
+    {
+        std::perror("socket() failed");
+        throw std::runtime_error("Error: socket() failed\n");
+    }
+
+    if (bind(m_serverSocket, (struct sockaddr *)&m_serverAddr, sizeof(m_serverAddr)) < 0)
+    {
+        std::perror("bind() failed");
+        throw std::runtime_error("bind() failed");
+    }
+
+    if (listen(m_serverSocket, 5) < 0)
+    {
+        std::perror("listen() failed");
+        throw std::runtime_error("Error: listen() failed\n");
+    }
+
+    std::cout << "TcpServer listening...\n";
+}
+
+// destructor
+TcpServer::~TcpServer(void)
+{
+    std::cout << "TcpServer destructor called\n";
+
+    // close(m_serverSocket);
+}
+
+#endif
+#include "TcpServer.hpp"
+#include "ClientSocket.hpp"
+#include "serverIO.hpp"
+#include <sys/epoll.h>
+
+int main(void)
+{
+    ServerIO s;
+    int nReadyFds{};
+    char buffer[BUFSIZE]{};
+    ssize_t nBytesReceived;
+    int currEventFd;
+    unsigned int args[2]{12345, 23456};
+
+    for (int i = 0; i < 2; i++)
+    {
+        TcpServer t{args[i]};
+        s.m_servers.push_back(t);
+    }
+
+    for (auto &server : s.m_servers)
+        s.addSocketToEpollFd(server.m_serverSocket);
+
+    while (true)
+    {
+        nReadyFds = epoll_wait(s.m_epollFD, s.m_events.data(), MAX_EVENTS, TIMEOUT);
+        if (nReadyFds == -1)
+        {
+            std::perror("epoll_wait() failed");
+            throw std::runtime_error("Error: epoll_wait() failed\n");
+        }
+
+        for (int i = 0; i < nReadyFds; i++)
+        {
+            for (auto &server : s.m_servers)
+            {
+                if (s.m_events.at(i).data.fd == server.m_serverSocket)
+                {
+                    ClientSocket c;
+                    c.m_clientSocket = accept(server.m_serverSocket, (struct sockaddr *)&c.m_clientAddr, &c.m_clientAddrSize);
+                    if (c.m_clientSocket == -1)
+                    {
+                        std::perror("accept() failed");
+                        throw std::runtime_error("Error: accept() failed\n");
+                    }
+                    server.m_clientSockets.push_back(c);
+                    s.addSocketToEpollFd(c.m_clientSocket);
+                }
+                else
+                {
+                    currEventFd = s.m_events.at(i).data.fd;
+
+                    nBytesReceived = recv(currEventFd, buffer, BUFSIZE, 0);
+                    if (nBytesReceived < 0)
+                        std::cerr << "Error: recv() failed\n";
+                    else if (nBytesReceived == 0)
+                    {
+                        std::cout << "Client disconnected before sending data.\n";
+                        s.deleteSocketFromEpollFd(currEventFd);
+                    }
+                    else
+                    {
+                        // Null-terminate the received data in case it's a string
+                        if (nBytesReceived < BUFSIZE)
+                            buffer[nBytesReceived] = '\0';
+                        else
+                            buffer[BUFSIZE - 1] = '\0';
+
+                        // Print the received data
+                        std::cout << "Received from client: " << buffer << "\n";
+
+                        // Echo the data back to the client
+                        if (send(currEventFd, buffer, nBytesReceived, 0) != nBytesReceived)
+                            std::cerr << "Error: send() failed\n";
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+#ifndef SERVERIO_HPP
+#define SERVERIO_HPP
+
+#include "iostream"
+#include <sys/epoll.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <iostream>
+#include <array>
+#include <cstring>
+#include "TcpServer.hpp"
+
+#define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
+#define TIMEOUT 60000 // Timeout for epoll_wait()
+
+class ServerIO
+{
+public:
+    int m_epollFD{};
+    std::vector<TcpServer> m_servers{}; // Should this be references or copies?
+    std::array<struct epoll_event, MAX_EVENTS> m_events{};
+
+    // default constructor
+    ServerIO(void);
+
+    // destructor
+    ~ServerIO(void);
+
+    // member functions
+    void addSocketToEpollFd(int socket);
+    void deleteSocketFromEpollFd(int socket);
+};
+
+ServerIO::ServerIO(void)
+{
+    std::cout << "ServerIO default constructor called\n";
+
+    m_epollFD = epoll_create(1);
+    if (m_epollFD == -1)
+    {
+        std::perror("epoll_create() failed");
+        throw std::runtime_error("Error: epoll_create() failed\n");
+    }
+}
+
+ServerIO::~ServerIO(void)
+{
+    std::cout << "ServerIO destructor called\n";
+
+    close(m_epollFD);
+}
+
+void ServerIO::addSocketToEpollFd(int socket)
+{
+    struct epoll_event event;
+
+    event.events = EPOLLIN;
+    event.data.fd = socket;
+    if (epoll_ctl(m_epollFD, EPOLL_CTL_ADD, socket, &event) == -1)
+    {
+        std::perror("epoll_ctl() failed");
+        throw std::runtime_error("Error: epoll_ctl() failed\n");
+    }
+}
+
+void ServerIO::deleteSocketFromEpollFd(int socket)
+{
+    if (epoll_ctl(m_epollFD, EPOLL_CTL_DEL, socket, NULL) == -1)
+    {
+        std::perror("epoll_ctl() failed");
+        throw std::runtime_error("Error: epoll_ctl() failed\n");
+    }
+    close(socket);
+}
+
+#endif

@@ -5,14 +5,21 @@
 
 int main(void)
 {
-    TcpServer t;
     ServerIO s;
     int nReadyFds{};
     char buffer[BUFSIZE]{};
     ssize_t nBytesReceived;
     int currEventFd;
+    unsigned int args[2]{12345, 23456};
 
-    s.addSocketToEpollFd(t.m_serverSocket);
+    for (auto &arg : args)
+    {
+        TcpServer t{arg};
+        s.m_servers.push_back(t);
+    }
+
+    for (auto &server : s.m_servers)
+        s.addSocketToEpollFd(server.m_serverSocket);
 
     while (true)
     {
@@ -25,23 +32,25 @@ int main(void)
 
         for (int i = 0; i < nReadyFds; i++)
         {
-            if (s.m_events.at(i).data.fd == t.m_serverSocket)
+            currEventFd = s.m_events.at(i).data.fd;
+            // If the current fd is a server socket, accept the new connection
+            for (auto &server : s.m_servers)
             {
-                ClientSocket c;
-
-                c.m_clientSocket = accept(t.m_serverSocket, (struct sockaddr *)&c.m_clientAddr, &c.m_clientAddrSize);
-                if (c.m_clientSocket == -1)
+                if (currEventFd == server.m_serverSocket)
                 {
-                    std::perror("accept() failed");
-                    throw std::runtime_error("Error: accept() failed\n");
+                    ClientSocket c;
+                    c.m_clientSocket = accept(server.m_serverSocket, (struct sockaddr *)&c.m_clientAddr, &c.m_clientAddrSize);
+                    if (c.m_clientSocket == -1)
+                    {
+                        std::perror("accept() failed");
+                        throw std::runtime_error("Error: accept() failed\n");
+                    }
+                    server.m_clientSockets.push_back(c);
+                    s.addSocketToEpollFd(c.m_clientSocket);
+                    continue;
                 }
-                t.m_clientSockets.push_back(c);
-                s.addSocketToEpollFd(c.m_clientSocket);
-            }
-            else
-            {
-                currEventFd = s.m_events.at(i).data.fd;
 
+                // If we've got here, this means that the current fd is not a server socket, so we assume it's a client
                 nBytesReceived = recv(currEventFd, buffer, BUFSIZE, 0);
                 if (nBytesReceived < 0)
                     std::cerr << "Error: recv() failed\n";
