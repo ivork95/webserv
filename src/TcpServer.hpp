@@ -20,7 +20,6 @@ public:
     struct sockaddr_in m_serverAddr
     {
     };
-    // std::vector<ClientSocket> m_clientSockets{};
     std::vector<std::unique_ptr<ClientSocket>> m_clientSockets{};
 
     // default constructor
@@ -38,6 +37,8 @@ TcpServer::TcpServer(const unsigned int port)
 {
     std::cout << "TcpServer port constructor called\n";
 
+    int on{1};
+
     m_serverAddr.sin_family = AF_INET;
     m_serverAddr.sin_port = htons(port);
     m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -49,13 +50,19 @@ TcpServer::TcpServer(const unsigned int port)
         throw std::runtime_error("Error: socket() failed\n");
     }
 
+    if (setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+    {
+        std::perror("setsockopt() failed");
+        throw std::runtime_error("setsockopt() failed");
+    }
+
     if (bind(m_serverSocket, (struct sockaddr *)&m_serverAddr, sizeof(m_serverAddr)) < 0)
     {
         std::perror("bind() failed");
         throw std::runtime_error("bind() failed");
     }
 
-    if (listen(m_serverSocket, 5) < 0)
+    if (listen(m_serverSocket, 32) < 0)
     {
         std::perror("listen() failed");
         throw std::runtime_error("Error: listen() failed\n");
