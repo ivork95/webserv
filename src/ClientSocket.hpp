@@ -25,6 +25,8 @@ ClientSocket::ClientSocket(void)
 ClientSocket::~ClientSocket(void)
 {
     std::cout << "ClientSocket destructor called\n";
+
+    close(m_clientSocket);
 }
 
 #endif
