@@ -37,7 +37,7 @@ int main(void)
 
     while (true)
     {
-        nReadyFds = epoll_wait(s.m_epollFD, s.m_events.data(), MAX_EVENTS, -1);
+        nReadyFds = epoll_wait(s.m_epollFD, s.m_events.data(), MAX_EVENTS, (3 * 60 * 1000));
         if (nReadyFds == -1)
         {
             if (errno == EINTR && caughtSigint)
