@@ -11,13 +11,12 @@
 #include "TcpServer.hpp"
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
-#define TIMEOUT 60000 // Timeout for epoll_wait()
 
 class ServerIO
 {
 public:
     int m_epollFD{};
-    std::vector<TcpServer> m_servers{}; // Should this be references or copies?
+    std::vector<TcpServer *> m_servers{}; // Should this be references or copies?
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
 
     // default constructor
@@ -65,12 +64,11 @@ void ServerIO::addSocketToEpollFd(int socket)
 
 void ServerIO::deleteSocketFromEpollFd(int socket)
 {
-    // if (epoll_ctl(m_epollFD, EPOLL_CTL_DEL, socket, NULL) == -1)
-    // {
-    //     std::perror("epoll_ctl() failed");
-    //     throw std::runtime_error("Error: epoll_ctl() failed\n");
-    // }
-    // close(socket);
+    if (epoll_ctl(m_epollFD, EPOLL_CTL_DEL, socket, NULL) == -1)
+    {
+        std::perror("epoll_ctl() failed");
+        throw std::runtime_error("Error: epoll_ctl() failed\n");
+    }
 }
 
 #endif
