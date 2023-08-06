@@ -57,7 +57,7 @@ docker-pwd-val:
 docker-build:
 	docker build -t $(IMAGE) .
 
-docker-new:
+docker-exec:
 	docker exec -it $(CONTAINER) sh -c "cd /pwd; bash"
 
 .PHONY	: clean fclean re docker-pwd docker-pwd-val docker-build
