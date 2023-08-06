@@ -2,24 +2,33 @@
 #include "ClientSocket.hpp"
 #include "serverIO.hpp"
 #include <sys/epoll.h>
+#include <csignal>
+
+volatile std::sig_atomic_t caughtSigint{false};
+
+void handleSigint(int)
+{
+    caughtSigint = true;
+}
 
 int main(void)
 {
-    ServerIO s;
+    ServerIO s{};
     int nReadyFds{};
     char buffer[BUFSIZE]{};
-    ssize_t nBytesReceived;
-    int currEventFd;
+    ssize_t nBytesReceived{};
+    int currEventFd{};
     unsigned int args[2]{12345, 23456};
     // Used to simulate a Python for-else loop
     bool flag{false};
 
+    std::signal(SIGINT, handleSigint);
+
     // Create TcpServer instance(s) for each port
-    // Memory leak
     for (auto &arg : args)
     {
-        TcpServer *t{new TcpServer(arg)};
-        s.m_servers.push_back(t);
+        std::unique_ptr<TcpServer> t = std::make_unique<TcpServer>(arg);
+        s.m_servers.push_back(std::move(t));
     }
 
     // Loop over TcpServer instance(s) and add to EpollFd
@@ -31,8 +40,16 @@ int main(void)
         nReadyFds = epoll_wait(s.m_epollFD, s.m_events.data(), MAX_EVENTS, -1);
         if (nReadyFds == -1)
         {
-            std::perror("epoll_wait() failed");
-            throw std::runtime_error("Error: epoll_wait() failed\n");
+            if (errno == EINTR && caughtSigint)
+            {
+                std::cout << "Caught SIGINT, shutting down gracefully...\n";
+                break;
+            }
+            else
+            {
+                std::perror("epoll_wait() failed");
+                throw std::runtime_error("Error: epoll_wait() failed\n");
+            }
         }
 
         for (int i{0}; i < nReadyFds; i++)
@@ -45,15 +62,15 @@ int main(void)
                 if (currEventFd == server->m_serverSocket)
                 {
                     // This is an event from a TcpServer instance, aka a new client requesting connection to this instance
-                    ClientSocket c;
-                    c.m_clientSocket = accept(server->m_serverSocket, (struct sockaddr *)&c.m_clientAddr, &c.m_clientAddrSize);
-                    if (c.m_clientSocket == -1)
+                    std::unique_ptr<ClientSocket> c = std::make_unique<ClientSocket>();
+                    c->m_clientSocket = accept(server->m_serverSocket, (struct sockaddr *)&(c->m_clientAddr), &(c->m_clientAddrSize));
+                    if (c->m_clientSocket == -1)
                     {
                         std::perror("accept() failed");
                         throw std::runtime_error("Error: accept() failed\n");
                     }
-                    server->m_clientSockets.push_back(c);
-                    s.addSocketToEpollFd(c.m_clientSocket);
+                    s.addSocketToEpollFd(c->m_clientSocket);
+                    server->m_clientSockets.push_back(std::move(c));
 
                     flag = true;
                     break;

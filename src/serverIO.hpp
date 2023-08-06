@@ -9,6 +9,7 @@
 #include <array>
 #include <cstring>
 #include "TcpServer.hpp"
+#include <memory>
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
 
@@ -16,7 +17,7 @@ class ServerIO
 {
 public:
     int m_epollFD{};
-    std::vector<TcpServer *> m_servers{}; // Should this be references or copies?
+    std::vector<std::unique_ptr<TcpServer>> m_servers{};
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
 
     // default constructor
@@ -30,6 +31,7 @@ public:
     void deleteSocketFromEpollFd(int socket);
 };
 
+// default constructor
 ServerIO::ServerIO(void)
 {
     std::cout << "ServerIO default constructor called\n";
@@ -42,6 +44,7 @@ ServerIO::ServerIO(void)
     }
 }
 
+// destructor
 ServerIO::~ServerIO(void)
 {
     std::cout << "ServerIO destructor called\n";
@@ -51,7 +54,9 @@ ServerIO::~ServerIO(void)
 
 void ServerIO::addSocketToEpollFd(int socket)
 {
-    struct epoll_event event;
+    struct epoll_event event
+    {
+    };
 
     event.events = EPOLLIN;
     event.data.fd = socket;
@@ -69,6 +74,8 @@ void ServerIO::deleteSocketFromEpollFd(int socket)
         std::perror("epoll_ctl() failed");
         throw std::runtime_error("Error: epoll_ctl() failed\n");
     }
+
+    close(m_epollFD);
 }
 
 #endif
