@@ -51,6 +51,7 @@ ServerIO::~ServerIO(void)
     close(m_epollFD);
 }
 
+// member functions
 void ServerIO::addSocketToEpollFd(int socket)
 {
     struct epoll_event event
@@ -74,7 +75,7 @@ void ServerIO::deleteSocketFromEpollFd(int socket)
         throw std::runtime_error("Error: epoll_ctl() failed\n");
     }
 
-    close(m_epollFD);
+    close(socket);
 }
 
 #endif
