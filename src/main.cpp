@@ -1,8 +1,7 @@
+#include <csignal>
 #include "TcpServer.hpp"
 #include "ClientSocket.hpp"
-#include "serverIO.hpp"
-#include <sys/epoll.h>
-#include <csignal>
+#include "ServerIO.hpp"
 
 volatile std::sig_atomic_t caughtSigint{false};
 
