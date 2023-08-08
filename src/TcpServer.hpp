@@ -30,18 +30,16 @@ public:
 
     // destructor
     ~TcpServer(void);
+
+    // outstream operator overload
+    friend std::ostream &operator<<(std::ostream &out, const TcpServer &tcpserver);
 };
 
 // port constructor
 TcpServer::TcpServer(const unsigned int port)
 {
-    std::cout << "TcpServer port constructor called\n";
 
     int on{1};
-
-    m_serverAddr.sin_family = AF_INET;
-    m_serverAddr.sin_port = htons(port);
-    m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     m_serverSocket = socket(PF_INET, SOCK_STREAM, 0);
     if (m_serverSocket < 0)
@@ -56,6 +54,9 @@ TcpServer::TcpServer(const unsigned int port)
         throw std::runtime_error("setsockopt() failed");
     }
 
+    m_serverAddr.sin_family = AF_INET;
+    m_serverAddr.sin_port = htons(port);
+    m_serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     if (bind(m_serverSocket, (struct sockaddr *)&m_serverAddr, sizeof(m_serverAddr)) < 0)
     {
         std::perror("bind() failed");
@@ -68,15 +69,23 @@ TcpServer::TcpServer(const unsigned int port)
         throw std::runtime_error("Error: listen() failed\n");
     }
 
-    std::cout << "TcpServer listening...\n";
+    std::cout << *this << " port constructor called\n";
 }
 
 // destructor
 TcpServer::~TcpServer(void)
 {
-    std::cout << "TcpServer destructor called\n";
+    std::cout << *this << " destructor called\n";
 
     close(m_serverSocket);
+}
+
+// outstream operator overload
+std::ostream &operator<<(std::ostream &out, const TcpServer &tcpserver)
+{
+    out << "TcpServer(" << tcpserver.m_serverSocket << ", " << tcpserver.m_serverAddr.sin_family << ", " << ntohs(tcpserver.m_serverAddr.sin_port) << ", " << ntohl(tcpserver.m_serverAddr.sin_addr.s_addr) << ')';
+
+    return out;
 }
 
 #endif
