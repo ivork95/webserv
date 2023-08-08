@@ -42,6 +42,7 @@ docker-pwd:
 
 docker-pwd-val:
 	docker run \
+	-p 12345:12345 \
 	--name $(CONTAINER) \
 	-it \
 	--rm \
