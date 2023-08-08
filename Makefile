@@ -1,8 +1,14 @@
+VPATH		:= src
 NAME		:= webserv
 CXXFLAGS	?= -Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
-OBJECTS		:=	main.o
-HEADERS		:=
+OBJECTS		:=	obj/main.o \
+				obj/ClientSocket.o \
+				obj/ServerIO.o \
+				obj/TcpServer.o
+HEADERS		:=	TcpServer.hpp \
+				ClientSocket.hpp \
+				ServerIO.hpp
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
 
@@ -11,11 +17,12 @@ all : $(NAME)
 $(NAME) : $(OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
-%.o : %.cpp $(HEADERS)
+obj/%.o : %.cpp $(HEADERS)
+	@mkdir -p $(dir $@)
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 clean :
-	$(RM) $(OBJECTS)
+	$(RM) -r obj
 
 fclean : clean
 	$(RM) $(NAME)
@@ -24,6 +31,7 @@ re : fclean all
 
 docker-pwd:
 	docker run \
+	-p 12345:12345 \
 	--name $(CONTAINER) \
 	-it \
 	--rm \
@@ -38,6 +46,7 @@ docker-pwd:
 
 docker-pwd-val:
 	docker run \
+	-p 12345:12345 \
 	--name $(CONTAINER) \
 	-it \
 	--rm \
@@ -53,7 +62,7 @@ docker-pwd-val:
 docker-build:
 	docker build -t $(IMAGE) .
 
-docker-new:
+docker-exec:
 	docker exec -it $(CONTAINER) sh -c "cd /pwd; bash"
 
 .PHONY	: clean fclean re docker-pwd docker-pwd-val docker-build
