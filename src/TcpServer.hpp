@@ -26,7 +26,7 @@ public:
     TcpServer(void) = delete;
 
     // port constructor
-    TcpServer(const unsigned int port);
+    TcpServer(unsigned int port);
 
     // destructor
     ~TcpServer(void);
@@ -36,7 +36,7 @@ public:
 };
 
 // port constructor
-TcpServer::TcpServer(const unsigned int port)
+TcpServer::TcpServer(unsigned int port)
 {
 
     int on{1};
