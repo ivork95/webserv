@@ -1,4 +1,5 @@
 #include "TcpServer.hpp"
+#include <fcntl.h>
 
 // port constructor
 TcpServer::TcpServer(unsigned int port)
@@ -13,11 +14,13 @@ TcpServer::TcpServer(unsigned int port)
         throw std::runtime_error("Error: socket() failed\n");
     }
 
-    if (setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+    if (setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char *>(&on), sizeof(on)) < 0)
     {
         std::perror("setsockopt() failed");
         throw std::runtime_error("setsockopt() failed");
     }
+
+    // fcntl(m_serverSocket, F_SETFL, O_NONBLOCK);
 
     m_serverAddr.sin_family = AF_INET;
     m_serverAddr.sin_port = htons(port);

@@ -12,6 +12,7 @@ void handleSigint(int)
 
 int main(void)
 {
+    int bytesCount{};
     ServerIO serverio{};
     int nReadyFds{};
     char buffer[BUFSIZE]{};
@@ -50,8 +51,10 @@ int main(void)
 
         for (int i{0}; i < nReadyFds; i++)
         {
-            isLoopBroken = false;
             currEventFd = serverio.m_events.at(i).data.fd;
+            uint32_t event = serverio.m_events.at(i).events;
+            isLoopBroken = false;
+
             for (auto &server : serverio.m_servers)
             {
                 if (currEventFd == server->m_serverSocket)
@@ -66,27 +69,24 @@ int main(void)
                 }
             }
 
-            if (!isLoopBroken)
+            if (event & EPOLLIN)
             {
-                nBytesReceived = recv(currEventFd, buffer, BUFSIZE, 0);
-                if (nBytesReceived < 0)
-                    std::cerr << "Error: recv() failed\n";
-                else if (nBytesReceived == 0)
+                if (!isLoopBroken)
                 {
-                    std::cout << "Client disconnected before sending data.\n";
-                    serverio.deleteSocketFromEpollFd(currEventFd);
-                }
-                else
-                {
-                    if (nBytesReceived < BUFSIZE)
-                        buffer[nBytesReceived] = '\0';
+                    nBytesReceived = recv(currEventFd, buffer, BUFSIZE, 0);
+                    bytesCount = bytesCount + nBytesReceived;
+                    std::cout << "bytesCount = " << bytesCount << '\n';
+                    if (nBytesReceived < 0)
+                        std::cerr << "Error: recv() failed\n";
+                    else if (nBytesReceived == 0)
+                    {
+                        std::cout << "Client disconnected before sending data.\n";
+                        serverio.deleteSocketFromEpollFd(currEventFd);
+                    }
                     else
-                        buffer[BUFSIZE - 1] = '\0';
-
-                    std::cout << "Received from client: " << buffer << "\n";
-
-                    if (send(currEventFd, buffer, nBytesReceived, 0) != nBytesReceived)
-                        std::cerr << "Error: send() failed\n";
+                    {
+                        std::cout << buffer;
+                    }
                 }
             }
         }

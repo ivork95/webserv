@@ -1,4 +1,5 @@
 #include "ClientSocket.hpp"
+#include <fcntl.h>
 
 // serverSocket constructor
 ClientSocket::ClientSocket(int serverSocket)
@@ -9,6 +10,8 @@ ClientSocket::ClientSocket(int serverSocket)
         std::perror("accept() failed");
         throw std::runtime_error("Error: accept() failed\n");
     }
+
+    // fcntl(m_clientSocket, F_SETFL, O_NONBLOCK);
 
     std::cout << *this << " constructor called\n";
 }

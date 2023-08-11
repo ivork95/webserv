@@ -28,7 +28,7 @@ void ServerIO::addSocketToEpollFd(int socket)
     {
     };
 
-    event.events = EPOLLIN;
+    event.events = EPOLLIN | EPOLLOUT;
     event.data.fd = socket;
     if (epoll_ctl(m_epollFD, EPOLL_CTL_ADD, socket, &event) == -1)
     {
