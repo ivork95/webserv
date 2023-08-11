@@ -10,7 +10,7 @@
 class ServerIO
 {
 public:
-    int m_epollFD{};
+    int m_epollfd{};
     std::vector<std::unique_ptr<TcpServer>> m_servers{};
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
 
