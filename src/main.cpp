@@ -29,7 +29,7 @@ void do_use_fd(int fd, ServerIO &serverio)
     {
         // We got some good data from a client
         std::cout << "nbytes = " << nbytes << '\n';
-        if (nbytes < sizeof(buf))
+        if (static_cast<unsigned int>(nbytes) < sizeof(buf))
             buf[nbytes] = '\0';
         else
             buf[sizeof(buf) - 1] = '\0';
