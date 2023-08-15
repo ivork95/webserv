@@ -7,25 +7,35 @@
 
 class Token {
 	public:
-		// Token(void) = delete;
-		Token();
+		enum ETokenType {
+			WORD,
+			SEMICOLON,
+			OPEN_BRACE,
+			CLOSE_BRACE,
+			NA
+		};
+
+		Token(Token::ETokenType &type);
+		Token(std::string &word);
 		~Token(void);
 
+		Token::ETokenType	&getType(void) const;
+		std::string			&getWord(void) const;
+
 	private:
-		// token types
-		// token value
+		ETokenType	_type;
+		std::string	_word;
 };
 
 class Lexer {
 	public:
-		// Lexer(void) = delete;
 		Lexer();
 		~Lexer(void);
 		
-		// tokenize the config file line by line
-		static std::vector<Token> tokenizeLine(std::ifstream &configFile);
+		static std::vector<Token>	tokenizeLine(std::ifstream &configFile);
 
 	private:
+		static void					_splitLine(std::vector<Token> *tokens, std::string &line);
 };
 
 #endif
