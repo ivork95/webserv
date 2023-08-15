@@ -5,10 +5,19 @@ LDFLAGS		?=
 OBJECTS		:=	obj/main.o \
 				obj/ClientSocket.o \
 				obj/ServerIO.o \
-				obj/TcpServer.o
+				obj/TcpServer.o \
+				obj/InitConfig.o \
+				obj/config-parsing/Lexer.o \
+				obj/config-parsing/Parser.o \
+				obj/config-parsing/Configuration.o \
+
 HEADERS		:=	TcpServer.hpp \
 				ClientSocket.hpp \
-				ServerIO.hpp
+				ServerIO.hpp \
+				config-parsing/Lexer.hpp \
+				config-parsing/Parser.hpp \
+				config-parsing/Configuration.hpp \
+
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
 

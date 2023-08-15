@@ -3,6 +3,12 @@
 #include "ClientSocket.hpp"
 #include "ServerIO.hpp"
 
+#include "config-parsing/Lexer.hpp"
+#include "config-parsing/Parser.hpp"
+#include "config-parsing/Configuration.hpp"
+
+int initConfig(const std::string &filePath);
+
 volatile std::sig_atomic_t caughtSigint{false};
 
 void handleSigint(int)
@@ -10,8 +16,14 @@ void handleSigint(int)
     caughtSigint = true;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+	if (argc != 2) {
+		std::cout << "Usage: ./webserv <config_file>\n";
+		return (1);
+	}
+	initConfig(argv[1]);
+
     ServerIO serverio{};
     int nReadyFds{};
     char buffer[BUFSIZE]{};
