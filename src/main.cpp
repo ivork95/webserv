@@ -49,9 +49,6 @@ int main(int argc, char *argv[])
         throw std::runtime_error("Usage: ./webserv <config_file>\n\n\n");
 	}
 	initConfig(argv[1]);
-    if (argc < 2)
-    {
-    }
 
     ServerIO serverio{};
     int epollCount;
