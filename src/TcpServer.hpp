@@ -1,8 +1,6 @@
 #ifndef TCPSERVER_HPP
 #define TCPSERVER_HPP
 
-#define BUFSIZE 1024
-
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <iostream>
@@ -10,12 +8,16 @@
 #include <vector>
 #include <memory>
 #include "ClientSocket.hpp"
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 class TcpServer
 {
 public:
     int m_serverSocket{};
-    struct sockaddr_in m_serverAddr
+    struct addrinfo m_hints
     {
     };
     std::vector<std::unique_ptr<ClientSocket>> m_clientSockets{};
@@ -24,7 +26,7 @@ public:
     TcpServer(void) = delete;
 
     // port constructor
-    TcpServer(unsigned int port);
+    TcpServer(const char *port);
 
     // destructor
     ~TcpServer(void);

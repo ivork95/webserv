@@ -13,11 +13,11 @@ Token::~Token(void) {
 	std::cout << "Token destructor called\n";
 }
 
-Token::ETokenType Token::getType(void) const {
+Token::ETokenType Token::_getType(void) const {
 	return _type;
 }
 
-std::string Token::getWord(void) const {
+std::string Token::_getWord(void) const {
 	return _word;
 }
 

@@ -4,15 +4,17 @@
 #include <iostream>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <fcntl.h>
+#include <arpa/inet.h>
 
 class ClientSocket
 {
 public:
     int m_clientSocket{};
-    struct sockaddr_in m_clientAddr
+    struct sockaddr_storage m_remoteaddr
     {
     };
-    socklen_t m_clientAddrSize{sizeof(m_clientAddr)};
+    socklen_t m_addrlen{sizeof(m_remoteaddr)};
 
     // default constructor
     ClientSocket(void) = delete;

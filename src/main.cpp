@@ -9,34 +9,57 @@
 
 int initConfig(const std::string &filePath);
 
-volatile std::sig_atomic_t caughtSigint{false};
-
-void handleSigint(int)
+void do_use_fd(int fd, ServerIO &serverio)
 {
-    caughtSigint = true;
+    char buf[256]; // Buffer for client data
+    int nbytes = recv(fd, buf, sizeof(buf), 0);
+
+    if (nbytes <= 0)
+    {
+        // Got error or connection closed by client
+        if (nbytes == 0)
+        {
+            // Connection closed
+            std::cout << "pollserver: socket " << fd << " hung up\n";
+        }
+        else
+        {
+            std::cerr << "Error: recv() failed\n";
+        }
+
+        serverio.deleteSocketFromEpollFd(fd);
+        // close(pfds[i].fd); // Bye!
+        // del_from_pfds(pfds, i, &fd_count);
+    }
+    else
+    {
+        // We got some good data from a client
+        std::cout << "nbytes = " << nbytes << '\n';
+        if (static_cast<unsigned int>(nbytes) < sizeof(buf))
+            buf[nbytes] = '\0';
+        else
+            buf[sizeof(buf) - 1] = '\0';
+        std::cout << buf;
+    }
 }
 
 int main(int argc, char *argv[])
 {
 	if (argc != 2) {
-		std::cout << "Usage: ./webserv <config_file>\n";
-		return (1);
+        throw std::runtime_error("Usage: ./webserv <config_file>\n\n\n");
 	}
 	initConfig(argv[1]);
+    if (argc < 2)
+    {
+    }
 
     ServerIO serverio{};
-    int nReadyFds{};
-    char buffer[BUFSIZE]{};
-    ssize_t nBytesReceived{};
-    int currEventFd{};
-    unsigned int args[2]{12345, 23456};
+    int epollCount;
     bool isLoopBroken{false};
 
-    std::signal(SIGINT, handleSigint);
-
-    for (auto &arg : args)
+    for (int i{1}; i < argc; i++)
     {
-        std::unique_ptr<TcpServer> tcpserver = std::make_unique<TcpServer>(arg);
+        std::unique_ptr<TcpServer> tcpserver = std::make_unique<TcpServer>(argv[i]);
         serverio.m_servers.push_back(std::move(tcpserver));
     }
 
@@ -45,64 +68,37 @@ int main(int argc, char *argv[])
 
     while (true)
     {
-        nReadyFds = epoll_wait(serverio.m_epollFD, serverio.m_events.data(), MAX_EVENTS, (3 * 60 * 1000));
-        if (nReadyFds == -1)
+        epollCount = epoll_wait(serverio.m_epollfd, serverio.m_events.data(), MAX_EVENTS, (3 * 60 * 1000));
+        if (epollCount == -1)
         {
-            if (errno == EINTR && caughtSigint)
-            {
-                std::cout << "Caught SIGINT, shutting down gracefully...\n";
-                break;
-            }
-            else
-            {
-                std::perror("epoll_wait() failed");
-                throw std::runtime_error("Error: epoll_wait() failed\n");
-            }
+            std::perror("epoll_wait() failed");
+            throw std::runtime_error("Error: epoll_wait() failed\n");
         }
 
-        for (int i{0}; i < nReadyFds; i++)
+        // Run through the existing connections looking for data to read
+        for (int i{0}; i < epollCount; i++)
         {
             isLoopBroken = false;
-            currEventFd = serverio.m_events.at(i).data.fd;
-            for (auto &server : serverio.m_servers)
+            // Check if someone's ready to read
+            if (serverio.m_events.at(i).events & EPOLLIN) // We got one!!
             {
-                if (currEventFd == server->m_serverSocket)
+                for (auto &server : serverio.m_servers)
                 {
-                    std::unique_ptr<ClientSocket> clientsocket = std::make_unique<ClientSocket>(server->m_serverSocket);
-
-                    serverio.addSocketToEpollFd(clientsocket->m_clientSocket);
-                    server->m_clientSockets.push_back(std::move(clientsocket));
-
-                    isLoopBroken = true;
-                    break;
+                    if (serverio.m_events.at(i).data.fd == server->m_serverSocket) // If listener is ready to read, handle new connection
+                    {
+                        std::unique_ptr<ClientSocket> clientsocket = std::make_unique<ClientSocket>(server->m_serverSocket);
+                        // setnonblocking(conn_sock);
+                        serverio.addSocketToEpollFd(clientsocket->m_clientSocket);
+                        server->m_clientSockets.push_back(std::move(clientsocket));
+                        isLoopBroken = true;
+                        break;
+                    }
                 }
-            }
-
-            if (!isLoopBroken)
-            {
-                nBytesReceived = recv(currEventFd, buffer, BUFSIZE, 0);
-                if (nBytesReceived < 0)
-                    std::cerr << "Error: recv() failed\n";
-                else if (nBytesReceived == 0)
+                if (!isLoopBroken) // If not the listener, we're just a regular client
                 {
-                    std::cout << "Client disconnected before sending data.\n";
-                    serverio.deleteSocketFromEpollFd(currEventFd);
-                }
-                else
-                {
-                    if (nBytesReceived < BUFSIZE)
-                        buffer[nBytesReceived] = '\0';
-                    else
-                        buffer[BUFSIZE - 1] = '\0';
-
-                    std::cout << "Received from client: " << buffer << "\n";
-
-                    if (send(currEventFd, buffer, nBytesReceived, 0) != nBytesReceived)
-                        std::cerr << "Error: send() failed\n";
+                    do_use_fd(serverio.m_events.at(i).data.fd, serverio);
                 }
             }
         }
     }
-
-    return 0;
 }

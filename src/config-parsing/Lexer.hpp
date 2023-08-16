@@ -19,12 +19,13 @@ class Token {
 		Token(std::string &word);
 		~Token(void);
 
-		Token::ETokenType	&getType(void) const;
-		std::string			&getWord(void) const;
 
 	private:
 		ETokenType	_type;
 		std::string	_word;
+
+		Token::ETokenType	_getType(void) const;
+		std::string			_getWord(void) const;
 };
 
 class Lexer {
