@@ -5,7 +5,6 @@
 
 class Parser {
 	public:
-		// Parser(void) = delete;
 		Parser();
 		~Parser(void);
 

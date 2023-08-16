@@ -1,32 +1,16 @@
 
 #include "Lexer.hpp"
 
-Token::Token(Token::ETokenType &type) : _type(type), _word("") {
-	std::cout << "Token constructor called\n";
-}
-
-Token::Token(std::string &word) : _type(Token::NA), _word(word) {
-	std::cout << "Token constructor called\n";
-}
-
-Token::~Token(void) {
-	std::cout << "Token destructor called\n";
-}
-
-Token::ETokenType Token::_getType(void) const {
-	return _type;
-}
-
-std::string Token::_getWord(void) const {
-	return _word;
-}
-
 Lexer::Lexer(void) {
-	std::cout << "Lexer constructor called\n";
+	// std::cout << "Lexer constructor called\n";
 }
 
 Lexer::~Lexer(void) {
-	std::cout << "Lexer destructor called\n";
+	// std::cout << "Lexer destructor called\n";
+}
+
+static bool	isSpecialChar(char c) {
+	return (c == '{' || c == '}' || c == ';');
 }
 
 std::vector<Token> Lexer::tokenizeLine(std::ifstream &configFile) {
@@ -41,11 +25,12 @@ std::vector<Token> Lexer::tokenizeLine(std::ifstream &configFile) {
 	// Read line by line (getline)
 	std::string line;
 	while (std::getline(configFile, line)) {
-		std::cout << "full line: " << line << std::endl;
+		// std::cout << "full line: " << line << std::endl; // ? testing
 
 		// Split line into tokens
 		_splitLine(&tokens, line);
 	}
+	Token::printTokens(&tokens);
 
 	return tokens;
 }
@@ -58,14 +43,34 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 		while (isspace(*it))
 			it++;
 
-		std::cout << *it << std::endl;
 		// Get type of current char (word, {, } or ;)
-			// If word
-				// Loop until reaching another space, special char or end to have a full word
-			// Else
-				// Add special char to tokens
+			// If special char
+		if (isSpecialChar(*it)) {
+			Token::ETokenType type = Token::NA;
+			if (*it == '{')
+				type = Token::OPEN_BRACE;
+			else if (*it == '}')
+				type = Token::CLOSE_BRACE;
+			else if (*it == ';')
+				type = Token::SEMICOLON;
 
-		it++;
+			// Add special char to tokens
+			Token token(type);
+			tokens->push_back(token);
+			it++;
+		}
+		else {
+			std::string word;
+
+			// Loop until reaching another space, special char or end to have a full word
+			while (!isspace(*it) && *it != '{' && *it != '}' && *it != ';') {
+				word += *it;
+				it++;
+			}
+
+			// Add word to tokens
+			Token token(word);
+			tokens->push_back(token);
+		}
 	}
-	(void)tokens;
 }

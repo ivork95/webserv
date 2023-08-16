@@ -1,8 +1,9 @@
-#ifndef LEXER_HPP
-#define LEXER_HPP
+#ifndef TOKEN_HPP
+#define TOKEN_HPP
+
+#include "Logger.hpp"
 
 #include <iostream>
-#include <fstream>
 #include <vector>
 
 class Token {
@@ -19,6 +20,7 @@ class Token {
 		Token(std::string &word);
 		~Token(void);
 
+		static void			printTokens(std::vector<Token> *tokens);
 
 	private:
 		ETokenType	_type;
@@ -26,17 +28,6 @@ class Token {
 
 		Token::ETokenType	_getType(void) const;
 		std::string			_getWord(void) const;
-};
-
-class Lexer {
-	public:
-		Lexer();
-		~Lexer(void);
-		
-		static std::vector<Token>	tokenizeLine(std::ifstream &configFile);
-
-	private:
-		static void					_splitLine(std::vector<Token> *tokens, std::string &line);
 };
 
 #endif

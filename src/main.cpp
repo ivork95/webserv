@@ -3,9 +3,9 @@
 #include "ClientSocket.hpp"
 #include "ServerIO.hpp"
 
-#include "config-parsing/Lexer.hpp"
-#include "config-parsing/Parser.hpp"
-#include "config-parsing/Configuration.hpp"
+#include "Lexer.hpp"
+#include "Parser.hpp"
+#include "Configuration.hpp"
 
 int initConfig(const std::string &filePath);
 

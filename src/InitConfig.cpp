@@ -1,7 +1,7 @@
 
-#include "config-parsing/Lexer.hpp"
-#include "config-parsing/Parser.hpp"
-#include "config-parsing/Configuration.hpp"
+#include "Lexer.hpp"
+#include "Parser.hpp"
+#include "Configuration.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -9,6 +9,10 @@
 
 static int	readFile(std::ifstream &configFile) {
 	std::vector<Token> tokens = Lexer::tokenizeLine(configFile);
+	if (tokens.empty()) {
+		std::cerr << "Error: could not tokenize file" << std::endl;
+		return (1);
+	}
 	return (0);
 }
 

@@ -10,13 +10,19 @@ OBJECTS		:=	obj/main.o \
 				obj/config-parsing/Lexer.o \
 				obj/config-parsing/Parser.o \
 				obj/config-parsing/Configuration.o \
+				obj/config-parsing/Token.o \
+				obj/logger/Logger.o \
 
-HEADERS		:=	TcpServer.hpp \
-				ClientSocket.hpp \
-				ServerIO.hpp \
-				config-parsing/Lexer.hpp \
-				config-parsing/Parser.hpp \
-				config-parsing/Configuration.hpp \
+# HEADERS		:=	TcpServer.hpp \
+# 				ClientSocket.hpp \
+# 				ServerIO.hpp \
+# 				config-parsing/Lexer.hpp \
+# 				config-parsing/Parser.hpp \
+# 				config-parsing/Configuration.hpp \
+# 				config-parsing/Token.hpp \
+# 				logger/Logger.hpp \
+
+INCL_DIR	:=	includes/
 
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
@@ -28,7 +34,7 @@ $(NAME) : $(OBJECTS)
 
 obj/%.o : %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -o $@ $< -I$(INCL_DIR)
 
 clean :
 	$(RM) -r obj

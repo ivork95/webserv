@@ -6,7 +6,6 @@
 
 class Route {
 	public:
-		// Route(void) = delete;
 		Route();
 		~Route(void);
 
@@ -16,7 +15,6 @@ class Route {
 
 class Server {
 	public:
-		// Server(void) = delete;
 		Server();
 		~Server(void);
 
@@ -29,7 +27,6 @@ class Server {
 
 class Configuration {
 	public:
-		// Configuration(void) = delete;
 		Configuration();
 		~Configuration(void);
 
