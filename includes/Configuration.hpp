@@ -21,7 +21,7 @@ class Server {
 		std::vector<std::string>	serverName;
 		std::vector<std::string>	errorPages;
 		std::vector<Route>			routes;
-		int							port;
+		std::string					port;
 		int							clientBodySizeLimit;
 };
 
