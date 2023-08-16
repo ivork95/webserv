@@ -7,9 +7,16 @@
 #include <fstream>
 #include <string.h>
 
-static int	readFile(std::ifstream &configFile) {
-	std::vector<Token> tokens = Lexer::tokenizeLine(configFile);
-	if (tokens.empty()) {
+static int	parseTokens(std::vector<Token> *tokens) {
+	Parser parser;
+
+	parser.parseTokens(tokens);
+	return (0);
+}
+
+static int	readFile(std::ifstream &configFile, std::vector<Token> *tokens) {
+	*tokens = Lexer::tokenizeLine(configFile);
+	if (tokens->empty()) {
 		std::cerr << "Error: could not tokenize file" << std::endl;
 		return (1);
 	}
@@ -27,22 +34,21 @@ static int	openFile(std::ifstream &configFile, const std::string &filePath) {
 
 int initConfig(const std::string &filePath) {
 	std::ifstream configFile;
+	std::vector<Token> tokens;
 
 	// open file for read
 	if (openFile(configFile, filePath))
 		return (1);
 
 	// read & tokenize line by line
-	if (readFile(configFile))
+	if (readFile(configFile, &tokens))
 		return (1);
 
+	// Token::printTokens(&tokens); // ? testing
+
 	// parse tokens
-		// identify sections and directives
-
-		// process directives (port, server name, error page, ...)
-			// + validate directives
-
-		// build config objects (data structures)
+	if (parseTokens(&tokens))
+		return (1);
 
 	// close file
 	configFile.close();

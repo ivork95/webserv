@@ -30,7 +30,7 @@ std::vector<Token> Lexer::tokenizeLine(std::ifstream &configFile) {
 		// Split line into tokens
 		_splitLine(&tokens, line);
 	}
-	Token::printTokens(&tokens);
+	// Token::printTokens(&tokens); // ? testing
 
 	return tokens;
 }
@@ -58,8 +58,7 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 			Token token(type);
 			tokens->push_back(token);
 			it++;
-		}
-		else {
+		} else {
 			std::string word;
 
 			// Loop until reaching another space, special char or end to have a full word
