@@ -22,12 +22,14 @@ class Token {
 
 		static void			printTokens(std::vector<Token> *tokens);
 
-	private:
 		ETokenType	_type;
 		std::string	_word;
 
 		Token::ETokenType	_getType(void) const;
 		std::string			_getWord(void) const;
+
+	private:
+	
 };
 
 #endif

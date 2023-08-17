@@ -56,7 +56,7 @@ docker-pwd:
 	--security-opt seccomp=unconfined \
 	-e CXX="clang++" \
 	-e CXXFLAGS="-Wall -Wextra -std=c++20 -O1 -g -fsanitize=address -fsanitize=leak -fno-omit-frame-pointer" \
-	-e LDFLAGS="-g -fsanitize=address -fsanitize=leak" \
+	-e LDFLAGS="-g3 -fsanitize=address -fsanitize=leak" \
 	$(IMAGE) sh -c "cd /pwd; bash"
 
 docker-pwd-val:
@@ -79,5 +79,11 @@ docker-build:
 
 docker-exec:
 	docker exec -it $(CONTAINER) sh -c "cd /pwd; bash"
+
+test:
+	./webserv config-files/valid/multiple-servers.conf
+
+db:
+	lldb webserv -- config-files/valid/multiple-servers.conf
 
 .PHONY	: clean fclean re docker-pwd docker-pwd-val docker-build

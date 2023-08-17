@@ -2,18 +2,28 @@
 #define PARSER_HPP
 
 #include "Lexer.hpp"
+#include "Configuration.hpp"
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+
+#include <string.h>
+#include <string>
+#include <algorithm>
+#include <vector>
+#include <stack>
 
 class Parser {
 	public:
 		Parser();
 		~Parser(void);
 
-		void	parseTokens(std::vector<Token> *tokens);
+		static Server	parseTokens(Server server);
 
 	private:
-		// parse tokens into data structures => Config.hpp
+		static void _identifyDirectives(Server *server, std::vector<Token> tokens);
+
 };
 
 #endif

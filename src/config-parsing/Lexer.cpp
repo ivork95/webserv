@@ -1,8 +1,11 @@
 
 #include "Lexer.hpp"
 
+/**
+ * Constructors / destructors
+*/
 Lexer::Lexer(void) {
-	// std::cout << "Lexer constructor called\n";
+	// std::cout << "Lexer default constructor called\n";
 }
 
 Lexer::~Lexer(void) {
@@ -13,28 +16,9 @@ static bool	isSpecialChar(char c) {
 	return (c == '{' || c == '}' || c == ';');
 }
 
-std::vector<Token> Lexer::tokenizeLine(std::ifstream &configFile) {
-	std::vector<Token> tokens;
-
-	// Check if file is opened
-	if (!configFile.is_open()) {
-		std::cout << "Error: file not opened\n";
-		return tokens;
-	}
-
-	// Read line by line (getline)
-	std::string line;
-	while (std::getline(configFile, line)) {
-		// std::cout << "full line: " << line << std::endl; // ? testing
-
-		// Split line into tokens
-		_splitLine(&tokens, line);
-	}
-	// Token::printTokens(&tokens); // ? testing
-
-	return tokens;
-}
-
+/**
+ * Member functions
+*/
 void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 	std::string::iterator it = line.begin();
 
@@ -62,7 +46,7 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 			std::string word;
 
 			// Loop until reaching another space, special char or end to have a full word
-			while (!isspace(*it) && *it != '{' && *it != '}' && *it != ';') {
+			while (!isspace(*it) && *it != '{' && *it != '}' && *it != ';' && it != line.end()) {
 				word += *it;
 				it++;
 			}
@@ -72,4 +56,62 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 			tokens->push_back(token);
 		}
 	}
+}
+
+std::vector<Token> Lexer::tokenizeServer(const std::string &rawData) {
+    std::vector<Token> tokens;
+
+    // Split rawData into lines
+    std::istringstream linesStream(rawData);
+    std::string line;
+
+    while (std::getline(linesStream, line)) {
+        // Split line into tokens
+        _splitLine(&tokens, line);
+    }
+
+    return tokens;
+}
+
+std::vector<std::string> Lexer::splitServers(std::ifstream &configFile) {
+	std::string 				content((std::istreambuf_iterator<char>(configFile)), \
+											(std::istreambuf_iterator<char>()));
+    std::vector<std::string>	sections;
+    size_t 						startPos = 0;
+    std::stack<char> 			braceStack;
+
+    for (size_t i = 0; i < content.size(); ++i) {
+        if (content[i] == '{') {
+            braceStack.push('{');
+            if (braceStack.size() == 1) {
+                startPos = i;
+            }
+        } else if (content[i] == '}') {
+            if (!braceStack.empty()) {
+                braceStack.pop();
+                if (braceStack.empty()) {
+                    sections.push_back(content.substr(startPos, i - startPos + 1));
+                }
+            }
+        }
+    }
+	if (!braceStack.empty()) {
+		std::cerr << "Error: unmatched braces" << std::endl;
+		return std::vector<std::string>();
+	}
+    return sections;
+}
+
+std::vector<Server>	Lexer::createServers(Configuration *config) {
+	std::vector<Server>	servers;
+
+	for (size_t i = 0; i < config->serverSections.size(); ++i) {
+		Server server(i, config->serverSections[i]);
+		servers.push_back(server);
+	}
+	if (servers.empty()) {
+		std::cerr << "Error: could not create servers" << std::endl;
+		return std::vector<Server>();
+	}
+	return servers;
 }

@@ -3,21 +3,45 @@
 #include "Parser.hpp"
 #include "Configuration.hpp"
 
-#include <iostream>
-#include <fstream>
-#include <string.h>
-
-static int	parseTokens(std::vector<Token> *tokens) {
-	Parser parser;
-
-	parser.parseTokens(tokens);
+static int	parseTokens(Configuration *config) {
+	for (size_t i = 0; i < config->servers.size(); ++i) {
+		config->servers[i] = Parser::parseTokens(config->servers[i]);
+		if (config->servers[i].port.empty()) {
+			std::cerr << "Error: could not parse server " << i << std::endl;
+			return (1);
+		}
+	}
+	if (config->servers.empty()) {
+		std::cerr << "Error: could not parse tokens" << std::endl;
+		return (1);
+	}
 	return (0);
 }
 
-static int	readFile(std::ifstream &configFile, std::vector<Token> *tokens) {
-	*tokens = Lexer::tokenizeLine(configFile);
-	if (tokens->empty()) {
-		std::cerr << "Error: could not tokenize file" << std::endl;
+static int	tokenizeServers(Configuration *config) {
+	for (size_t i = 0; i < config->servers.size(); ++i) {
+		config->servers[i].tokens = Lexer::tokenizeServer(config->servers[i].rawData);
+		if (config->servers[i].tokens.empty()) {
+			std::cerr << "Error: could not tokenize server " << i << std::endl;
+			return (1);
+		}
+	}
+	return (0);
+}
+
+static int	createServers(Configuration *config) {
+	config->servers = Lexer::createServers(config);
+	if (config->servers.empty()) {
+		std::cerr << "Error: could not create servers" << std::endl;
+		return (1);
+	}
+	return (0);
+}
+
+static int	readFile(std::ifstream &configFile, Configuration *config) {
+    config->serverSections = Lexer::splitServers(configFile);
+	if (config->serverSections.empty()) {
+		std::cerr << "Error: could not split sections" << std::endl;
 		return (1);
 	}
 	return (0);
@@ -33,25 +57,35 @@ static int	openFile(std::ifstream &configFile, const std::string &filePath) {
 }
 
 int initConfig(const std::string &filePath) {
-	std::ifstream configFile;
-	std::vector<Token> tokens;
+	std::ifstream 		configFile;
+	Configuration 		config;
 
 	// open file for read
 	if (openFile(configFile, filePath))
 		return (1);
 
-	// read & tokenize line by line
-	if (readFile(configFile, &tokens))
+	// read file, check braces & split sections
+	if (readFile(configFile, &config))
 		return (1);
-
-	// Token::printTokens(&tokens); // ? testing
-
-	// parse tokens
-	if (parseTokens(&tokens))
-		return (1);
-
+	
 	// close file
 	configFile.close();
+
+	// create Server objects from server sections
+	if (createServers(&config))
+		return (1);
+
+	// tokenize each server
+	if (tokenizeServers(&config))
+		return (1);
+
+	// parse tokens into data structures
+	if (parseTokens(&config))
+		return (1);
+
+	for (size_t i = 0; i < config.servers.size(); ++i) {
+		config.servers[i].printData();
+	}
 
 	return (0);
 }

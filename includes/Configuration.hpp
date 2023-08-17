@@ -4,9 +4,12 @@
 #include <iostream>
 #include <vector>
 
+#include "Token.hpp"
+
 class Route {
 	public:
 		Route();
+		Route(std::string routePath);
 		~Route(void);
 
 		std::string routePath;
@@ -15,22 +18,29 @@ class Route {
 
 class Server {
 	public:
-		Server();
+		Server(void);
+		Server(unsigned int index, std::string rawData);
 		~Server(void);
 
-		std::vector<std::string>	serverName;
-		std::vector<std::string>	errorPages;
-		std::vector<Route>			routes;
+		unsigned int				_index;
 		std::string					port;
+		std::string					serverName;
+		std::vector<std::string>	errorPages{};
+		std::vector<Route>			routes{};
 		int							clientBodySizeLimit;
+		std::string					rawData;
+		std::vector<Token>			tokens{};
+
+		void						printData(void);
 };
 
 class Configuration {
 	public:
-		Configuration();
+		Configuration(void);
 		~Configuration(void);
 
-		std::vector<Server> m_servers;
+		std::vector<Server>			servers;
+		std::vector<std::string>	serverSections;
 };
 
 #endif

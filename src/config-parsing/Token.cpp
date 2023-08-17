@@ -1,18 +1,24 @@
 
 #include "Token.hpp"
 
+/**
+ * Constructors / destructors
+*/
 Token::Token(Token::ETokenType &type) : _type(type), _word("") {
-	// std::cout << "Token constructor called\n";
+	// std::cout << "Token type constructor called\n";
 }
 
 Token::Token(std::string &word) : _type(Token::NA), _word(word) {
-	// std::cout << "Token constructor called\n";
+	// std::cout << "Token word constructor called\n";
 }
 
 Token::~Token(void) {
 	// std::cout << "Token destructor called\n";
 }
 
+/**
+ * Getters / setters
+*/
 Token::ETokenType Token::_getType(void) const {
 	return _type;
 }
@@ -21,6 +27,9 @@ std::string Token::_getWord(void) const {
 	return _word;
 }
 
+/**
+ * Member functions
+*/
 void	Token::printTokens(std::vector<Token> *tokens) {
 	std::cout << "Tokens:\n";
 	for (std::vector<Token>::iterator it = tokens->begin(); it != tokens->end(); it++) {
