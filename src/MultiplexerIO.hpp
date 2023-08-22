@@ -1,5 +1,5 @@
-#ifndef SERVERIO_HPP
-#define SERVERIO_HPP
+#ifndef MULTIPLEXERIO_HPP
+#define MULTIPLEXERIO_HPP
 
 #include <array>
 #include <sys/epoll.h>
@@ -7,21 +7,21 @@
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
 
-class ServerIO
+class MultiplexerIO
 {
 public:
     int m_epollfd{};
-    std::vector<std::unique_ptr<TcpServer>> m_servers{};
+    std::vector<TcpServer *> m_servers{};
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
 
     // default constructor
-    ServerIO(void);
+    MultiplexerIO(void);
 
     // destructor
-    ~ServerIO(void);
+    ~MultiplexerIO(void);
 
     // member functions
-    void addSocketToEpollFd(int socket);
+    void addSocketToEpollFd(Socket *ptr);
     void deleteSocketFromEpollFd(int socket);
 };
 

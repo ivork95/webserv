@@ -1,94 +1,92 @@
 #include <csignal>
 #include "TcpServer.hpp"
-#include "ClientSocket.hpp"
-#include "ServerIO.hpp"
+#include "Client.hpp"
+#include "MultiplexerIO.hpp"
 
-void do_use_fd(int fd, ServerIO &serverio)
+#define BUFSIZE 256
+
+void do_use_fd(Socket *ePollDataPtr, MultiplexerIO &serverio)
 {
-    char buf[256]; // Buffer for client data
-    int nbytes = recv(fd, buf, sizeof(buf), 0);
+    Client *c{};
 
-    if (nbytes <= 0)
-    {
-        // Got error or connection closed by client
-        if (nbytes == 0)
-        {
-            // Connection closed
-            std::cout << "pollserver: socket " << fd << " hung up\n";
-        }
-        else
-        {
-            std::cerr << "Error: recv() failed\n";
-        }
-
-        serverio.deleteSocketFromEpollFd(fd);
-        // close(pfds[i].fd); // Bye!
-        // del_from_pfds(pfds, i, &fd_count);
-    }
+    if ((c = dynamic_cast<Client *>(ePollDataPtr)))
+        ;
     else
     {
-        // We got some good data from a client
-        std::cout << "nbytes = " << nbytes << '\n';
-        if (static_cast<unsigned int>(nbytes) < sizeof(buf))
-            buf[nbytes] = '\0';
+        std::cerr << "Error: the actual type of the object pointed to by ePollDataPtr = Unrecognized\n";
+        return;
+    }
+
+    char buf[BUFSIZE + 1]{}; // Buffer for client data
+    int nbytes = recv(ePollDataPtr->m_socketFd, buf, BUFSIZE, 0);
+
+    if (nbytes <= 0) // Got error or connection closed by client
+    {
+        if (nbytes == 0) // Connection closed
+            std::cout << "pollserver: socket " << ePollDataPtr->m_socketFd << " hung up\n";
         else
-            buf[sizeof(buf) - 1] = '\0';
-        std::cout << buf;
+            std::cerr << "Error: recv() failed\n";
+        serverio.deleteSocketFromEpollFd(ePollDataPtr->m_socketFd);
+    }
+    else // We got some good data from a client
+    {
+        std::cout << "nbytes = " << nbytes << '\n';
+        c->httpMessage.append(buf);
+        std::cout << "\n\n|" << c->httpMessage << "|\n\n";
+        // if (static_cast<unsigned int>(nbytes) < sizeof(buf))
+        //     buf[nbytes] = '\0';
+        // else
+        //     buf[sizeof(buf) - 1] = '\0';
+        // std::cout << buf;
     }
 }
 
 int main(int argc, char *argv[])
 {
     if (argc < 2)
-    {
         throw std::runtime_error("usage: webserv [port]\n\n\n");
-    }
 
-    ServerIO serverio{};
-    int epollCount;
-    bool isLoopBroken{false};
+    MultiplexerIO serverio{};
 
     for (int i{1}; i < argc; i++)
     {
-        std::unique_ptr<TcpServer> tcpserver = std::make_unique<TcpServer>(argv[i]);
-        serverio.m_servers.push_back(std::move(tcpserver));
+        TcpServer *tcpserver = new TcpServer{argv[i]};
+        serverio.m_servers.push_back(tcpserver);
     }
 
     for (auto &server : serverio.m_servers)
-        serverio.addSocketToEpollFd(server->m_serverSocket);
+        serverio.addSocketToEpollFd(server);
 
     while (true)
     {
-        epollCount = epoll_wait(serverio.m_epollfd, serverio.m_events.data(), MAX_EVENTS, (3 * 60 * 1000));
+        int epollCount{epoll_wait(serverio.m_epollfd, serverio.m_events.data(), MAX_EVENTS, (3 * 60 * 1000))};
         if (epollCount == -1)
         {
             std::perror("epoll_wait() failed");
             throw std::runtime_error("Error: epoll_wait() failed\n");
         }
 
-        // Run through the existing connections looking for data to read
-        for (int i{0}; i < epollCount; i++)
+        for (int i{0}; i < epollCount; i++) // Run through the existing connections looking for data to read
         {
-            isLoopBroken = false;
+            bool isLoopBroken{false};
+            Socket *ePollDataPtr{static_cast<Socket *>(serverio.m_events.at(i).data.ptr)};
+
             // Check if someone's ready to read
             if (serverio.m_events.at(i).events & EPOLLIN) // We got one!!
             {
                 for (auto &server : serverio.m_servers)
                 {
-                    if (serverio.m_events.at(i).data.fd == server->m_serverSocket) // If listener is ready to read, handle new connection
+                    if (ePollDataPtr->m_socketFd == server->m_socketFd) // If listener is ready to read, handle new connection
                     {
-                        std::unique_ptr<ClientSocket> clientsocket = std::make_unique<ClientSocket>(server->m_serverSocket);
-                        // setnonblocking(conn_sock);
-                        serverio.addSocketToEpollFd(clientsocket->m_clientSocket);
-                        server->m_clientSockets.push_back(std::move(clientsocket));
+                        Client *clientsocket = new Client{server->m_socketFd};
+                        serverio.addSocketToEpollFd(clientsocket);
+                        server->m_clientSockets.push_back(clientsocket);
                         isLoopBroken = true;
                         break;
                     }
                 }
                 if (!isLoopBroken) // If not the listener, we're just a regular client
-                {
-                    do_use_fd(serverio.m_events.at(i).data.fd, serverio);
-                }
+                    do_use_fd(ePollDataPtr, serverio);
             }
         }
     }

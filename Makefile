@@ -3,12 +3,14 @@ NAME		:= webserv
 CXXFLAGS	?= -Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	obj/main.o \
-				obj/ClientSocket.o \
-				obj/ServerIO.o \
-				obj/TcpServer.o
+				obj/Client.o \
+				obj/MultiplexerIO.o \
+				obj/TcpServer.o \
+				obj/Socket.o
 HEADERS		:=	TcpServer.hpp \
-				ClientSocket.hpp \
-				ServerIO.hpp
+				Client.hpp \
+				MultiplexerIO.hpp \
+				Socket.hpp
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
 
