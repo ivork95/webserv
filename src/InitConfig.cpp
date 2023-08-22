@@ -4,14 +4,14 @@
 #include "Configuration.hpp"
 
 static int	parseTokens(Configuration *config) {
-	for (size_t i = 0; i < config->servers.size(); ++i) {
-		config->servers[i] = Parser::parseTokens(config->servers[i]);
-		if (config->servers[i].port.empty()) {
+	for (size_t i = 0; i < config->serversConfig.size(); ++i) {
+		config->serversConfig[i] = Parser::parseTokens(config->serversConfig[i]);
+		if (config->serversConfig[i].portNb.empty()) {
 			std::cerr << "Error: could not parse server " << i << std::endl;
 			return (1);
 		}
 	}
-	if (config->servers.empty()) {
+	if (config->serversConfig.empty()) {
 		std::cerr << "Error: could not parse tokens" << std::endl;
 		return (1);
 	}
@@ -19,9 +19,9 @@ static int	parseTokens(Configuration *config) {
 }
 
 static int	tokenizeServers(Configuration *config) {
-	for (size_t i = 0; i < config->servers.size(); ++i) {
-		config->servers[i].tokens = Lexer::tokenizeServer(config->servers[i].rawData);
-		if (config->servers[i].tokens.empty()) {
+	for (size_t i = 0; i < config->serversConfig.size(); ++i) {
+		config->serversConfig[i].tokens = Lexer::tokenizeServer(config->serversConfig[i].rawData);
+		if (config->serversConfig[i].tokens.empty()) {
 			std::cerr << "Error: could not tokenize server " << i << std::endl;
 			return (1);
 		}
@@ -30,9 +30,9 @@ static int	tokenizeServers(Configuration *config) {
 }
 
 static int	createServers(Configuration *config) {
-	config->servers = Lexer::createServers(config);
-	if (config->servers.empty()) {
-		std::cerr << "Error: could not create servers" << std::endl;
+	config->serversConfig = Lexer::createServers(config);
+	if (config->serversConfig.empty()) {
+		std::cerr << "Error: could not create serversConfig" << std::endl;
 		return (1);
 	}
 	return (0);
@@ -83,8 +83,8 @@ int initConfig(const std::string &filePath) {
 	if (parseTokens(&config))
 		return (1);
 
-	for (size_t i = 0; i < config.servers.size(); ++i) {
-		config.servers[i].printData();
+	for (size_t i = 0; i < config.serversConfig.size(); ++i) {
+		config.serversConfig[i].printData();
 	}
 
 	return (0);

@@ -12,6 +12,9 @@ OBJECTS		:=	obj/main.o \
 				obj/config-parsing/Configuration.o \
 				obj/config-parsing/Token.o \
 				obj/logger/Logger.o \
+				obj/config-parsing/Server.o \
+				obj/config-parsing/Route.o \
+				obj/config-parsing/ErrorPage.o \
 
 # HEADERS		:=	TcpServer.hpp \
 # 				ClientSocket.hpp \

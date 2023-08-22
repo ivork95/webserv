@@ -16,68 +16,44 @@ Parser::~Parser(void) {
  * Member functions
 */
 void Parser::_identifyDirectives(Server *server, std::vector<Token> tokens) {
-	for (size_t i = 0; i < tokens.size(); i++)
-	{
-		if (tokens.at(i)._getType() == Token::NA)
-		{
-			if (tokens.at(i)._getWord() == "listen")
-			{
-				if (tokens.at(i + 1)._getType() == Token::NA)
-				{
-					server->port = tokens.at(i + 1)._getWord();
+	for (size_t i = 0; i < tokens.size(); i++) {
+		if (tokens.at(i)._getType() == Token::NA) {
+			if (tokens.at(i)._getWord() == "listen") {
+				if (tokens.at(i + 1)._getType() == Token::NA) {
+					server->portNb = tokens.at(i + 1)._getWord();
 					i++;
-				}
-				else
-				{
+				} else {
 					// throw error
 				}
-			}
-			else if (tokens.at(i)._getWord() == "server_name")
-			{
-				if (tokens.at(i + 1)._getType() == Token::NA)
-				{
+			} else if (tokens.at(i)._getWord() == "server_name") {
+				if (tokens.at(i + 1)._getType() == Token::NA) {
 					server->serverName = tokens.at(i + 1)._getWord();
 					i++;
-				}
-				else
-				{
+				} else {
 					// throw error
 				}
-			}
-			else if (tokens.at(i)._getWord() == "error_page")
-			{
-				if (tokens.at(i + 1)._getType() == Token::NA)
-				{
-					server->errorPages.push_back(tokens.at(i + 1)._getWord());
+			} else if (tokens.at(i)._getWord() == "error_page") {
+				if (tokens.at(i + 1)._getType() == Token::NA) {
+					ErrorPage errorPage(tokens.at(i + 1)._getWord(), tokens.at(i + 2)._getWord());
+					// errorPage.printData();
+					server->errorPages.push_back(errorPage);
 					i++;
-				}
-				else
-				{
+				} else {
 					// throw error
 				}
-			}
-			else if (tokens.at(i)._getWord() == "client_body_size_limit")
-			{
-				if (tokens.at(i + 1)._getType() == Token::NA)
-				{
-					server->clientBodySizeLimit = atoi(tokens.at(i + 1)._getWord().c_str());
+			} else if (tokens.at(i)._getWord() == "client_max_body_size") {
+				if (tokens.at(i + 1)._getType() == Token::NA) {
+					server->clientMaxBodySize = tokens.at(i + 1)._getWord();
 					i++;
-				}
-				else
-				{
+				} else {
 					// throw error
 				}
-			}
-			else if (tokens.at(i)._getWord() == "location")
-			{
-				if (tokens.at(i + 1)._getType() == Token::NA)
-				{
+			} else if (tokens.at(i)._getWord() == "location") {
+				if (tokens.at(i + 1)._getType() == Token::NA) {
 					Route route(tokens.at(i + 1)._getWord());
-					server->routes.push_back(route);
+					server->routesConfig.push_back(route);
 					i++;
-				}
-				else
-				{
+				} else {
 					// throw error
 				}
 			}
