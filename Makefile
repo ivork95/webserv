@@ -6,11 +6,13 @@ OBJECTS		:=	obj/main.o \
 				obj/Client.o \
 				obj/MultiplexerIO.o \
 				obj/TcpServer.o \
-				obj/Socket.o
+				obj/Socket.o \
+				obj/HttpMessage.o
 HEADERS		:=	TcpServer.hpp \
 				Client.hpp \
 				MultiplexerIO.hpp \
-				Socket.hpp
+				Socket.hpp \
+				HttpMessage.hpp
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
 
