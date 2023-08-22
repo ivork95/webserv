@@ -2,6 +2,7 @@
 #include "TcpServer.hpp"
 #include "Client.hpp"
 #include "MultiplexerIO.hpp"
+#include "HttpMessage.hpp"
 
 #define BUFSIZE 256
 
@@ -31,13 +32,16 @@ void do_use_fd(Socket *ePollDataPtr, MultiplexerIO &serverio)
     else // We got some good data from a client
     {
         std::cout << "nbytes = " << nbytes << '\n';
-        c->httpMessage.append(buf);
-        std::cout << "\n\n|" << c->httpMessage << "|\n\n";
-        // if (static_cast<unsigned int>(nbytes) < sizeof(buf))
-        //     buf[nbytes] = '\0';
-        // else
-        //     buf[sizeof(buf) - 1] = '\0';
-        // std::cout << buf;
+        HttpMessage message(buf);
+        std::cout << "\n\nBUF:\n" << buf << "\n###\n\n";
+        c->requestMessage += message;
+        if (!c->requestMessage.isComplete())
+        {
+            std::cout << "Message not complete...\n\n";
+            return ;
+        }
+        std::cout << "Mission completed!!!\n\n" << std::endl; 
+        std::cout << "\n\n|" << c->requestMessage.getRawRequest() << "|\n\n";
     }
 }
 
