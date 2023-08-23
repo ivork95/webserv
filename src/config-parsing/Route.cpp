@@ -1,12 +1,17 @@
 
 #include "Route.hpp"
 
-Route::Route(void) : routePath(""), rootDir(""), clientMaxBodySize(""), autoIndex(false), indexFile(), cgiExtension(""), httpMethods() {
+Route::Route(void) : \
+	routePath("N/A"), rootDir("N/A"), clientMaxBodySize("N/A"), \
+	autoIndex(false), indexFile{"N/A"}, cgiHandler{{"N/A","N/A"}}, httpMethods{"N/A"} {
 	// std::cout << "Route default constructor called\n";
 }
 
-Route::Route(const std::string routePath) : routePath(routePath), rootDir(""), clientMaxBodySize(""), autoIndex(false), indexFile(), cgiExtension(""), httpMethods() {
+Route::Route(const std::string routePath) : \
+	routePath(routePath), rootDir("N/A"), clientMaxBodySize("N/A"), \
+	autoIndex(false), indexFile{"N/A"}, cgiHandler{{"N/A","N/A"}}, httpMethods{"N/A"} {
 	// std::cout << "Route parametric constructor called\n";
+	// printData(); // ? testing
 }
 
 Route::~Route(void) {
@@ -23,13 +28,17 @@ void	Route::printData(void) {
 	std::cout << "\t\trootDir: " << rootDir << std::endl;
 	std::cout << "\t\tclientMaxBodySize: " << clientMaxBodySize << std::endl;
 	std::cout << "\t\tautoIndex: " << autoIndex << std::endl;
+	std::cout << "\t\tindexFile: ";
 	for (size_t i = 0; i < indexFile.size(); ++i) {
-		std::cout << "\t\t\t" << indexFile[i] << std::endl;
+		std::cout << indexFile[i];
 	}
-	std::cout << "\t\tcgiExtension: " << cgiExtension << std::endl;
-	std::cout << "\t\thttpMethods:\n";
+	std::cout << "\n\t\tcgiHandler: ";
+	for (std::map<std::string, std::string>::iterator it = cgiHandler.begin(); it != cgiHandler.end(); ++it) {
+		std::cout << "[" << it->first << ", " << it->second << "]" << std::endl;
+	}
+	std::cout << "\t\thttpMethods: ";
 	for (size_t i = 0; i < httpMethods.size(); ++i) {
-		std::cout << "\t\t" << httpMethods[i] << std::endl;
+		std::cout << httpMethods[i];
 	}
 	std::cout << std::endl;
 }

@@ -83,7 +83,7 @@ docker-build:
 docker-exec:
 	docker exec -it $(CONTAINER) sh -c "cd /pwd; bash"
 
-test:
+test: all
 	./webserv config-files/valid/multiple-servers.conf
 
 db:

@@ -4,11 +4,12 @@
 /**
  * Constructors / destructors
 */
-ErrorPage::ErrorPage(void) : errorCode(), filePath("") {
+ErrorPage::ErrorPage(void) : errorCode(), filePath("N/A") {
 	// std::cout << "ErrorPage default constructor called\n";
 }
 
-ErrorPage::ErrorPage(const std::string errorCode, const std::string filePath) : errorCode{errorCode}, filePath(filePath) {
+ErrorPage::ErrorPage(const std::string errorCode, const std::string filePath) : \
+	errorCode{errorCode}, filePath(filePath) {
 	// std::cout << "ErrorPage parametric constructor called\n";
 }
 
@@ -26,5 +27,4 @@ void	ErrorPage::printData(void) {
 		std::cout << errorCode[i] << std::endl;
 	}
 	std::cout << "\t\tfilePath: " << filePath << std::endl;
-	std::cout << std::endl;
 }
