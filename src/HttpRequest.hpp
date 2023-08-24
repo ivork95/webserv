@@ -20,7 +20,6 @@ class HttpRequest : public HttpMessage
 		~HttpRequest(void);
 
 		const std::string &getBody(void) const;
-		const std::string getFilePath(void) const;
 		const std::map<std::string, std::string>& getHeaders(void) const;
 
 	private:
