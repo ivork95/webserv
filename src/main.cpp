@@ -3,6 +3,7 @@
 #include "Client.hpp"
 #include "MultiplexerIO.hpp"
 #include "HttpMessage.hpp"
+#include "HttpRequest.hpp"
 
 #define BUFSIZE 256
 
@@ -42,6 +43,14 @@ void do_use_fd(Socket *ePollDataPtr, MultiplexerIO &serverio)
         }
         std::cout << "Mission completed!!!\n\n" << std::endl; 
         std::cout << "\n\n|" << c->requestMessage.getRawRequest() << "|\n\n";
+        if (c->requestMessage.isValidHttpMessage())
+        {
+            HttpRequest httpRequest{c->requestMessage};
+            std::cout << "HttpMessage is valid\n\n";
+            std::cout << httpRequest << std::endl;
+            return ;
+        }
+
     }
 }
 
