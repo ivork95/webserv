@@ -8,7 +8,7 @@ ErrorPage::ErrorPage(void) : errorCode(), filePath("N/A") {
 	// std::cout << "ErrorPage default constructor called\n";
 }
 
-ErrorPage::ErrorPage(const std::string errorCode, const std::string filePath) : \
+ErrorPage::ErrorPage(std::vector<std::string> errorCode, const std::string filePath) : \
 	errorCode{errorCode}, filePath(filePath) {
 	// std::cout << "ErrorPage parametric constructor called\n";
 }
@@ -22,9 +22,10 @@ ErrorPage::~ErrorPage(void) {
 */
 void	ErrorPage::printData(void) {
 	std::cout << "\tErrorPage:\n";
-	std::cout << "\t\terrorCode: ";
+	std::cout << "\t\terrorCode: [";
 	for (size_t i = 0; i < errorCode.size(); ++i) {
-		std::cout << errorCode[i] << std::endl;
+		std::cout << errorCode[i] << ",";
 	}
+	std::cout << "]" << std::endl;
 	std::cout << "\t\tfilePath: " << filePath << std::endl;
 }

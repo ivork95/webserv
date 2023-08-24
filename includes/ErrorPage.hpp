@@ -8,7 +8,7 @@
 class ErrorPage {
 	public:
 		ErrorPage(void);
-		ErrorPage(const std::string errorCode, const std::string filePath);
+		ErrorPage(std::vector<std::string> errorCode, const std::string filePath);
 		~ErrorPage(void);
 
 		std::vector<std::string>	errorCode;			// 404, 401, 403, 500

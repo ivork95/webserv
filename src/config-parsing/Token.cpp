@@ -8,6 +8,7 @@ Token::Token(Token::ETokenType &type) : _type(type), _word("") {
 	// std::cout << "Token type constructor called\n";
 }
 
+// TODO change NA to word
 Token::Token(std::string &word) : _type(Token::NA), _word(word) {
 	// std::cout << "Token word constructor called\n";
 }

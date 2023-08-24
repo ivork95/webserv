@@ -15,6 +15,9 @@ OBJECTS		:=	obj/main.o \
 				obj/config-parsing/Server.o \
 				obj/config-parsing/Route.o \
 				obj/config-parsing/ErrorPage.o \
+				obj/utils/isNumber.o \
+				obj/utils/isHtmlExtension.o \
+				obj/utils/isHttpMethod.o \
 
 # HEADERS		:=	TcpServer.hpp \
 # 				ClientSocket.hpp \

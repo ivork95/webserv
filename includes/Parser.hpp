@@ -23,7 +23,18 @@ class Parser {
 
 	private:
 		static void _identifyDirectives(Server *server, std::vector<Token> tokens);
+		static void _parseListen(Server *server, std::vector<Token> tokens, size_t *i);
+		static void _parseServerName(Server *server, std::vector<Token> tokens, size_t *i);
+		static void _parseErrorPage(Server *server, std::vector<Token> tokens, size_t *i);
+		static void _parseClientSize(Server *server, std::vector<Token> tokens, size_t *i);
+		static void _parseLocation(Server *server, std::vector<Token> tokens, size_t *i);
 
+	class InvalidTokenException : public std::exception {
+		public:
+			char const *what() const throw() {
+				return ("Invalid token");
+			}
+	};
 };
 
 #endif

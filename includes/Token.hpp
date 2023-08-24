@@ -13,6 +13,7 @@ class Token {
 			SEMICOLON,
 			OPEN_BRACE,
 			CLOSE_BRACE,
+			NEW_LINE,
 			NA
 		};
 

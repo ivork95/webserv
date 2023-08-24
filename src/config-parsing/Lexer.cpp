@@ -13,7 +13,7 @@ Lexer::~Lexer(void) {
 }
 
 static bool	isSpecialChar(char c) {
-	return (c == '{' || c == '}' || c == ';');
+	return (c == '{' || c == '}' || c == ';' || c == '\n');
 }
 
 /**
@@ -31,13 +31,15 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 			// If special char
 		if (isSpecialChar(*it)) {
 			Token::ETokenType type = Token::NA;
-			if (*it == '{')
+			if (*it == ';')
+				type = Token::SEMICOLON;
+			else if (*it == '{')
 				type = Token::OPEN_BRACE;
 			else if (*it == '}')
 				type = Token::CLOSE_BRACE;
-			else if (*it == ';')
-				type = Token::SEMICOLON;
-
+			else if (*it == '\n')
+				type = Token::NEW_LINE;
+			
 			// Add special char to tokens
 			Token token(type);
 			tokens->push_back(token);
@@ -46,7 +48,7 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 			std::string word;
 
 			// Loop until reaching another space, special char or end to have a full word
-			while (!isspace(*it) && *it != '{' && *it != '}' && *it != ';' && it != line.end()) {
+			while (!isspace(*it) && *it != '{' && *it != '}' && *it != ';' && *it != '\n' && it != line.end()) {
 				word += *it;
 				it++;
 			}

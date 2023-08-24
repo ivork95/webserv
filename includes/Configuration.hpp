@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Server.hpp"
+#include "Utils.hpp"
 
 class Configuration {
 	public:
