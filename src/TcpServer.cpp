@@ -20,18 +20,18 @@ TcpServer::TcpServer(const char *port)
 
     for (p = ai; p != NULL; p = p->ai_next)
     {
-        m_serverSocket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if (m_serverSocket < 0)
+        m_socketFd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (m_socketFd < 0)
         {
             continue;
         }
 
         // Lose the pesky "address already in use" error message
-        setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+        setsockopt(m_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
-        if (bind(m_serverSocket, p->ai_addr, p->ai_addrlen) < 0)
+        if (bind(m_socketFd, p->ai_addr, p->ai_addrlen) < 0)
         {
-            close(m_serverSocket);
+            close(m_socketFd);
             continue;
         }
 
@@ -48,11 +48,13 @@ TcpServer::TcpServer(const char *port)
     }
 
     // Listen
-    if (listen(m_serverSocket, 10) == -1)
+    if (listen(m_socketFd, 10) == -1)
     {
         std::perror("listen() failed");
         throw std::runtime_error("Error: listen() failed\n");
     }
+
+    setNonBlocking();
 
     std::cout << *this << " port constructor called\n";
 }
@@ -62,7 +64,7 @@ TcpServer::~TcpServer(void)
 {
     std::cout << *this << " destructor called\n";
 
-    close(m_serverSocket);
+    close(m_socketFd);
 }
 
 // outstream operator overload

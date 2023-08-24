@@ -1,9 +1,9 @@
-#include "ServerIO.hpp"
+#include "MultiplexerIO.hpp"
 
 // default constructor
-ServerIO::ServerIO(void)
+MultiplexerIO::MultiplexerIO(void)
 {
-    std::cout << "ServerIO default constructor called\n";
+    std::cout << "MultiplexerIO default constructor called\n";
 
     m_epollfd = epoll_create(1);
     if (m_epollfd == -1)
@@ -14,30 +14,30 @@ ServerIO::ServerIO(void)
 }
 
 // destructor
-ServerIO::~ServerIO(void)
+MultiplexerIO::~MultiplexerIO(void)
 {
-    std::cout << "ServerIO destructor called\n";
+    std::cout << "MultiplexerIO destructor called\n";
 
     close(m_epollfd);
 }
 
 // member functions
-void ServerIO::addSocketToEpollFd(int socket)
+void MultiplexerIO::addSocketToEpollFd(Socket *ptr)
 {
     struct epoll_event ev
     {
     };
-
+    ev.data.ptr = ptr;
     ev.events = EPOLLIN | EPOLLOUT;
-    ev.data.fd = socket;
-    if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, socket, &ev) == -1)
+
+    if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, ptr->m_socketFd, &ev) == -1)
     {
         std::perror("epoll_ctl() failed");
         throw std::runtime_error("Error: epoll_ctl() failed\n");
     }
 }
 
-void ServerIO::deleteSocketFromEpollFd(int socket)
+void MultiplexerIO::deleteSocketFromEpollFd(int socket)
 {
     if (epoll_ctl(m_epollfd, EPOLL_CTL_DEL, socket, NULL) == -1)
     {

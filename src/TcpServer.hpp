@@ -7,20 +7,20 @@
 #include <unistd.h>
 #include <vector>
 #include <memory>
-#include "ClientSocket.hpp"
+#include "Client.hpp"
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include "Socket.hpp"
 
-class TcpServer
+class TcpServer : public Socket
 {
 public:
-    int m_serverSocket{};
     struct addrinfo m_hints
     {
     };
-    std::vector<std::unique_ptr<ClientSocket>> m_clientSockets{};
+    std::vector<Client *> m_clientSockets{};
 
     // default constructor
     TcpServer(void) = delete;

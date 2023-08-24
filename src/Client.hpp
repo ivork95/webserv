@@ -1,32 +1,33 @@
-#ifndef CLIENTSOCKET_HPP
-#define CLIENTSOCKET_HPP
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
 #include <iostream>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include "Socket.hpp"
+#include "HttpMessage.hpp"
 
-class ClientSocket
+class Client : public Socket
 {
 public:
-    int m_clientSocket{};
     struct sockaddr_storage m_remoteaddr
     {
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
-
+    HttpMessage requestMessage;
     // default constructor
-    ClientSocket(void) = delete;
+    Client(void) = delete;
 
     // serverSocket constructor
-    ClientSocket(int serverSocket);
+    Client(int serverSocket);
 
     // destructor
-    ~ClientSocket(void);
+    ~Client(void);
 
     // outstream operator overload
-    friend std::ostream &operator<<(std::ostream &out, const ClientSocket &clientsocket);
+    friend std::ostream &operator<<(std::ostream &out, const Client &clientsocket);
 };
 
 #endif
