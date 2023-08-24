@@ -12,25 +12,79 @@ HttpMessage::HttpMessage(const std::string &rawRequest)
     return ;
 }
 
-//overload operator
+HttpMessage::HttpMessage(const HttpMessage &src)
+{
+    m_rawRequest = src.getRawRequest();
+    m_method = src.getMethod();
+    m_version = src.getVersion();
+    m_path = src.getPath();
+    return ;
+}
+
+HttpMessage::~HttpMessage( void )
+{
+    return ;
+}
+
 HttpMessage& HttpMessage::operator+=(const HttpMessage& src)
 {
     this->m_rawRequest += src.getRawRequest();
     return *this;
 }
 
+const std::string HttpMessage::getMethod(void) const
+{
+    return m_method;
+}
 
-// member function
-std::string HttpMessage::getRawRequest(void) const
+const std::string HttpMessage::getVersion(void) const
+{
+    return m_version;
+}
+
+const std::string HttpMessage::getPath(void) const
+{
+    return m_path;
+}
+
+const std::string HttpMessage::getRawRequest(void) const
 {
     return m_rawRequest;
 }
 
-bool HttpMessage::isComplete(void) const
+bool HttpMessage::isComplete(void)
 {
-    if (m_rawRequest.find("\r\n\r\n") == std::string::npos)
+    size_t contentLengthValue;
+    size_t breakLinePos = m_rawRequest.find("\r\n\r\n");
+    size_t contentLengthPos = m_rawRequest.find("Content-Length:");
+    if (breakLinePos == std::string::npos)
         return false;
+    else if (contentLengthPos != std::string::npos)
+    {
+        contentLengthPos += 16;
+        size_t contentLengthEnd = m_rawRequest.find("\r\n", contentLengthPos);
+        contentLengthValue = atoi(m_rawRequest.substr(contentLengthPos, contentLengthEnd - contentLengthPos).c_str());
+        if (contentLengthValue == 0)
+        {
+            std::cerr << "ERROR retreiving Content-Length value\n";
+            return false;
+        }
+        if (contentLengthValue > contentLengthEnd - breakLinePos)
+            return false;
+    }
+    setStartLineValues();
     return true;
+}
+
+void HttpMessage::setStartLineValues(void)
+{
+	std::istringstream stream(m_rawRequest);
+
+	std::string startLine;
+	std::getline(stream, startLine);
+
+	std::istringstream startLineStream(startLine);
+	startLineStream >> m_method >> m_path >> m_version;
 }
 
 
