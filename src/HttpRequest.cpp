@@ -1,5 +1,10 @@
 #include "HttpRequest.hpp"
 
+HttpRequest::HttpRequest(void)
+{
+    return ;
+}
+
 HttpRequest::HttpRequest(const HttpMessage &message) : HttpMessage(message)
 {
 	std::istringstream stream(getRawRequest());

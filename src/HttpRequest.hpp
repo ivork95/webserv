@@ -15,7 +15,7 @@ class HttpRequest : public HttpMessage
 {
 	public:
 
-		HttpRequest();
+		HttpRequest(void);
 		HttpRequest(const HttpMessage &message);
 		~HttpRequest(void);
 
