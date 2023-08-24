@@ -2,17 +2,19 @@ VPATH		:= src
 NAME		:= webserv
 CXXFLAGS	?= -Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
-OBJECTS		:=	obj/main.o \
-				obj/Client.o \
+OBJECTS		:=	obj/Client.o \
+				obj/HttpMessage.o \
+				obj/HttpRequest.o \
+				obj/main.o \
 				obj/MultiplexerIO.o \
-				obj/TcpServer.o \
 				obj/Socket.o \
-				obj/HttpMessage.o
-HEADERS		:=	TcpServer.hpp \
-				Client.hpp \
+				obj/TcpServer.o
+HEADERS		:=	Client.hpp \
+				HttpMessage.hpp \
+				HttpRequest.hpp \
 				MultiplexerIO.hpp \
 				Socket.hpp \
-				HttpMessage.hpp
+				TcpServer.hpp
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
 
