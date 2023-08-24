@@ -35,7 +35,7 @@ fclean : clean
 
 re : fclean all
 
-docker-pwd:
+docker-pwd-val:
 	docker run \
 	-p 12345:12345 \
 	--name $(CONTAINER) \
@@ -50,7 +50,7 @@ docker-pwd:
 	-e LDFLAGS="-g -fsanitize=address -fsanitize=leak" \
 	$(IMAGE) sh -c "cd /pwd; bash"
 
-docker-pwd-val:
+docker-pwd:
 	docker run \
 	-p 12345:12345 \
 	--name $(CONTAINER) \

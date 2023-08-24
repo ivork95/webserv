@@ -9,6 +9,7 @@ TcpServer::TcpServer(const char *port)
     struct addrinfo *p{};
 
     // Get us a socket and bind it
+    std::memset(&m_hints, 0, sizeof(m_hints));
     m_hints.ai_family = AF_UNSPEC;
     m_hints.ai_socktype = SOCK_STREAM;
     m_hints.ai_flags = AI_PASSIVE;
@@ -37,6 +38,25 @@ TcpServer::TcpServer(const char *port)
 
         break;
     }
+
+    // get the pointer to the address itself,
+    // different fields in IPv4 and IPv6:
+    if (p->ai_family == AF_INET)
+    { // IPv4
+        struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+        m_addr = &(ipv4->sin_addr);
+        m_ipver = "IPv4";
+        m_port = ntohs(ipv4->sin_port);
+    }
+    else
+    { // IPv6
+        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+        m_addr = &(ipv6->sin6_addr);
+        m_ipver = "IPv6";
+        m_port = ntohs(ipv6->sin6_port);
+    }
+    // convert the IP to a string and print it:
+    inet_ntop(p->ai_family, m_addr, m_ipstr, sizeof m_ipstr);
 
     freeaddrinfo(ai); // All done with this
 
@@ -70,8 +90,7 @@ TcpServer::~TcpServer(void)
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const TcpServer &tcpserver)
 {
-    (void)tcpserver;
-    out << "TcpServer(" << ')';
+    out << "TcpServer(" << tcpserver.m_socketFd << ": " << tcpserver.m_ipver << ": " << tcpserver.m_ipstr << ": " << tcpserver.m_port << ")";
 
     return out;
 }

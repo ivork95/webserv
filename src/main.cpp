@@ -34,23 +34,24 @@ void do_use_fd(Socket *ePollDataPtr, MultiplexerIO &serverio)
     {
         std::cout << "nbytes = " << nbytes << '\n';
         HttpMessage message(buf);
-        std::cout << "\n\nBUF:\n" << buf << "\n###\n\n";
+        std::cout << "\n\nBUF:\n"
+                  << buf << "\n###\n\n";
         c->requestMessage += message;
         if (!c->requestMessage.isComplete())
         {
             std::cout << "Message not complete...\n\n";
-            return ;
+            return;
         }
-        std::cout << "Mission completed!!!\n\n" << std::endl; 
+        std::cout << "Mission completed!!!\n\n"
+                  << std::endl;
         std::cout << "\n\n|" << c->requestMessage.getRawRequest() << "|\n\n";
         if (c->requestMessage.isValidHttpMessage())
         {
             HttpRequest httpRequest{c->requestMessage};
             std::cout << "HttpMessage is valid\n\n";
             std::cout << httpRequest << std::endl;
-            return ;
+            return;
         }
-
     }
 }
 
