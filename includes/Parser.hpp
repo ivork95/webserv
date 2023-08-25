@@ -15,26 +15,36 @@
 #include <stack>
 
 class Parser {
+	private:
+		void _identifyDirectives(Server *server, std::vector<Token> tokens);
+		void _parseListen(Server *server, std::vector<Token> tokens, size_t *i);
+		void _parseServerName(Server *server, std::vector<Token> tokens, size_t *i);
+		void _parseErrorPage(Server *server, std::vector<Token> tokens, size_t *i);
+		void _parseClientSize(Server *server, std::vector<Token> tokens, size_t *i);
+		void _parseLocation(Server *server, std::vector<Token> tokens, size_t *i);
+		void _parseDirective(Server *server, std::vector<Token> tokens, size_t *i);
+
 	public:
-		Parser();
+		Parser(void);
 		~Parser(void);
+
 
 		static Server	parseTokens(Server server);
 
-	private:
-		static void _identifyDirectives(Server *server, std::vector<Token> tokens);
-		static void _parseListen(Server *server, std::vector<Token> tokens, size_t *i);
-		static void _parseServerName(Server *server, std::vector<Token> tokens, size_t *i);
-		static void _parseErrorPage(Server *server, std::vector<Token> tokens, size_t *i);
-		static void _parseClientSize(Server *server, std::vector<Token> tokens, size_t *i);
-		static void _parseLocation(Server *server, std::vector<Token> tokens, size_t *i);
+		class InvalidTokenException : public std::exception {
+			public:
+				char const* what() const throw() {
+					return "Invalid token: ";
+				}
+		};
 
-	class InvalidTokenException : public std::exception {
-		public:
-			char const *what() const throw() {
-				return ("Invalid token");
-			}
-	};
+		class ExpectedWordTokenException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + "Expected word token";
+					return message.c_str();
+				}
+		};
 };
 
 #endif

@@ -9,7 +9,7 @@ Token::Token(Token::ETokenType &type) : _type(type), _word("") {
 }
 
 // TODO change NA to word
-Token::Token(std::string &word) : _type(Token::NA), _word(word) {
+Token::Token(std::string &word) : _type(Token::WORD), _word(word) {
 	// std::cout << "Token word constructor called\n";
 }
 
@@ -34,7 +34,7 @@ std::string Token::_getWord(void) const {
 void	Token::printTokens(std::vector<Token> *tokens) {
 	std::cout << "Tokens:\n";
 	for (std::vector<Token>::iterator it = tokens->begin(); it != tokens->end(); it++) {
-		if (it->_getType() != Token::NA)
+		if (it->_getType() != Token::WORD)
 			std::cout << "\ttype: " << it->_getType() << std::endl;
 		else
 			std::cout << "\tword: " << it->_getWord() << std::endl;

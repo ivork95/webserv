@@ -1,12 +1,9 @@
 #ifndef LEXER_HPP
 #define LEXER_HPP
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-
 #include "Token.hpp"
 #include "Configuration.hpp"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
