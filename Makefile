@@ -8,7 +8,8 @@ OBJECTS		:=	obj/main.o \
 				obj/TcpServer.o \
 				obj/Socket.o \
 				obj/HttpMessage.o \
-				obj/HttpRequest.o
+				obj/HttpRequest.o \
+				obj/HttpResponse.o
 HEADERS		:=	TcpServer.hpp \
 				Client.hpp \
 				MultiplexerIO.hpp \
