@@ -7,12 +7,15 @@ OBJECTS		:=	obj/main.o \
 				obj/MultiplexerIO.o \
 				obj/TcpServer.o \
 				obj/Socket.o \
-				obj/HttpMessage.o
+				obj/HttpMessage.o \
+				obj/HttpRequest.o
 HEADERS		:=	TcpServer.hpp \
 				Client.hpp \
 				MultiplexerIO.hpp \
 				Socket.hpp \
-				HttpMessage.hpp
+				HttpMessage.hpp \
+				HttpRequest.hpp \
+				HttpResponse.hpp 
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
 
