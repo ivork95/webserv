@@ -1,10 +1,10 @@
 #include <csignal>
-#include "TcpServer.hpp"
-#include "Client.hpp"
-#include "MultiplexerIO.hpp"
-#include "HttpMessage.hpp"
-#include "HttpRequest.hpp"
-#include "HttpResponse.hpp"
+#include "../includes/TcpServer.hpp"
+#include "../includes/Client.hpp"
+#include "../includes/MultiplexerIO.hpp"
+#include "../includes/HttpMessage.hpp"
+#include "../includes/HttpRequest.hpp"
+#include "../includes/HttpResponse.hpp"
 #include <fstream>
 
 #define BUFSIZE 256

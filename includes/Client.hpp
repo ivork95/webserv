@@ -7,7 +7,7 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include "Socket.hpp"
-#include "HttpMessage.hpp"
+#include "../includes/HttpMessage.hpp"
 
 class Client : public Socket
 {

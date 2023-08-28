@@ -10,13 +10,13 @@ OBJECTS		:=	obj/main.o \
 				obj/HttpMessage.o \
 				obj/HttpRequest.o \
 				obj/HttpResponse.o
-HEADERS		:=	TcpServer.hpp \
-				Client.hpp \
-				MultiplexerIO.hpp \
-				Socket.hpp \
-				HttpMessage.hpp \
-				HttpRequest.hpp \
-				HttpResponse.hpp 
+HEADERS		:=	includes/TcpServer.hpp \
+				includes/Client.hpp \
+				includes/MultiplexerIO.hpp \
+				includes/Socket.hpp \
+				includes/HttpMessage.hpp \
+				includes/HttpRequest.hpp \
+				includes/HttpResponse.hpp 
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
 
