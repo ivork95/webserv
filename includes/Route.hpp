@@ -12,7 +12,7 @@ class Route {
 		Route(const std::string routePath);
 		~Route(void);
 
-		std::string 						routePath;			// location / 
+		std::string 						requestURI;			// location / 
 		std::string 						rootPath;			// root    files/html/Website
 		std::string							clientMaxBodySize;	// client_max_body_size 42k
 		bool								autoIndex;			// autoindex on/off

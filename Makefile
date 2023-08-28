@@ -89,6 +89,9 @@ docker-exec:
 test: all
 	./webserv config-files/valid/multiple-servers.conf
 
+run: all
+	./webserv config-files/valid/complexe-server.conf
+
 db:
 	lldb webserv -- config-files/valid/multiple-servers.conf
 

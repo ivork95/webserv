@@ -2,14 +2,14 @@
 #include "Route.hpp"
 
 Route::Route(void) : \
-	routePath("N/A"), rootPath("N/A"), clientMaxBodySize("N/A"), \
-	autoIndex(false), indexFile{"N/A"}, cgiHandler{{"N/A","N/A"}}, httpMethods{"N/A"} {
+	requestURI("N/A"), rootPath("N/A"), clientMaxBodySize("N/A"), \
+	autoIndex(false), indexFile{"N/A"}, cgiHandler{}, httpMethods{"N/A"} {
 	// std::cout << "Route default constructor called\n";
 }
 
-Route::Route(const std::string routePath) : \
-	routePath(routePath), rootPath("N/A"), clientMaxBodySize("N/A"), \
-	autoIndex(false), indexFile{"N/A"}, cgiHandler{{"N/A","N/A"}}, httpMethods{"N/A"} {
+Route::Route(const std::string requestURI) : \
+	requestURI(requestURI), rootPath("N/A"), clientMaxBodySize("N/A"), \
+	autoIndex(false), indexFile{"N/A"}, cgiHandler{}, httpMethods{"N/A"} {
 	// std::cout << "Route parametric constructor called\n";
 	// printData(); // ? testing
 }
@@ -24,7 +24,7 @@ Route::~Route(void) {
 // TODO make printData virtual in all classes (see CPP modules)
 void	Route::printData(void) {
 	std::cout << "\tRoute:\n";
-	std::cout << "\t\troutePath: " << routePath << std::endl;
+	std::cout << "\t\trequestURI: " << requestURI << std::endl;
 	std::cout << "\t\trootPath: " << rootPath << std::endl;
 	std::cout << "\t\tclientMaxBodySize: " << clientMaxBodySize << std::endl;
 	std::cout << "\t\tautoIndex: " << autoIndex << std::endl;

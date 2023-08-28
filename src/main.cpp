@@ -48,7 +48,12 @@ int main(int argc, char *argv[])
 	if (argc != 2) {
         throw std::runtime_error("Usage: ./webserv <config_file>\n\n\n");
 	}
-	initConfig(argv[1]);
+	try {
+		initConfig(argv[1]);
+	} catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		return 1;
+	}
 	return 0;
 
     ServerIO serverio{};

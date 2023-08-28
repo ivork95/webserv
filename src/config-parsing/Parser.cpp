@@ -12,6 +12,8 @@ Parser::~Parser(void) {
 	// std::cout << "Parser destructor called\n";
 }
 
+Logger logger("Parser");
+
 /**
  * Member functions
 */
@@ -19,79 +21,191 @@ static void	printCurrentToken(std::vector<Token> tokens, size_t i) {
 	std::cout << "[" << i << "] " << tokens.at(i)._getWord() << " | " << tokens.at(i)._getType() << std::endl;
 }
 
-void	Parser::_parseLocation(Server *server, std::vector<Token> tokens, size_t *i) {
-	if (tokens.at(*i + 1)._getType() == Token::WORD) {
-		size_t		j = *i + 1;
-		std::string	routePath = tokens.at(j)._getWord();
-		Route 		route(routePath);
-		j += 2; // skip opening brace
-		while (tokens.at(j)._getType() != Token::CLOSE_BRACE) {
-			if (tokens.at(j)._getWord() == "root") {
-				std::string rootPath = tokens.at(j + 1)._getWord();
-				route.rootPath = rootPath;
-			} else if (tokens.at(j)._getWord() == "client_max_body_size") {
-				std::string clientMaxBodySize = tokens.at(j + 1)._getWord();
-				route.clientMaxBodySize = clientMaxBodySize;
-			} else if (tokens.at(j)._getWord() == "autoindex") {
-				bool autoIndex = false;
-				if (tokens.at(j + 1)._getWord() == "off")
-					autoIndex = false;
-				else if (tokens.at(j + 1)._getWord() == "on")
-					autoIndex = true;
-				route.autoIndex = autoIndex;
-			} else if (tokens.at(j)._getWord() == "index") {
-				std::vector<std::string> indexFile;
-				while (tokens.at(j + 1)._getType() == Token::WORD && isHtmlExtension(tokens.at(j + 1)._getWord())) {
-					indexFile.push_back(tokens.at(j + 1)._getWord());
-					j++;
-				}
-				route.indexFile = indexFile;
-			} else if (tokens.at(j)._getWord() == "cgi") {
-				std::string cgiExtension;
-				std::string cgiPath;
-				std::map<std::string, std::string>	cgiHandler;
-				if (tokens.at(j + 1)._getWord()[0] == '.') {
-					cgiExtension = tokens.at(j + 1)._getWord();
-					j++;
-				}
-				if (tokens.at(j + 1)._getType() == Token::WORD) {
-					cgiPath = tokens.at(j + 1)._getWord();
-					j++;
-				}
-				route.cgiHandler[cgiExtension] = cgiPath;
-			} else if (tokens.at(j)._getWord() == "limit_except") {
-				std::vector<std::string> httpMethods;
-				while (tokens.at(j + 1)._getType() == Token::WORD && isHttpMethod(tokens.at(j + 1)._getWord())) {
-					httpMethods.push_back(tokens.at(j + 1)._getWord());
-					j++;
-				}
-				route.httpMethods = httpMethods;
-			} else if (tokens.at(j)._getWord() == "}") {
-				break;
+/**
+ * limit_except GET POST DELETE
+ * limit_except <method> (<method> ...)
+ * TODO error check method (can only be GET, POST, DELETE)
+*/
+void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, Route &route) {
+	// std::cout << "\tParsing limit_except directive\n";
+	if (tokens.at(*i)._getType() == Token::WORD) {
+		size_t						j = *i;
+		std::vector<std::string>	httpMethods;
+		while (tokens.at(j)._getType() == Token::WORD) {
+			if (isHttpMethod(tokens.at(j)._getWord())) {
+				httpMethods.push_back(tokens.at(j)._getWord());
+				j++;
 			} else {
-				// throw error
+				throw ExpectedHttpMethodTokenException();
 			}
-			j++;
 		}
-		server->routesConfig.push_back(route);
+		route.httpMethods = httpMethods;
 		(*i) = j;
 	} else {
 		// throw error
 	}
 }
 
-void	Parser::_parseClientSize(Server *server, std::vector<Token> tokens, size_t *i) {
-	if (tokens.at(*i + 1)._getType() == Token::WORD) {
-		server->clientMaxBodySize = tokens.at(*i + 1)._getWord();
-		(*i)++;
+/**
+ * cgi .php cgi-bin
+ * cgi <file_extension> <path_to_cgi>
+ * TODO 1. check file_extension (only file extensions ?)
+ * TODO 2. check path_to_cgi
+*/
+void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, Route &route) {
+	// std::cout << "\tParsing cgi directive\n";
+	if (tokens.at(*i)._getWord()[0] == '.') {
+		std::string cgiExtension = tokens.at(*i)._getWord();
+		if (tokens.at(*i + 1)._getType() == Token::WORD) {
+			(*i)++;
+			std::string cgiPath = tokens.at(*i)._getWord();
+			route.cgiHandler[cgiExtension] = cgiPath;
+		} else {
+			// throw error
+		}
 	} else {
 		// throw error
 	}
 }
 
+/**
+ * index index.html index.php
+ * index <file_name> (<file_name> ...)
+*/
+void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, Route &route) {
+	// std::cout << "\tParsing index directive\n";
+	if (tokens.at(*i)._getType() == Token::WORD) {
+		size_t j = *i;
+		std::vector<std::string> indexFile;
+		while (tokens.at(j)._getType() == Token::WORD && isHtmlExtension(tokens.at(j)._getWord())) {
+			indexFile.push_back(tokens.at(j)._getWord());
+			j++;
+		}
+		route.indexFile = indexFile;
+		(*i) = j;
+	} else {
+		// throw error
+	}
+}
+
+/**
+ * autoindex on
+ * autoindex <on/off>
+*/
+void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, Route &route) {
+	// std::cout << "\tParsing autoindex directive\n";
+	if (tokens.at(*i)._getType() == Token::WORD) {
+		bool autoIndex = false;
+		if (tokens.at(*i)._getWord() == "off")
+			autoIndex = false;
+		else if (tokens.at(*i)._getWord() == "on")
+			autoIndex = true;
+		route.autoIndex = autoIndex;
+	} else {
+		// throw error
+	}
+}
+
+/**
+ * client_max_body_size 1m
+ * client_max_body_size <size>
+*/
+void	Parser::_parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, Route &route) {
+	// std::cout << "\tParsing client_max_body_size directive\n";
+	if (tokens.at(*i)._getType() == Token::WORD) {
+		route.clientMaxBodySize = tokens.at(*i)._getWord();
+	} else {
+		// throw error
+	}
+}
+
+/**
+ * root /var/www/html
+ * root <path_to_root>
+*/
+void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, Route &route) {
+	// std::cout << "\tParsing root directive\n";
+	if (tokens.at(*i)._getType() == Token::WORD) {
+		route.rootPath = tokens.at(*i)._getWord();
+	} else {
+		// throw error
+	}
+}
+
+/**
+ * location / {
+ *     root /var/www/html;
+ *     index index.html index.php;
+ *     autoindex on;
+ *     cgi .php cgi-bin;
+ *     limit_except GET POST;
+ * }
+ * location <requestURI> { ... }
+*/
+void Parser::_parseLocationBlock(Server *server, std::vector<Token> tokens, size_t *i) {
+	// std::cout << "Parsing location block\n";
+    if (tokens.at(*i)._getType() == Token::WORD) {
+        size_t j = *i;
+        std::string requestURI = tokens.at(j)._getWord();
+        Route route(requestURI);
+        j += 2; // skip opening brace
+
+		void (Parser::*pf_blockDirective[6])(std::vector<Token> tokens, size_t *j, Route &route) = {
+			&Parser::_parseRoot, 
+			&Parser::_parseClientMaxBodySize, 
+			&Parser::_parseAutoIndex, 
+			&Parser::_parseIndex, 
+			&Parser::_parseCgi,
+			&Parser::_parseLimitExcept
+		};
+		std::string directive[6] = {
+			"root", 
+			"client_max_body_size", 
+			"autoindex", 
+			"index", 
+			"cgi",
+			"limit_except"
+		};
+
+		while (tokens.at(j)._getType() != Token::CLOSE_BRACE) {
+			for (size_t n = 0; n < 6; n++) {
+				if (tokens.at(j)._getWord() == directive[n]) {
+					j++;
+					(this->*pf_blockDirective[n])(tokens, &j, route);
+					break;
+				}
+			}
+			j++;
+		}
+
+        server->routesConfig.push_back(route);
+        (*i) = j;
+    } else {
+        // throw error
+    }
+}
+
+/**
+ * client_max_body_size 1m
+ * client_max_body_size <size>
+*/
+void	Parser::_parseClientSize(Server *server, std::vector<Token> tokens, size_t *i) {
+	// std::cout << "Parsing client_max_body_size directive\n";
+	if (tokens.at(*i)._getType() == Token::WORD) {
+		server->clientMaxBodySize = tokens.at(*i)._getWord();
+	} else {
+		// throw error
+	}
+}
+
+/**
+ * error_page 404 files/html/Website/Error/404.html
+ * error_page <error_code (error_code ...)> <path_to_error_page>
+*/
 void	Parser::_parseErrorPage(Server *server, std::vector<Token> tokens, size_t *i) {
-	if (tokens.at(*i + 1)._getType() == Token::WORD) {
-		size_t						j = *i + 1;
+	// std::cout << "Parsing error_page directive\n";
+	if (tokens.at(*i)._getType() == Token::WORD) {
+		size_t						j = *i;
 		std::vector<std::string>	errorCodes;
 		while (tokens.at(j)._getType() == Token::WORD && isNumber(tokens.at(j)._getWord())) {
 			errorCodes.push_back(tokens.at(j)._getWord());
@@ -106,59 +220,76 @@ void	Parser::_parseErrorPage(Server *server, std::vector<Token> tokens, size_t *
 	}
 }
 
+/**
+ * server_name localhost
+ * server_name <server_name>
+*/
 void	Parser::_parseServerName(Server *server, std::vector<Token> tokens, size_t *i) {
-	if (tokens.at(*i + 1)._getType() == Token::WORD) {
-		server->serverName = tokens.at(*i + 1)._getWord();
-		(*i)++;
+	// std::cout << "Parsing server_name directive\n";
+	if (tokens.at(*i)._getType() == Token::WORD) {
+		server->serverName = tokens.at(*i)._getWord();
 	} else {
 		// throw error
 	}
 }
 
+/**
+ * listen 8080
+ * listen <port_number>
+*/
 void	Parser::_parseListen(Server *server, std::vector<Token> tokens, size_t *i) {
-	if (tokens.at(*i + 1)._getType() == Token::WORD) {
-		server->portNb = tokens.at(*i + 1)._getWord();
-		(*i)++;
+	// std::cout << "Parsing listen directive\n";
+	if (tokens.at(*i)._getType() == Token::WORD) {
+		server->portNb = tokens.at(*i)._getWord();
 	} else {
 		// Next token is not a word
 		throw ExpectedWordTokenException();
 	}
 }
 
+/**
+ * Given the current token, loop over the directives and call the appropriate function
+*/
 void	Parser::_parseDirective(Server *server, std::vector<Token> tokens, size_t *i) {
-	void (Parser::*pf[5])(Server *server, std::vector<Token> tokens, size_t *i) = {
+	void (Parser::*pf_simpleDirective[4])(Server *server, std::vector<Token> tokens, size_t *i) = {
 		&Parser::_parseListen, 
 		&Parser::_parseServerName, 
 		&Parser::_parseErrorPage, 
 		&Parser::_parseClientSize, 
-		&Parser::_parseLocation
 	};
-	std::string directive[5] = {
+	std::string simpleDirective[4] = {
 		"listen", 
 		"server_name", 
 		"error_page", 
 		"client_max_body_size", 
-		"location"
 	};
 
-	for (size_t j = 0; j < 5; j++) {
-		if (tokens.at(*i)._getWord() == directive[j]) {
-			(this->*pf[j])(server, tokens, i);
+	for (size_t n = 0; n < 4; n++) {
+		if (tokens.at(*i)._getWord() == simpleDirective[n]) {
+			(*i)++;
+			(this->*pf_simpleDirective[n])(server, tokens, i);
+			break;
+		} else if (tokens.at(*i)._getWord() == "location") {
+			(*i)++;
+			_parseLocationBlock(server, tokens, i);
 			break;
 		}
 	}
 }
 
+/**
+ * Loop over tokens and identify directives (listen, server_name, error_page, client_max_body_size, location)
+*/
 void	Parser::_identifyDirectives(Server *server, std::vector<Token> tokens) {
 	for (size_t i = 0; i < tokens.size(); i++) {
-		printCurrentToken(tokens, i);
+		// printCurrentToken(tokens, i); // ? testing
 		_parseDirective(server, tokens, &i);
 	}
 }
 
 Server Parser::parseTokens(Server server) {
 	Parser parser;
-	
+
 	// server.printData(); // ? testing
 
 	// Identify directives

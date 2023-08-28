@@ -26,8 +26,9 @@ Server::~Server(void) {
 */
 void	Server::printData(void) {
 	std::cout << "Server " << _index << ":\n";
-	std::cout << "\tport: " << portNb << std::endl;
+	std::cout << "\tportNb: " << portNb << std::endl;
 	std::cout << "\tserverName: " << serverName << std::endl;
+	std::cout << "\tclientBodySizeLimit: " << clientMaxBodySize << std::endl;
 	if (errorPages.size() == 0) {
 		std::cout << "\terrorPages: empty\n";
 	}
@@ -40,7 +41,6 @@ void	Server::printData(void) {
 	for (size_t i = 0; i < routesConfig.size(); ++i) {
 		routesConfig[i].printData();
 	}
-	std::cout << "\tclientBodySizeLimit: " << clientMaxBodySize << std::endl;
 	// std::cout << "\trawData: " << rawData << std::endl;
 	// std::cout << "\ttokens:\n";
 	// for (size_t i = 0; i < tokens.size(); ++i) {
