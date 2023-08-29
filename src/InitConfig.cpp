@@ -40,6 +40,7 @@ static int	createServers(Configuration *config) {
 
 static int	readFile(std::ifstream &configFile, Configuration *config) {
     config->serverSections = Lexer::splitServers(configFile);
+	// std::cout << "Number of servers: " << config->serverSections.size() << std::endl; // ? testing
 	if (config->serverSections.empty()) {
 		std::cerr << "Error: could not split sections" << std::endl;
 		return (1);

@@ -73,7 +73,15 @@ class Parser {
 		class InvalidConversionUnit : public InvalidTokenException {
 			public:
 				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Invalid conversion unit (only 'k/K' or 'm/M' or 'g/G')";
+					static std::string message = std::string(InvalidTokenException::what()) + "Invalid conversion unit (only 'k/K', 'm/M' or 'g/G')";
+					return message.c_str();
+				}
+		};
+
+		class InvalidClientMaxBodySizeValueException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + "Invalid client_max_body_size value (only integers)";
 					return message.c_str();
 				}
 		};

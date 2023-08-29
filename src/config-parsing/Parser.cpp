@@ -12,7 +12,7 @@ Parser::~Parser(void) {
 	// std::cout << "Parser destructor called\n";
 }
 
-Logger logger("Parser");
+// Logger logger("Parser");
 
 /**
  * Member functions
@@ -103,6 +103,9 @@ void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, Route &route)
 		else
 			throw InvalidAutoIndexValueException();
 		route.autoIndex = autoIndex;
+	} else if (tokens.at(*i)._getType() == Token::SEMICOLON) {
+		// set to default value (= off)
+		route.autoIndex = false;
 	} else {
 		// throw error
 	}
@@ -111,32 +114,38 @@ void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, Route &route)
 /**
  * client_max_body_size 1m
  * client_max_body_size <size> (where size is a number followed by k, m, or g)
- * TODO check that value is only digits followed by a single unit
- * TODO if value is set to 0
+ * TODO 1. check if size = 0
+ * TODO 2. check if size has a conversion unit, and that it is at the end
+ * TODO 3. convert size to bytes value
 */
 void	Parser::_parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, Route &route) {
 	// std::cout << "\tParsing client_max_body_size directive\n";
 	if (tokens.at(*i)._getType() == Token::WORD) {
-		std::string rawValue = tokens.at(*i)._getWord();
-		if (!hasConversionUnit(rawValue))
-			throw MissingConversionUnit();
-		std::string convertedValue;
-		for (size_t j = 0; j < rawValue.size(); j++) {
-			if (isdigit(rawValue[j]))
-				convertedValue += rawValue[j];
-			else if (rawValue[j] == 'k' || rawValue[j] == 'K')
+		const std::string rawValue = tokens.at(*i)._getWord();
+		if (rawValue == "0")
+			route.clientMaxBodySize = rawValue;
+		else if (!hasConversionUnit(rawValue))
+			throw InvalidConversionUnit();
+		else {
+			std::string convertedValue;
+			for (size_t j = 0; j < rawValue.size() - 1; j++) {
+				if (!isdigit(rawValue[j]))
+					throw InvalidClientMaxBodySizeValueException();
+				else
+					convertedValue += rawValue[j];
+			}
+			const size_t lastCharIndex = rawValue.size() - 1;
+			if (rawValue[lastCharIndex] == 'k' || rawValue[lastCharIndex] == 'K')
 				convertedValue += "000";
-			else if (rawValue[j] == 'm' || rawValue[j] == 'M')
+			else if (rawValue[lastCharIndex] == 'm' || rawValue[lastCharIndex] == 'M')
 				convertedValue += "000000";
-			else if (rawValue[j] == 'g' || rawValue[j] == 'G')
+			else if (rawValue[lastCharIndex] == 'g' || rawValue[lastCharIndex] == 'G')
 				convertedValue += "000000000";
-			else
-				throw ExpectedWordTokenException();
+			route.clientMaxBodySize = convertedValue;
 		}
-		// std::cout << "convertedValue: " << convertedValue << std::endl; // ? testing
-		route.clientMaxBodySize = convertedValue;
 	} else {
-		// throw error
+		// throw error? set to default value (= 1m || 1000000)?
+		route.clientMaxBodySize = "1000000";
 	}
 }
 
@@ -211,11 +220,35 @@ void Parser::_parseLocationBlock(Server *server, std::vector<Token> tokens, size
  * client_max_body_size <size>
 */
 void	Parser::_parseClientSize(Server *server, std::vector<Token> tokens, size_t *i) {
-	// std::cout << "Parsing client_max_body_size directive\n";
 	if (tokens.at(*i)._getType() == Token::WORD) {
-		server->clientMaxBodySize = tokens.at(*i)._getWord();
+		const std::string rawValue = tokens.at(*i)._getWord();
+		if (rawValue == "0")
+			server->clientMaxBodySize = rawValue;
+		else if (!hasConversionUnit(rawValue))
+			throw InvalidConversionUnit();
+		else {
+			// TODO make this a function
+			std::string convertedValue;
+			for (size_t j = 0; j < rawValue.size() - 1; j++) {
+				if (!isdigit(rawValue[j]))
+					throw InvalidClientMaxBodySizeValueException();
+				else
+					convertedValue += rawValue[j];
+			}
+			const size_t lastCharIndex = rawValue.size() - 1;
+			if (rawValue[lastCharIndex] == 'k' || rawValue[lastCharIndex] == 'K')
+				convertedValue += "000";
+			else if (rawValue[lastCharIndex] == 'm' || rawValue[lastCharIndex] == 'M')
+				convertedValue += "000000";
+			else if (rawValue[lastCharIndex] == 'g' || rawValue[lastCharIndex] == 'G')
+				convertedValue += "000000000";
+			server->clientMaxBodySize = convertedValue;
+		}
+	} else if (tokens.at(*i)._getType() == Token::SEMICOLON) {
+		throw ExpectedWordTokenException();
 	} else {
-		// throw error
+		// throw error? set to default value (= 1m || 1000000)?
+		server->clientMaxBodySize = "1000000";
 	}
 }
 
@@ -300,6 +333,8 @@ void	Parser::_parseDirective(Server *server, std::vector<Token> tokens, size_t *
 
 /**
  * Loop over tokens and identify directives (listen, server_name, error_page, client_max_body_size, location)
+ * ? should I init every directive to default values 
+ * ? in case they are not found in the config file ?
 */
 void	Parser::_identifyDirectives(Server *server, std::vector<Token> tokens) {
 	for (size_t i = 0; i < tokens.size(); i++) {
@@ -318,9 +353,7 @@ Server Parser::parseTokens(Server server) {
 
 	// server.printData(); // ? testing
 
-	// Validate directives
-
-	// Build config objects (data structures)
+	// TODO check for N/A directives and set to default values or error ?
 
 	return server;
 }

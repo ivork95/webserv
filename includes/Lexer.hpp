@@ -15,6 +15,9 @@
 #include <stack>
 
 class Lexer {
+	private:
+		static void					_splitLine(std::vector<Token> *tokens, std::string &line);
+
 	public:
 		Lexer();
 		~Lexer(void);
@@ -23,8 +26,13 @@ class Lexer {
 		static std::vector<Server>		createServers(Configuration *config);
 		static std::vector<Token>		tokenizeServer(const std::string &rawData);
 
-	private:
-		static void					_splitLine(std::vector<Token> *tokens, std::string &line);
+		class UnmatchedBracesException : public std::exception {
+			public:
+				char const* what() const throw() {
+					return "Unmatched braces";
+				}
+		};
+
 };
 
 #endif
