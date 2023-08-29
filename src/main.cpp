@@ -4,6 +4,7 @@
 #include "MultiplexerIO.hpp"
 #include "HttpMessage.hpp"
 #include "HttpRequest.hpp"
+#include "spdlog/spdlog.h"
 
 #define BUFSIZE 256
 
@@ -57,6 +58,8 @@ void do_use_fd(Socket *ePollDataPtr)
 
 int main(int argc, char *argv[])
 {
+    spdlog::info("Welcome to spdlog!");
+
     if (argc < 2)
         throw std::runtime_error("usage: webserv [port]\n\n\n");
 

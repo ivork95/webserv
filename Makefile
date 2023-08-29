@@ -1,4 +1,5 @@
-VPATH		:= src
+VPATH		:=	src:\
+				include
 NAME		:= webserv
 CXXFLAGS	?= -Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
@@ -17,15 +18,16 @@ HEADERS		:=	Client.hpp \
 				TcpServer.hpp
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
+LIBS		:= -I./include -I./spdlog/include
 
 all : $(NAME)
 
 $(NAME) : $(OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $^
+	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
 obj/%.o : %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(LIBS) -o $@ $<
 
 clean :
 	$(RM) -r obj
