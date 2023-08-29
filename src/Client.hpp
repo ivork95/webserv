@@ -16,6 +16,13 @@ public:
     {
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
+
+    // data only used to print info about socket
+    char m_ipstr[INET6_ADDRSTRLEN];
+    void *m_addr;
+    const char *m_ipver;
+    int m_port;
+
     HttpMessage requestMessage;
     // default constructor
     Client(void) = delete;
