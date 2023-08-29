@@ -1,0 +1,1 @@
+/usr/bin/clang++ -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf -O3 -DNDEBUG -g -gdwarf-4 -gstrict-dwarf CMakeFiles/example.dir/example.cpp.o -o example  ../libspdlog.a 
