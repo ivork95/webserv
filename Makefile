@@ -1,5 +1,6 @@
 VPATH		:= src
 NAME		:= webserv
+LIBS		:= -I./include -I./spdlog/include
 CXXFLAGS	?= -Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	obj/main.o \
@@ -10,24 +11,24 @@ OBJECTS		:=	obj/main.o \
 				obj/HttpMessage.o \
 				obj/HttpRequest.o \
 				obj/HttpResponse.o
-HEADERS		:=	includes/TcpServer.hpp \
-				includes/Client.hpp \
-				includes/MultiplexerIO.hpp \
-				includes/Socket.hpp \
-				includes/HttpMessage.hpp \
-				includes/HttpRequest.hpp \
-				includes/HttpResponse.hpp 
+HEADERS		:=	include/TcpServer.hpp \
+				include/Client.hpp \
+				include/MultiplexerIO.hpp \
+				include/Socket.hpp \
+				include/HttpMessage.hpp \
+				include/HttpRequest.hpp \
+				include/HttpResponse.hpp 
 CONTAINER	:= webserv-container
 IMAGE		:= ubuntu-c-plus
 
 all : $(NAME)
 
 $(NAME) : $(OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $^
+	$(CXX) $(LDFLAGS) $(LIBS) -o $@ $^
 
 obj/%.o : %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(LIBS) -o $@ $<
 
 clean :
 	$(RM) -r obj
