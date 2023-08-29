@@ -1,15 +1,15 @@
 #include "../include/HttpMessage.hpp"
 
 // constructor
-HttpMessage::HttpMessage( void )
+HttpMessage::HttpMessage(void)
 {
-    return ;
+    return;
 }
 
 HttpMessage::HttpMessage(const std::string &rawRequest)
 {
     m_rawRequest = rawRequest;
-    return ;
+    return;
 }
 
 HttpMessage::HttpMessage(const HttpMessage &src)
@@ -18,15 +18,15 @@ HttpMessage::HttpMessage(const HttpMessage &src)
     m_method = src.getMethod();
     m_version = src.getVersion();
     m_path = src.getPath();
-    return ;
+    return;
 }
 
-HttpMessage::~HttpMessage( void )
+HttpMessage::~HttpMessage(void)
 {
-    return ;
+    return;
 }
 
-HttpMessage& HttpMessage::operator+=(const HttpMessage& src)
+HttpMessage &HttpMessage::operator+=(const HttpMessage &src)
 {
     this->m_rawRequest += src.getRawRequest();
     return *this;
@@ -63,7 +63,7 @@ bool HttpMessage::isComplete(void)
     {
         contentLengthPos += 16;
         size_t contentLengthEnd = m_rawRequest.find("\r\n", contentLengthPos);
-        contentLengthValue = atoi(m_rawRequest.substr(contentLengthPos, contentLengthEnd - contentLengthPos).c_str());
+        contentLengthValue = atoi(m_rawRequest.substr(contentLengthPos, contentLengthEnd - contentLengthPos).c_str()); // check of hier wat safer for is
         if (contentLengthValue == 0)
         {
             std::cerr << "ERROR retreiving Content-Length value\n";
@@ -78,15 +78,14 @@ bool HttpMessage::isComplete(void)
 
 void HttpMessage::setStartLineValues(void)
 {
-	std::istringstream stream(m_rawRequest);
+    std::istringstream stream(m_rawRequest);
 
-	std::string startLine;
-	std::getline(stream, startLine);
+    std::string startLine;
+    std::getline(stream, startLine);
 
-	std::istringstream startLineStream(startLine);
-	startLineStream >> m_method >> m_path >> m_version;
+    std::istringstream startLineStream(startLine);
+    startLineStream >> m_method >> m_path >> m_version;
 }
-
 
 bool HttpMessage::isValidHttpMessage(void) const
 {
