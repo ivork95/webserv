@@ -1,4 +1,3 @@
-#include <spdlog/spdlog.h>
 #include <csignal>
 #include "../include/TcpServer.hpp"
 #include "../include/Client.hpp"
@@ -139,25 +138,23 @@ void do_use_fd(Socket *ePollDataPtr)
 
 int main(int argc, char *argv[])
 {
-    spdlog::info("Welcome to spdlog!");
-
     if (argc < 2)
         throw std::runtime_error("usage: webserv [port]\n\n\n");
 
-    MultiplexerIO serverio{};
+    MultiplexerIO multiplexerio{};
 
     for (int i{1}; i < argc; i++)
     {
         TcpServer *tcpserver = new TcpServer{argv[i]};
-        serverio.m_servers.push_back(tcpserver);
+        multiplexerio.m_servers.push_back(tcpserver);
     }
 
-    for (auto &server : serverio.m_servers)
-        serverio.addSocketToEpollFd(server);
+    for (auto &server : multiplexerio.m_servers)
+        multiplexerio.addSocketToEpollFd(server);
 
     while (true)
     {
-        int epollCount{epoll_wait(serverio.m_epollfd, serverio.m_events.data(), MAX_EVENTS, (3 * 60 * 1000))};
+        int epollCount{epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, (3 * 60 * 1000))};
         if (epollCount == -1)
         {
             std::perror("epoll_wait() failed");
@@ -166,24 +163,19 @@ int main(int argc, char *argv[])
 
         for (int i{0}; i < epollCount; i++) // Run through the existing connections looking for data to read
         {
-            bool isLoopBroken{false};
-            Socket *ePollDataPtr{static_cast<Socket *>(serverio.m_events.at(i).data.ptr)};
+            Socket *ePollDataPtr{static_cast<Socket *>(multiplexerio.m_events.at(i).data.ptr)};
 
             // Check if someone's ready to read
-            if (serverio.m_events.at(i).events & EPOLLIN) // We got one!!
+            if (multiplexerio.m_events.at(i).events & EPOLLIN) // We got one!!
             {
-                for (auto &server : serverio.m_servers)
+                if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr))
+                // If listener is ready to read, handle new connection
                 {
-                    if (ePollDataPtr->m_socketFd == server->m_socketFd) // If listener is ready to read, handle new connection
-                    {
-                        Client *clientsocket = new Client{server->m_socketFd};
-                        serverio.addSocketToEpollFd(clientsocket);
-                        server->m_clientSockets.push_back(clientsocket);
-                        isLoopBroken = true;
-                        break;
-                    }
+                    Client *clientsocket = new Client{server->m_socketFd};
+                    multiplexerio.addSocketToEpollFd(clientsocket);
+                    server->m_clientSockets.push_back(clientsocket);
                 }
-                if (!isLoopBroken) // If not the listener, we're just a regular client
+                else // If not the listener, we're just a regular client
                     do_use_fd(ePollDataPtr);
             }
         }
