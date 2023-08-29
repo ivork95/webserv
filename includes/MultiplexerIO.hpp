@@ -3,7 +3,7 @@
 
 #include <array>
 #include <sys/epoll.h>
-#include "../include/TcpServer.hpp"
+#include "../includes/TcpServer.hpp"
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
 
@@ -22,6 +22,7 @@ public:
 
     // member functions
     void addSocketToEpollFd(Socket *ptr);
+    void deleteSocketFromEpollFd(int socket);
 };
 
 #endif

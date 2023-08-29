@@ -7,13 +7,12 @@
 #include <unistd.h>
 #include <vector>
 #include <memory>
-#include "../include/Client.hpp"
+#include "../includes/Client.hpp"
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include "Socket.hpp"
-#include "cstring"
 
 class TcpServer : public Socket
 {
@@ -22,12 +21,6 @@ public:
     {
     };
     std::vector<Client *> m_clientSockets{};
-
-    // data only used to print info about socket
-    char m_ipstr[INET6_ADDRSTRLEN];
-    void *m_addr;
-    const char *m_ipver;
-    int m_port;
 
     // default constructor
     TcpServer(void) = delete;

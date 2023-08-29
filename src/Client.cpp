@@ -1,4 +1,4 @@
-#include "Client.hpp"
+#include "../include/Client.hpp"
 
 // serverSocket constructor
 Client::Client(int serverSocket)

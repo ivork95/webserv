@@ -1,4 +1,4 @@
-#include "HttpMessage.hpp"
+#include "../include/HttpMessage.hpp"
 
 // constructor
 HttpMessage::HttpMessage( void )
@@ -69,7 +69,7 @@ bool HttpMessage::isComplete(void)
             std::cerr << "ERROR retreiving Content-Length value\n";
             return false;
         }
-        if (contentLengthValue > contentLengthEnd - breakLinePos)
+        if (contentLengthValue > m_rawRequest.length() - (breakLinePos + 4))
             return false;
     }
     setStartLineValues();

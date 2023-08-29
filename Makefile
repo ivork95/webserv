@@ -6,6 +6,7 @@ LDFLAGS		?=
 OBJECTS		:=	obj/Client.o \
 				obj/HttpMessage.o \
 				obj/HttpRequest.o \
+				obj/HttpResponse.o \
 				obj/main.o \
 				obj/MultiplexerIO.o \
 				obj/Socket.o \
@@ -13,6 +14,7 @@ OBJECTS		:=	obj/Client.o \
 HEADERS		:=	Client.hpp \
 				HttpMessage.hpp \
 				HttpRequest.hpp \
+				HttpResponse.hpp \
 				MultiplexerIO.hpp \
 				Socket.hpp \
 				TcpServer.hpp
