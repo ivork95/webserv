@@ -61,6 +61,30 @@ class Parser {
 					return message.c_str();
 				}
 		};
+
+		class MissingConversionUnit : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + "Missing conversion unit (only 'k/K' or 'm/M' or 'g/G')";
+					return message.c_str();
+				}
+		};
+
+		class InvalidConversionUnit : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + "Invalid conversion unit (only 'k/K' or 'm/M' or 'g/G')";
+					return message.c_str();
+				}
+		};
+
+		class InvalidAutoIndexValueException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + "Invalid autoindex value (only 'on' or 'off')";
+					return message.c_str();
+				}
+		};
 };
 
 #endif

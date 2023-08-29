@@ -9,4 +9,6 @@ bool	isHtmlExtension(const std::string &str);
 
 bool	isHttpMethod(const std::string &str);
 
+bool	hasConversionUnit(const std::string &str);
+
 #endif

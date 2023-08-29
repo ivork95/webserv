@@ -100,6 +100,8 @@ void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, Route &route)
 			autoIndex = false;
 		else if (tokens.at(*i)._getWord() == "on")
 			autoIndex = true;
+		else
+			throw InvalidAutoIndexValueException();
 		route.autoIndex = autoIndex;
 	} else {
 		// throw error
@@ -108,12 +110,31 @@ void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, Route &route)
 
 /**
  * client_max_body_size 1m
- * client_max_body_size <size>
+ * client_max_body_size <size> (where size is a number followed by k, m, or g)
+ * TODO check that value is only digits followed by a single unit
+ * TODO if value is set to 0
 */
 void	Parser::_parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, Route &route) {
 	// std::cout << "\tParsing client_max_body_size directive\n";
 	if (tokens.at(*i)._getType() == Token::WORD) {
-		route.clientMaxBodySize = tokens.at(*i)._getWord();
+		std::string rawValue = tokens.at(*i)._getWord();
+		if (!hasConversionUnit(rawValue))
+			throw MissingConversionUnit();
+		std::string convertedValue;
+		for (size_t j = 0; j < rawValue.size(); j++) {
+			if (isdigit(rawValue[j]))
+				convertedValue += rawValue[j];
+			else if (rawValue[j] == 'k' || rawValue[j] == 'K')
+				convertedValue += "000";
+			else if (rawValue[j] == 'm' || rawValue[j] == 'M')
+				convertedValue += "000000";
+			else if (rawValue[j] == 'g' || rawValue[j] == 'G')
+				convertedValue += "000000000";
+			else
+				throw ExpectedWordTokenException();
+		}
+		// std::cout << "convertedValue: " << convertedValue << std::endl; // ? testing
+		route.clientMaxBodySize = convertedValue;
 	} else {
 		// throw error
 	}

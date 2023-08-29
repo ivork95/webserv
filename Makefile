@@ -18,6 +18,7 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/isNumber.o \
 				obj/utils/isHtmlExtension.o \
 				obj/utils/isHttpMethod.o \
+				obj/utils/hasConversionUnit.o \
 
 # HEADERS		:=	TcpServer.hpp \
 # 				ClientSocket.hpp \
