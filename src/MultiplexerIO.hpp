@@ -22,7 +22,6 @@ public:
 
     // member functions
     void addSocketToEpollFd(Socket *ptr);
-    void deleteSocketFromEpollFd(int socket);
 };
 
 #endif

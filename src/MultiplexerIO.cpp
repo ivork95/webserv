@@ -36,14 +36,3 @@ void MultiplexerIO::addSocketToEpollFd(Socket *ptr)
         throw std::runtime_error("Error: epoll_ctl() failed\n");
     }
 }
-
-void MultiplexerIO::deleteSocketFromEpollFd(int socket)
-{
-    if (epoll_ctl(m_epollfd, EPOLL_CTL_DEL, socket, NULL) == -1)
-    {
-        std::perror("epoll_ctl() failed");
-        throw std::runtime_error("Error: epoll_ctl() failed\n");
-    }
-
-    close(socket);
-}

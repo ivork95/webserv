@@ -7,7 +7,7 @@
 
 #define BUFSIZE 256
 
-void do_use_fd(Socket *ePollDataPtr, MultiplexerIO &serverio)
+void do_use_fd(Socket *ePollDataPtr)
 {
     Client *c{};
 
@@ -25,32 +25,33 @@ void do_use_fd(Socket *ePollDataPtr, MultiplexerIO &serverio)
     if (nbytes <= 0) // Got error or connection closed by client
     {
         if (nbytes == 0) // Connection closed
-            std::cout << "pollserver: socket " << ePollDataPtr->m_socketFd << " hung up\n";
+            std::cout << "socket " << *c << " hung up\n";
         else
             std::cerr << "Error: recv() failed\n";
-        serverio.deleteSocketFromEpollFd(ePollDataPtr->m_socketFd);
+        close(ePollDataPtr->m_socketFd);
     }
     else // We got some good data from a client
     {
         std::cout << "nbytes = " << nbytes << '\n';
         HttpMessage message(buf);
-        std::cout << "\n\nBUF:\n" << buf << "\n###\n\n";
+        std::cout << "\n\nBUF:\n"
+                  << buf << "\n###\n\n";
         c->requestMessage += message;
         if (!c->requestMessage.isComplete())
         {
             std::cout << "Message not complete...\n\n";
-            return ;
+            return;
         }
-        std::cout << "Mission completed!!!\n\n" << std::endl; 
+        std::cout << "Mission completed!!!\n\n"
+                  << std::endl;
         std::cout << "\n\n|" << c->requestMessage.getRawRequest() << "|\n\n";
         if (c->requestMessage.isValidHttpMessage())
         {
             HttpRequest httpRequest{c->requestMessage};
             std::cout << "HttpMessage is valid\n\n";
             std::cout << httpRequest << std::endl;
-            return ;
+            return;
         }
-
     }
 }
 
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
                     }
                 }
                 if (!isLoopBroken) // If not the listener, we're just a regular client
-                    do_use_fd(ePollDataPtr, serverio);
+                    do_use_fd(ePollDataPtr);
             }
         }
     }

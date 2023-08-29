@@ -1,21 +1,8 @@
 #include "Client.hpp"
 
-// Get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-    if (sa->sa_family == AF_INET)
-    {
-        return &(((struct sockaddr_in *)sa)->sin_addr);
-    }
-
-    return &(((struct sockaddr_in6 *)sa)->sin6_addr);
-}
-
 // serverSocket constructor
 Client::Client(int serverSocket)
 {
-    char remoteIP[INET6_ADDRSTRLEN];
-
     m_socketFd = accept(serverSocket, (struct sockaddr *)&m_remoteaddr, &m_addrlen);
     if (m_socketFd == -1)
     {
@@ -25,7 +12,26 @@ Client::Client(int serverSocket)
 
     setNonBlocking();
 
-    std::cout << "pollserver: new connection from " << inet_ntop(m_remoteaddr.ss_family, get_in_addr((struct sockaddr *)&m_remoteaddr), remoteIP, INET6_ADDRSTRLEN) << " on socket " << m_socketFd << '\n';
+    // different fields in IPv4 and IPv6:
+    if (m_remoteaddr.ss_family == AF_INET)
+    { // IPv4
+        struct sockaddr_in *ipv4 = (struct sockaddr_in *)&m_remoteaddr;
+        m_addr = &(ipv4->sin_addr);
+        m_ipver = "IPv4";
+        m_port = ntohs(ipv4->sin_port);
+        // inet_ntop(AF_INET, &ipv4->sin_addr, remoteIP, sizeof remoteIP);
+    }
+    else
+    { // IPv6
+        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)&m_remoteaddr;
+        m_addr = &(ipv6->sin6_addr);
+        m_ipver = "IPv6";
+        m_port = ntohs(ipv6->sin6_port);
+    }
+    // convert the IP to a string and print it:
+    inet_ntop(m_remoteaddr.ss_family, m_addr, m_ipstr, sizeof m_ipstr);
+
+    std::cout << *this << " serverSocket constructor called\n";
 }
 
 // destructor
@@ -37,10 +43,9 @@ Client::~Client(void)
 }
 
 // outstream operator overload
-std::ostream &operator<<(std::ostream &out, const Client &clientsocket)
+std::ostream &operator<<(std::ostream &out, const Client &client)
 {
-    (void)clientsocket;
-    out << "Client(" << ')';
+    out << "Client(" << client.m_socketFd << ": " << client.m_ipver << ": " << client.m_ipstr << ": " << client.m_port << ")";
 
     return out;
 }
