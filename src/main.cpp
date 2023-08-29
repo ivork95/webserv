@@ -1,10 +1,11 @@
+#include <spdlog/spdlog.h>
 #include <csignal>
-#include "../includes/TcpServer.hpp"
-#include "../includes/Client.hpp"
-#include "../includes/MultiplexerIO.hpp"
-#include "../includes/HttpMessage.hpp"
-#include "../includes/HttpRequest.hpp"
-#include "../includes/HttpResponse.hpp"
+#include "../include/TcpServer.hpp"
+#include "../include/Client.hpp"
+#include "../include/MultiplexerIO.hpp"
+#include "../include/HttpMessage.hpp"
+#include "../include/HttpRequest.hpp"
+#include "../include/HttpResponse.hpp"
 #include <fstream>
 
 #define BUFSIZE 256
@@ -83,7 +84,6 @@ HttpResponse createResponse(HttpRequest request) {
     }
     return response;
 }
-
 
 void do_use_fd(Socket *ePollDataPtr, MultiplexerIO &serverio)
 {
