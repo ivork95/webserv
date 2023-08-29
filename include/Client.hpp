@@ -8,6 +8,8 @@
 #include <arpa/inet.h>
 #include "Socket.hpp"
 #include "../include/HttpMessage.hpp"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h> // must be included
 
 class Client : public Socket
 {

@@ -14,7 +14,8 @@
 #include <netdb.h>
 #include "Socket.hpp"
 #include "cstring"
-
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h> // must be included
 class TcpServer : public Socket
 {
 public:

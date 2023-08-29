@@ -31,13 +31,13 @@ Client::Client(int serverSocket)
     // convert the IP to a string and print it:
     inet_ntop(m_remoteaddr.ss_family, m_addr, m_ipstr, sizeof m_ipstr);
 
-    std::cout << *this << " serverSocket constructor called\n";
+    spdlog::info("{0} constructor called", *this);
 }
 
 // destructor
 Client::~Client(void)
 {
-    std::cout << *this << " destructor called\n";
+    spdlog::info("{0} destructor called", *this);
 
     close(m_socketFd);
 }
