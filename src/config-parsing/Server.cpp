@@ -3,16 +3,26 @@
 
 /**
  * Constructors / destructors
+ * TODO set default values ?
+ * 	listen: *:80 | *:8000;
+ * 	server_name: "";
+ * 	client_max_body_size: 1M;
+ * 	error_page: -;
+ * 	location: -;
+ * 		root: html;
+ * 		index: index.html;
+ * 		client_max_body_size: 1M;
+ *      limit_except: -;
 */
 Server::Server(void) : \
-	_index(0), portNb("N/A"), serverName("N/A"), errorPages(), \
-	routesConfig(), clientMaxBodySize("N/A"), rawData("N/A") {
+	_index(0), portNb("N/A"), serverName("N/A"), clientMaxBodySize("N/A"), \
+	errorPages(), routesConfig(), rawData("N/A") {
 	// std::cout << "Server default constructor called\n";
 }
 
 Server::Server(unsigned int index, std::string rawData) : \
-	_index(index), portNb("N/A"), serverName("N/A"), errorPages(), \
-	routesConfig(), clientMaxBodySize("N/A"), rawData(rawData) {
+	_index(index), portNb("N/A"), serverName("N/A"), clientMaxBodySize("N/A"), \
+	errorPages(), routesConfig(), rawData(rawData) {
 	// std::cout << "Server parametric constructor called\n";
 	// printData(); // ? testing
 }

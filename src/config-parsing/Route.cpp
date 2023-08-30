@@ -1,6 +1,17 @@
 
 #include "Route.hpp"
 
+/**
+ * Constructors and destructor
+ * TODO set default values ?
+ * 	requestURI: /;
+ * 	root: html;
+ * 	client_max_body_size: 1M;
+ * 	autoindex: off;
+ * 	index: index.html;
+ *  cgi_handler: -; => ?
+ *  limit_except: -;
+ */
 Route::Route(void) : \
 	requestURI("N/A"), rootPath("N/A"), clientMaxBodySize("N/A"), \
 	autoIndex(false), indexFile{"N/A"}, cgiHandler{}, httpMethods{"N/A"} {

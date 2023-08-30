@@ -19,9 +19,9 @@ class Server {
 
 		std::string					portNb;				// listen  8080
 		std::string					serverName;			// server_name localhost
-		std::vector<ErrorPage>		errorPages;			// error_page 404 files/html/Website/Error/404.html
-		std::vector<Route>			routesConfig;		// location / { ... }, location /upload { ... }, location /test { ... }
 		std::string					clientMaxBodySize;	// client_max_body_size 10M
+		std::vector<ErrorPage>		errorPages;			// error_page 404 405 406 files/html/Website/Error/404.html
+		std::vector<Route>			routesConfig;		// location / { ... }, location /upload { ... }, location /test { ... }
 
 		std::string					rawData;
 		std::vector<Token>			tokens;

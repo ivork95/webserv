@@ -55,10 +55,10 @@ void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, Route &rout
 void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, Route &route) {
 	// std::cout << "\tParsing cgi directive\n";
 	if (tokens.at(*i)._getWord()[0] == '.') {
-		std::string cgiExtension = tokens.at(*i)._getWord();
+		const std::string cgiExtension = tokens.at(*i)._getWord();
 		if (tokens.at(*i + 1)._getType() == Token::WORD) {
 			(*i)++;
-			std::string cgiPath = tokens.at(*i)._getWord();
+			const std::string cgiPath = tokens.at(*i)._getWord();
 			route.cgiHandler[cgiExtension] = cgiPath;
 		} else {
 			// throw error
@@ -75,8 +75,8 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, Route &route) {
 void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, Route &route) {
 	// std::cout << "\tParsing index directive\n";
 	if (tokens.at(*i)._getType() == Token::WORD) {
-		size_t j = *i;
-		std::vector<std::string> indexFile;
+		size_t						j = *i;
+		std::vector<std::string>	indexFile;
 		while (tokens.at(j)._getType() == Token::WORD && isHtmlExtension(tokens.at(j)._getWord())) {
 			indexFile.push_back(tokens.at(j)._getWord());
 			j++;
@@ -95,14 +95,12 @@ void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, Route &route) {
 void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, Route &route) {
 	// std::cout << "\tParsing autoindex directive\n";
 	if (tokens.at(*i)._getType() == Token::WORD) {
-		bool autoIndex = false;
 		if (tokens.at(*i)._getWord() == "off")
-			autoIndex = false;
+			route.autoIndex = false;
 		else if (tokens.at(*i)._getWord() == "on")
-			autoIndex = true;
+			route.autoIndex = true;
 		else
 			throw InvalidAutoIndexValueException();
-		route.autoIndex = autoIndex;
 	} else if (tokens.at(*i)._getType() == Token::SEMICOLON) {
 		// set to default value (= off)
 		route.autoIndex = false;
@@ -175,9 +173,10 @@ void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, Route &route) {
 void Parser::_parseLocationBlock(Server *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing location block\n";
     if (tokens.at(*i)._getType() == Token::WORD) {
-        size_t j = *i;
-        std::string requestURI = tokens.at(j)._getWord();
-        Route route(requestURI);
+        size_t		j = *i;
+        std::string	requestURI = tokens.at(j)._getWord();
+        Route		route(requestURI);
+
         j += 2; // skip opening brace
 
 		void (Parser::*pf_blockDirective[6])(std::vector<Token> tokens, size_t *j, Route &route) = {
