@@ -43,13 +43,15 @@ void	Server::printData(void) {
 		std::cout << "\terrorPages: empty\n";
 	}
 	for (size_t i = 0; i < errorPages.size(); ++i) {
-		errorPages[i].printData();
+		// errorPages[i].printData();
+		std::cout << errorPages[i];
 	}
 	if (routesConfig.size() == 0) {
 		std::cout << "\troutesConfig: empty\n";
 	}
 	for (size_t i = 0; i < routesConfig.size(); ++i) {
-		routesConfig[i].printData();
+		// routesConfig[i].printData();
+		std::cout << routesConfig[i];
 	}
 	// std::cout << "\trawData: " << rawData << std::endl;
 	// std::cout << "\ttokens:\n";

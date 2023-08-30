@@ -6,15 +6,21 @@
 # include <vector>
 
 class ErrorPage {
+	private:
+		std::vector<std::string>	_errorCode;			// 404, 401, 403, 500
+		std::string 				_filePath;			// files/html/Website/Error/404.html
+
 	public:
 		ErrorPage(void);
-		ErrorPage(std::vector<std::string> errorCode, const std::string filePath);
+		ErrorPage(const std::vector<std::string> &errorCode, const std::string &filePath);
 		~ErrorPage(void);
 
-		std::vector<std::string>	errorCode;			// 404, 401, 403, 500
-		std::string 				filePath;			// files/html/Website/Error/404.html
+		std::vector<std::string>	getErrorCode(void) const;
+		std::string					getFilePath(void) const;
 
-		void						printData(void);
+		friend std::ostream			&operator << (std::ostream &out, const ErrorPage &errorPage);
+
+		// void						printData(void);
 };
 
 #endif
