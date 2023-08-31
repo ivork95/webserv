@@ -209,7 +209,7 @@ void Parser::_parseLocationBlock(ServerConfig *server, std::vector<Token> tokens
 			j++;
 		}
 
-		server->setRoutesConfig(route);
+		server->setLocationsConfig(route);
 		(*i) = j;
     } else {
         // throw error
@@ -268,7 +268,7 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 		}
 		std::string	filePath = tokens.at(j)._getWord();
 		ErrorPageConfig	errorPage(errorCodes, filePath);
-		server->setErrorPages(errorPage);
+		server->setErrorPagesConfig(errorPage);
 		(*i) = j;
 	} else {
 		// throw error

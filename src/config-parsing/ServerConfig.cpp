@@ -18,13 +18,13 @@
 */
 ServerConfig::ServerConfig(void) : \
 	_index(0), _portNb("N/A"), _serverName("N/A"), _clientMaxBodySize("N/A"), \
-	_errorPages(), _routesConfig(), _rawData("N/A") {
+	_errorPagesConfig(), _locationsConfig(), _rawData("N/A") {
 	// std::cout << "ServerConfig default constructor called\n";
 }
 
 ServerConfig::ServerConfig(unsigned int index, std::string rawData) : \
 	_index(index), _portNb("N/A"), _serverName("N/A"), _clientMaxBodySize("N/A"), \
-	_errorPages(), _routesConfig(), _rawData(rawData) {
+	_errorPagesConfig(), _locationsConfig(), _rawData(rawData) {
 	// std::cout << "ServerConfig parametric constructor called\n";
 }
 
@@ -51,12 +51,12 @@ const std::string &ServerConfig::getClientMaxBodySize(void) const {
 	return (_clientMaxBodySize);
 }
 
-const std::vector<ErrorPageConfig> &ServerConfig::getErrorPages(void) const {
-	return (_errorPages);
+const std::vector<ErrorPageConfig> &ServerConfig::getErrorPagesConfig(void) const {
+	return (_errorPagesConfig);
 }
 
-const std::vector<LocationConfig> &ServerConfig::getRoutesConfig(void) const {
-	return (_routesConfig);
+const std::vector<LocationConfig> &ServerConfig::getLocationsConfig(void) const {
+	return (_locationsConfig);
 }
 
 const std::string &ServerConfig::getRawData(void) const {
@@ -83,12 +83,12 @@ void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize) {
 	_clientMaxBodySize = clientMaxBodySize;
 }
 
-void ServerConfig::setErrorPages(const ErrorPageConfig &errorPages) {
-	_errorPages.push_back(errorPages);
+void ServerConfig::setErrorPagesConfig(const ErrorPageConfig &errorPages) {
+	_errorPagesConfig.push_back(errorPages);
 }
 
-void ServerConfig::setRoutesConfig(const LocationConfig &routeConfig) {
-	_routesConfig.push_back(routeConfig);
+void ServerConfig::setLocationsConfig(const LocationConfig &routeConfig) {
+	_locationsConfig.push_back(routeConfig);
 }
 
 void ServerConfig::setRawData(const std::string &rawData) {
@@ -108,19 +108,17 @@ std::ostream &operator << (std::ostream &out, const ServerConfig &server) {
 	out << "\tportNb: " << server.getPortNb() << std::endl;
 	out << "\tserverName: " << server.getServerName() << std::endl;
 	out << "\tclientBodySizeLimit: " << server.getClientMaxBodySize() << std::endl;
-	if (server.getErrorPages().size() == 0) {
+	if (server.getErrorPagesConfig().size() == 0) {
 		out << "\terrorPages: empty\n";
 	}
-	for (size_t i = 0; i < server.getErrorPages().size(); ++i) {
-		// server.getErrorPages()[i].printData();
-		out << server.getErrorPages()[i];
+	for (size_t i = 0; i < server.getErrorPagesConfig().size(); ++i) {
+		out << server.getErrorPagesConfig()[i];
 	}
-	if (server.getRoutesConfig().size() == 0) {
+	if (server.getLocationsConfig().size() == 0) {
 		out << "\tlocationConfig: empty\n";
 	}
-	for (size_t i = 0; i < server.getRoutesConfig().size(); ++i) {
-		// server.getRoutesConfig()[i].printData();
-		out << server.getRoutesConfig()[i];
+	for (size_t i = 0; i < server.getLocationsConfig().size(); ++i) {
+		out << server.getLocationsConfig()[i];
 	}
 	// out << "\trawData: " << server.getRawData() << std::endl;
 	// out << "\ttokens:\n";
