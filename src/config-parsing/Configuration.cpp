@@ -2,7 +2,7 @@
 #include "Configuration.hpp"
 
 /**
- * Constructors / destructors
+ * CONSTRUCTORS / DESTRUCTORS
 */
 Configuration::Configuration(void) : serversConfig(), serverSections() {
 	// std::cout << "Configuration default constructor called\n";
@@ -13,5 +13,5 @@ Configuration::~Configuration(void) {
 }
 
 /**
- * Member functions
+ * MEMBER FUNCTIONS
 */

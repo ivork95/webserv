@@ -2,7 +2,7 @@
 #include "ServerConfig.hpp"
 
 /**
- * Constructors / destructors
+ * CONSTRUCTORS / DESTRUCTORS
 */
 /**
  * TODO set default values ?
@@ -67,7 +67,7 @@ const std::vector<Token> &ServerConfig::getTokens(void) const {
 	return (_tokens);
 }
 
-void ServerConfig::setIndex(const unsigned int index) {
+void ServerConfig::setIndex(const unsigned int &index) {
 	_index = index;
 }
 
@@ -100,7 +100,7 @@ void ServerConfig::setTokens(const std::vector<Token> &tokens) {
 }
 
 /**
- * Operator overloads
+ * OPERATOR OVERLOADS
 */
 std::ostream &operator << (std::ostream &out, const ServerConfig &server) {
 	out << "=============================================================\n";
@@ -130,5 +130,5 @@ std::ostream &operator << (std::ostream &out, const ServerConfig &server) {
 }
 
 /**
- * Member functions
+ * MEMBER FUNCTIONS
 */

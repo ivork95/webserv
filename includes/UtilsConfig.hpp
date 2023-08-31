@@ -7,6 +7,8 @@ bool	isNumber(std::string str);
 
 bool	isHtmlExtension(const std::string &str);
 
+bool	isPhpExtension(const std::string &str);
+
 bool	isHttpMethod(const std::string &str);
 
 bool	hasConversionUnit(const std::string &str);

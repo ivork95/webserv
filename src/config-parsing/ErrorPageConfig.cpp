@@ -2,7 +2,7 @@
 #include "ErrorPageConfig.hpp"
 
 /**
- * Constructors / destructors
+ * CONSTRUCTORS / DESTRUCTORS
 */
 ErrorPageConfig::ErrorPageConfig(void) : _errorCode(), _filePath("N/A") {
 	// std::cout << "ErrorPageConfig default constructor called\n";
@@ -29,7 +29,7 @@ const std::string	&ErrorPageConfig::getFilePath(void) const {
 }
 
 /**
- * Operator overloads
+ * OPERATOR OVERLOADS
 */
 std::ostream	&operator << (std::ostream &out, const ErrorPageConfig &errorPage) {
 	out << "\nErrorPageConfig:\n";
@@ -43,5 +43,5 @@ std::ostream	&operator << (std::ostream &out, const ErrorPageConfig &errorPage) 
 }
 
 /**
- * Member functions
+ * MEMBER FUNCTIONS
 */

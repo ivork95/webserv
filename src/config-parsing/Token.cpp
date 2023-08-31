@@ -2,7 +2,7 @@
 #include "Token.hpp"
 
 /**
- * Constructors / destructors
+ * CONSTRUCTORS / DESTRUCTORS
 */
 Token::Token(Token::ETokenType &type) : _type(type), _word("") {
 	// std::cout << "Token type constructor called\n";
@@ -36,7 +36,7 @@ void	Token::setWord(const std::string &word) {
 }
 
 /**
- * Operator overloads
+ * OPERATOR OVERLOADS
 */
 std::ostream &operator << (std::ostream &out, const Token &token) {
 	if (token._getType() != Token::WORD)
@@ -47,7 +47,7 @@ std::ostream &operator << (std::ostream &out, const Token &token) {
 }
 
 /**
- * Member functions
+ * MEMBER FUNCTIONS
 */
 void	Token::printTokens(std::vector<Token> *tokens) {
 	std::cout << "Tokens:\n";

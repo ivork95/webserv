@@ -2,7 +2,7 @@
 #include "Lexer.hpp"
 
 /**
- * Constructors / destructors
+ * CONSTRUCTORS / DESTRUCTORS
 */
 Lexer::Lexer(void) {
 	// std::cout << "Lexer default constructor called\n";
@@ -17,7 +17,7 @@ static bool	isSpecialChar(char c) {
 }
 
 /**
- * Member functions
+ * MEMBER FUNCTIONS
 */
 void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 	std::string::iterator it = line.begin();
@@ -77,7 +77,7 @@ std::vector<Token> Lexer::tokenizeServer(const std::string &rawData) {
         _splitLine(&tokens, line);
     }
 
-    return tokens;
+    return (tokens);
 }
 
 std::vector<std::string> Lexer::splitServers(std::ifstream &configFile) {
@@ -107,7 +107,7 @@ std::vector<std::string> Lexer::splitServers(std::ifstream &configFile) {
 		std::cerr << "Error: unmatched braces" << std::endl;
 		return std::vector<std::string>();
 	}
-    return sections;
+    return (sections);
 }
 
 std::vector<ServerConfig>	Lexer::createServers(Configuration *config) {
@@ -121,5 +121,5 @@ std::vector<ServerConfig>	Lexer::createServers(Configuration *config) {
 		std::cerr << "Error: could not create servers" << std::endl;
 		return std::vector<ServerConfig>();
 	}
-	return servers;
+	return (servers);
 }

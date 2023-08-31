@@ -90,7 +90,7 @@ void LocationConfig::setHttpMethods(const std::vector<std::string> &httpMethods)
 }
 
 /**
- * Operator overloads
+ * OPERATOR OVERLOADS
 */
 std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
 	out << "\nLocationConfig:\n";
@@ -116,5 +116,5 @@ std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
 }
 
 /**
- * Member functions
+ * MEMBER FUNCTIONS
  */

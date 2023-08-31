@@ -36,7 +36,7 @@ class ServerConfig {
 		const std::string					&getRawData(void) const;
 		const std::vector<Token>			&getTokens(void) const;
 
-		void							setIndex(const unsigned int index);
+		void							setIndex(const unsigned int &index);
 		void							setPortNb(const std::string &portNb);
 		void							setServerName(const std::string &serverName);
 		void							setClientMaxBodySize(const std::string &clientMaxBodySize);

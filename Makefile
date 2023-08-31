@@ -15,7 +15,7 @@ OBJECTS		:=	obj/main.o \
 				obj/config-parsing/LocationConfig.o \
 				obj/config-parsing/ErrorPageConfig.o \
 				obj/utils/config/isNumber.o \
-				obj/utils/config/isHtmlExtension.o \
+				obj/utils/config/isSpecificExtension.o \
 				obj/utils/config/isHttpMethod.o \
 				obj/utils/config/hasConversionUnit.o \
 				obj/logger/Logger.o \

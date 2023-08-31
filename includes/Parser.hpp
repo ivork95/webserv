@@ -18,14 +18,13 @@ class Parser {
 	private:
 		void _identifyDirectives(ServerConfig *server, std::vector<Token> tokens);
 
-		void _parseDirective(ServerConfig *server, std::vector<Token> tokens, size_t *i);
-
+		void _parseServerContext(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseListen(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseClientSize(ServerConfig *server, std::vector<Token> tokens, size_t *i);
-		void _parseLocationBlock(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 
+		void _parseLocationContext(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &route);
 		void _parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, LocationConfig &route);
 		void _parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route);
@@ -42,7 +41,7 @@ class Parser {
 		class InvalidTokenException : public std::exception {
 			public:
 				char const* what() const throw() {
-					return "Invalid token: ";
+					return ("Invalid token: ");
 				}
 		};
 
@@ -50,7 +49,7 @@ class Parser {
 			public:
 				char const* what() const throw() {
 					static std::string message = std::string(InvalidTokenException::what()) + "Expected word token";
-					return message.c_str();
+					return (message.c_str());
 				}
 		};
 
@@ -58,23 +57,23 @@ class Parser {
 			public:
 				char const* what() const throw() {
 					static std::string message = std::string(InvalidTokenException::what()) + "Expected HTTP method token (only GET, POST or DELETE)";
-					return message.c_str();
+					return (message.c_str());
 				}
 		};
 
-		class MissingConversionUnit : public InvalidTokenException {
+		class MissingConversionUnitException : public InvalidTokenException {
 			public:
 				char const* what() const throw() {
 					static std::string message = std::string(InvalidTokenException::what()) + "Missing conversion unit (only 'k/K' or 'm/M' or 'g/G')";
-					return message.c_str();
+					return (message.c_str());
 				}
 		};
 
-		class InvalidConversionUnit : public InvalidTokenException {
+		class InvalidConversionUnitException : public InvalidTokenException {
 			public:
 				char const* what() const throw() {
 					static std::string message = std::string(InvalidTokenException::what()) + "Invalid conversion unit (only 'k/K', 'm/M' or 'g/G')";
-					return message.c_str();
+					return (message.c_str());
 				}
 		};
 
@@ -82,7 +81,7 @@ class Parser {
 			public:
 				char const* what() const throw() {
 					static std::string message = std::string(InvalidTokenException::what()) + "Invalid client_max_body_size value (only integers)";
-					return message.c_str();
+					return (message.c_str());
 				}
 		};
 
@@ -90,7 +89,40 @@ class Parser {
 			public:
 				char const* what() const throw() {
 					static std::string message = std::string(InvalidTokenException::what()) + "Invalid autoindex value (only 'on' or 'off')";
-					return message.c_str();
+					return (message.c_str());
+				}
+		};
+
+		class InvalidFileExtensionException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + "Invalid file extension (only '.html' or '.php')";
+					return (message.c_str());
+				}
+		};
+
+		class ExpectedFileExtensionException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + "Expected file extension (only '.py', '.php' or '.c')";
+					return (message.c_str());
+				}
+		};
+
+		class MissingFilePathException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + "Missing file path";
+					return (message.c_str());
+				}
+		};
+
+		class InvalidErrorCodeException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + \
+												"Invalid error code (only 400, 401, 403, 404, 405, 413, 500, 501, 505)";
+					return (message.c_str());
 				}
 		};
 };
