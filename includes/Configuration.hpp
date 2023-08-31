@@ -4,15 +4,15 @@
 #include <iostream>
 #include <vector>
 
-#include "Server.hpp"
-#include "Utils.hpp"
+#include "ServerConfig.hpp"
+#include "UtilsConfig.hpp"
 
 class Configuration {
 	public:
 		Configuration(void);
 		~Configuration(void);
 
-		std::vector<Server>			serversConfig;
+		std::vector<ServerConfig>	serversConfig;
 		std::vector<std::string>	serverSections;
 };
 

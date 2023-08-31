@@ -19,12 +19,12 @@ class Lexer {
 		static void					_splitLine(std::vector<Token> *tokens, std::string &line);
 
 	public:
-		Lexer();
+		Lexer(void);
 		~Lexer(void);
 		
-		static std::vector<std::string>	splitServers(std::ifstream &configFile);
-		static std::vector<Server>		createServers(Configuration *config);
-		static std::vector<Token>		tokenizeServer(const std::string &rawData);
+		static std::vector<std::string>		splitServers(std::ifstream &configFile);
+		static std::vector<ServerConfig>	createServers(Configuration *config);
+		static std::vector<Token>			tokenizeServer(const std::string &rawData);
 
 		class UnmatchedBracesException : public std::exception {
 			public:

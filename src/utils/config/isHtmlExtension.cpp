@@ -1,5 +1,5 @@
 
-#include "Utils.hpp"
+#include "UtilsConfig.hpp"
 
 bool isHtmlExtension(const std::string &str) {
 	std::string htmlExtension = ".html";

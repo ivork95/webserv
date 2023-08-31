@@ -16,28 +16,28 @@
 
 class Parser {
 	private:
-		void _identifyDirectives(Server *server, std::vector<Token> tokens);
+		void _identifyDirectives(ServerConfig *server, std::vector<Token> tokens);
 
-		void _parseDirective(Server *server, std::vector<Token> tokens, size_t *i);
+		void _parseDirective(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 
-		void _parseListen(Server *server, std::vector<Token> tokens, size_t *i);
-		void _parseServerName(Server *server, std::vector<Token> tokens, size_t *i);
-		void _parseErrorPage(Server *server, std::vector<Token> tokens, size_t *i);
-		void _parseClientSize(Server *server, std::vector<Token> tokens, size_t *i);
-		void _parseLocationBlock(Server *server, std::vector<Token> tokens, size_t *i);
+		void _parseListen(ServerConfig *server, std::vector<Token> tokens, size_t *i);
+		void _parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i);
+		void _parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i);
+		void _parseClientSize(ServerConfig *server, std::vector<Token> tokens, size_t *i);
+		void _parseLocationBlock(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 
-		void _parseRoot(std::vector<Token> tokens, size_t *i, Route &route);
-		void _parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, Route &route);
-		void _parseIndex(std::vector<Token> tokens, size_t *i, Route &route);
-		void _parseAutoIndex(std::vector<Token> tokens, size_t *i, Route &route);
-		void _parseCgi(std::vector<Token> tokens, size_t *i, Route &route);
-		void _parseLimitExcept(std::vector<Token> tokens, size_t *i, Route &route);
+		void _parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &route);
+		void _parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, LocationConfig &route);
+		void _parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route);
+		void _parseAutoIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route);
+		void _parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &route);
+		void _parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationConfig &route);
 
 	public:
 		Parser(void);
 		~Parser(void);
 
-		static Server	parseTokens(Server server);
+		static ServerConfig	parseTokens(ServerConfig server);
 
 		class InvalidTokenException : public std::exception {
 			public:

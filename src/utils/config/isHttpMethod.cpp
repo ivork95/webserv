@@ -1,5 +1,5 @@
 
-#include "Utils.hpp"
+#include "UtilsConfig.hpp"
 
 bool	isHttpMethod(const std::string &str) {
 	if (str == "GET" || str == "POST" || str == "DELETE")

@@ -23,13 +23,17 @@ class Token {
 
 		static void			printTokens(std::vector<Token> *tokens);
 
-		ETokenType	_type;
-		std::string	_word;
+		const Token::ETokenType	&_getType(void) const;
+		const std::string		&_getWord(void) const;
 
-		Token::ETokenType	_getType(void) const;
-		std::string			_getWord(void) const;
+		void					setType(const Token::ETokenType &type);
+		void					setWord(const std::string &word);
+
+		friend std::ostream		&operator << (std::ostream &out, const Token &token);
 
 	private:
+		ETokenType	_type;
+		std::string	_word;
 	
 };
 

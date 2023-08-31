@@ -6,7 +6,7 @@
 static int	parseTokens(Configuration *config) {
 	for (size_t i = 0; i < config->serversConfig.size(); ++i) {
 		config->serversConfig[i] = Parser::parseTokens(config->serversConfig[i]);
-		if (config->serversConfig[i].portNb.empty()) {
+		if (config->serversConfig[i].getPortNb().empty()) {
 			std::cerr << "Error: could not parse server " << i << std::endl;
 			return (1);
 		}
@@ -20,8 +20,9 @@ static int	parseTokens(Configuration *config) {
 
 static int	tokenizeServers(Configuration *config) {
 	for (size_t i = 0; i < config->serversConfig.size(); ++i) {
-		config->serversConfig[i].tokens = Lexer::tokenizeServer(config->serversConfig[i].rawData);
-		if (config->serversConfig[i].tokens.empty()) {
+		// config->serversConfig[i].tokens = Lexer::tokenizeServer(config->serversConfig[i].rawData);
+		config->serversConfig[i].setTokens(Lexer::tokenizeServer(config->serversConfig[i].getRawData()));
+		if (config->serversConfig[i].getTokens().empty()) {
 			std::cerr << "Error: could not tokenize server " << i << std::endl;
 			return (1);
 		}
@@ -85,7 +86,7 @@ int initConfig(const std::string &filePath) {
 		return (1);
 
 	for (size_t i = 0; i < config.serversConfig.size(); ++i) {
-		config.serversConfig[i].printData();
+		std::cout << config.serversConfig[i];
 	}
 
 	return (0);

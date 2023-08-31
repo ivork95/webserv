@@ -110,16 +110,16 @@ std::vector<std::string> Lexer::splitServers(std::ifstream &configFile) {
     return sections;
 }
 
-std::vector<Server>	Lexer::createServers(Configuration *config) {
-	std::vector<Server>	servers;
+std::vector<ServerConfig>	Lexer::createServers(Configuration *config) {
+	std::vector<ServerConfig>	servers;
 
 	for (size_t i = 0; i < config->serverSections.size(); ++i) {
-		Server server(i, config->serverSections[i]);
+		ServerConfig server(i, config->serverSections[i]);
 		servers.push_back(server);
 	}
 	if (servers.empty()) {
 		std::cerr << "Error: could not create servers" << std::endl;
-		return std::vector<Server>();
+		return std::vector<ServerConfig>();
 	}
 	return servers;
 }

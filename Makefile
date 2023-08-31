@@ -7,18 +7,18 @@ OBJECTS		:=	obj/main.o \
 				obj/ServerIO.o \
 				obj/TcpServer.o \
 				obj/InitConfig.o \
+				obj/config-parsing/Token.o \
 				obj/config-parsing/Lexer.o \
 				obj/config-parsing/Parser.o \
 				obj/config-parsing/Configuration.o \
-				obj/config-parsing/Token.o \
+				obj/config-parsing/ServerConfig.o \
+				obj/config-parsing/LocationConfig.o \
+				obj/config-parsing/ErrorPageConfig.o \
+				obj/utils/config/isNumber.o \
+				obj/utils/config/isHtmlExtension.o \
+				obj/utils/config/isHttpMethod.o \
+				obj/utils/config/hasConversionUnit.o \
 				obj/logger/Logger.o \
-				obj/config-parsing/Server.o \
-				obj/config-parsing/Route.o \
-				obj/config-parsing/ErrorPage.o \
-				obj/utils/isNumber.o \
-				obj/utils/isHtmlExtension.o \
-				obj/utils/isHttpMethod.o \
-				obj/utils/hasConversionUnit.o \
 
 # HEADERS		:=	TcpServer.hpp \
 # 				ClientSocket.hpp \

@@ -1,5 +1,5 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#ifndef UTILS_CONFIG_HPP
+#define UTILS_CONFIG_HPP
 
 # include <iostream>
 
