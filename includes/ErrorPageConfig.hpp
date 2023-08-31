@@ -18,7 +18,7 @@ class ErrorPageConfig {
 		const std::vector<std::string>	&getErrorCode(void) const;
 		const std::string				&getFilePath(void) const;
 
-		friend std::ostream			&operator << (std::ostream &out, const ErrorPageConfig &errorPage);
+		friend std::ostream				&operator << (std::ostream &out, const ErrorPageConfig &errorPage);
 };
 
 #endif
