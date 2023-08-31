@@ -210,6 +210,9 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
  * client_max_body_size 1m
  * client_max_body_size <size>
 */
+/**
+ * TODO valid size ? (only integers? max size?)
+*/
 void	Parser::_parseClientSize(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	const std::string rawValue = tokens.at(*i)._getWord();
 	if (rawValue == "0")
