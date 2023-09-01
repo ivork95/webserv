@@ -1,9 +1,9 @@
-#include "../include/Client.hpp"
+#include "Client.hpp"
 
 // serverSocket constructor
-Client::Client(int serverSocket)
+Client::Client(const TcpServer &server) : m_server(server)
 {
-    m_socketFd = accept(serverSocket, (struct sockaddr *)&m_remoteaddr, &m_addrlen);
+    m_socketFd = accept(m_server.m_socketFd, (struct sockaddr *)&m_remoteaddr, &m_addrlen);
     if (m_socketFd == -1)
     {
         std::perror("accept() failed");
@@ -19,7 +19,6 @@ Client::Client(int serverSocket)
         m_addr = &(ipv4->sin_addr);
         m_ipver = "IPv4";
         m_port = ntohs(ipv4->sin_port);
-        // inet_ntop(AF_INET, &ipv4->sin_addr, remoteIP, sizeof remoteIP);
     }
     else
     { // IPv6
