@@ -21,6 +21,7 @@ CONTAINER	:=	webserv-container
 IMAGE		:=	ubuntu-c-plus
 SPDLOGLIB	:=	./spdlog/build/libspdlog.a
 SPDLOGINCLUDE	:= -DSPDLOG_COMPILED_LIB -I./spdlog/include
+INCLUDE		:= -I./include
 
 all : $(NAME)
 
@@ -29,7 +30,7 @@ $(NAME) : $(OBJECTS)
 
 obj/%.o : %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	$(CXX) -c $(CXXFLAGS) $(SPDLOGINCLUDE) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(INCLUDE) $(SPDLOGINCLUDE) -o $@ $<
 
 clean :
 	$(RM) -r obj
@@ -80,8 +81,8 @@ docker-pwd:
 	--cap-add=SYS_PTRACE \
 	--security-opt seccomp=unconfined \
 	-e CXX="clang++" \
-	-e CXXFLAGS="-Wall -Wextra -std=c++20 -g" \
-	-e LDFLAGS="-g" \
+	-e CXXFLAGS="-Wall -Wextra -std=c++20" \
+	-e LDFLAGS= \
 	$(IMAGE) sh -c "cd /pwd; bash"
 
 docker-build:

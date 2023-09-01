@@ -1,4 +1,4 @@
-#include "../include/TcpServer.hpp"
+#include "TcpServer.hpp"
 
 // port constructor
 TcpServer::TcpServer(const char *port)

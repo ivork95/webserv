@@ -1,4 +1,4 @@
-#include "../include/HttpMessage.hpp"
+#include "HttpMessage.hpp"
 
 // constructor
 HttpMessage::HttpMessage(void)
