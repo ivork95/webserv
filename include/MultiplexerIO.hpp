@@ -3,7 +3,7 @@
 
 #include <array>
 #include <sys/epoll.h>
-#include "../include/TcpServer.hpp"
+#include "TcpServer.hpp"
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
 
@@ -11,7 +11,6 @@ class MultiplexerIO
 {
 public:
     int m_epollfd{};
-    std::vector<TcpServer *> m_servers{};
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
 
     // default constructor
