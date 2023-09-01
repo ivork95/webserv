@@ -20,3 +20,5 @@ This project is about writing your own HTTP server. You will be able to test it 
     - https://drive.google.com/file/d/0B3msld7qnNOhN1NXaFIwSFU2Mjg/view?resourcekey=0-ngY0neP78dxJKlFv0PJoDQ
 - Book on HTTP
     - https://www.manning.com/books/illustrated-guide-to-http?new=true&experiment=B
+- Better RFC
+    - https://httpwg.org
