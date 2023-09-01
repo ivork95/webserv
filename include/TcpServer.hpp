@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <vector>
 #include <memory>
-#include "../include/Client.hpp"
+#include "Client.hpp"
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -16,19 +16,13 @@
 #include "cstring"
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h> // must be included
+
 class TcpServer : public Socket
 {
 public:
     struct addrinfo m_hints
     {
     };
-    std::vector<Client *> m_clientSockets{};
-
-    // data only used to print info about socket
-    char m_ipstr[INET6_ADDRSTRLEN];
-    void *m_addr;
-    const char *m_ipver;
-    int m_port;
 
     // default constructor
     TcpServer(void) = delete;
