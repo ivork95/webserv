@@ -1,10 +1,9 @@
-#include "../include/MultiplexerIO.hpp"
-
+#include "MultiplexerIO.hpp"
 
 // default constructor
 MultiplexerIO::MultiplexerIO(void)
 {
-    std::cout << "MultiplexerIO default constructor called\n";
+    spdlog::info("MultiplexerIO default constructor called");
 
     m_epollfd = epoll_create(1);
     if (m_epollfd == -1)
@@ -17,7 +16,7 @@ MultiplexerIO::MultiplexerIO(void)
 // destructor
 MultiplexerIO::~MultiplexerIO(void)
 {
-    std::cout << "MultiplexerIO destructor called\n";
+    spdlog::info("MultiplexerIO destructor called");
 
     close(m_epollfd);
 }
