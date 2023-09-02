@@ -1,8 +1,8 @@
 
 #include "UtilsConfig.hpp"
 
-bool	isNumber(std::string str) {
-	for (std::string::iterator it = str.begin(); it != str.end(); it++) {
+bool	isNumber(const std::string &str) {
+	for (std::string::const_iterator it = str.begin(); it != str.end(); it++) {
 		if (!isdigit(*it))
 			return (false);
 	}

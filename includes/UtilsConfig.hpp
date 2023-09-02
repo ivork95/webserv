@@ -3,7 +3,7 @@
 
 # include <iostream>
 
-bool	isNumber(std::string str);
+bool	isNumber(const std::string &str);
 
 bool	isHtmlExtension(const std::string &str);
 
@@ -12,5 +12,9 @@ bool	isPhpExtension(const std::string &str);
 bool	isHttpMethod(const std::string &str);
 
 bool	hasConversionUnit(const std::string &str);
+
+bool	isValidErrorCode(const std::string &errorCode);
+
+bool	isValidPortNumber(const std::string &portNumber);
 
 #endif

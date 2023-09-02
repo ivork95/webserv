@@ -18,6 +18,8 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isSpecificExtension.o \
 				obj/utils/config/isHttpMethod.o \
 				obj/utils/config/hasConversionUnit.o \
+				obj/utils/config/isValidErrorCode.o \
+				obj/utils/config/isValidPortNumber.o \
 				obj/logger/Logger.o \
 
 # HEADERS		:=	TcpServer.hpp \

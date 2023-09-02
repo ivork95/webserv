@@ -125,6 +125,15 @@ class Parser {
 					return (message.c_str());
 				}
 		};
+
+		class InvalidPortNumberException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + \
+												"Invalid port number (range from 0 to 65535)";
+					return (message.c_str());
+				}
+		};
 };
 
 #endif

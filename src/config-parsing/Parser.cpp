@@ -235,13 +235,15 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 	// std::cout << "Parsing error_page directive\n";
 	size_t						j = *i;
 	std::vector<std::string>	errorCodes;
-	while (tokens.at(j)._getType() == Token::WORD) {
-		if (isNumber(tokens.at(j)._getWord())) { // TODO check if valid (// error code validity?)
+	while (tokens.at(j)._getType() == Token::WORD && isNumber(tokens.at(j)._getWord())) {
+		std::string	errorCode = tokens.at(j)._getWord();
+		// TODO check if valid (// error code validity?)
+		if (isValidErrorCode(errorCode)) {
 			errorCodes.push_back(tokens.at(j)._getWord());
-			j++;
 		} else {
-			throw InvalidErrorCodeException();
+			// throw InvalidErrorCodeException();
 		}
+		j++;
 	}
 	std::string		filePath = tokens.at(j)._getWord();
 	// TODO check if filePath is valid
@@ -271,7 +273,10 @@ void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, s
 */
 void	Parser::_parseListen(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing listen directive\n";
-	server->setPortNb(tokens.at(*i)._getWord());
+	std::string	portNumber = tokens.at(*i)._getWord();
+	if (!isValidPortNumber(portNumber))
+		throw InvalidPortNumberException();
+	server->setPortNb(portNumber);
 }
 
 /**
