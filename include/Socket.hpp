@@ -9,19 +9,19 @@
 class Socket
 {
 public:
-    int m_socketFd;
+    int m_socketFd{};
 
     // data only used to print info about socket
-    char m_ipstr[INET6_ADDRSTRLEN];
-    void *m_addr;
-    const char *m_ipver;
-    int m_port;
+    char m_ipstr[INET6_ADDRSTRLEN]{};
+    void *m_addr{};
+    const char *m_ipver{};
+    int m_port{};
 
+    // destructor
+    virtual ~Socket(void) = 0;
+
+    // member functions
     int setNonBlocking(void);
-    virtual ~Socket(void)
-    {
-        std::cout << "Socket destructor called\n";
-    }
 };
 
 #endif

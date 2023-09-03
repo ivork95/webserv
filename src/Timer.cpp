@@ -2,33 +2,38 @@
 
 Timer::Timer(Client *client) : m_client(client)
 {
-    // Set initial expiration to 2 seconds and interval to 1 second.
-    m_spec.it_value.tv_sec = 5;
+    m_spec.it_value.tv_sec = 180;
     m_spec.it_value.tv_nsec = 0;
     m_spec.it_interval.tv_sec = 0;
     m_spec.it_interval.tv_nsec = 0;
 
-    // Create a new timer object.
-    m_socketFd = timerfd_create(CLOCK_REALTIME, 0);
+    m_socketFd = timerfd_create(CLOCK_REALTIME, O_NONBLOCK);
     if (m_socketFd == -1)
     {
-        perror("timerfd_create");
-        exit(EXIT_FAILURE);
+        std::perror("timerfd_create() failed");
+        throw std::runtime_error("Error: timerfd_create() failed\n");
     }
 
-    // Set the timer.
     if (timerfd_settime(m_socketFd, 0, &m_spec, NULL) == -1)
     {
-        perror("timerfd_settime");
-        exit(EXIT_FAILURE);
+        std::perror("timerfd_settime failed");
+        throw std::runtime_error("Error: timerfd_settime failed\n");
     }
 
-    spdlog::info("Timer default constructor called");
+    spdlog::debug("{} constructor called", *this);
 }
 
 Timer::~Timer(void)
 {
-    spdlog::info("Timer destructor called");
+    spdlog::debug("{} destructor called", *this);
 
     close(m_socketFd);
+}
+
+// outstream operator overload
+std::ostream &operator<<(std::ostream &out, const Timer &timer)
+{
+    out << "Timer(" << timer.m_socketFd << ")";
+
+    return out;
 }

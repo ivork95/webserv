@@ -76,13 +76,13 @@ TcpServer::TcpServer(const char *port)
 
     setNonBlocking();
 
-    spdlog::info("{0} constructor called", *this);
+    spdlog::debug("{0} constructor called", *this);
 }
 
 // destructor
 TcpServer::~TcpServer(void)
 {
-    spdlog::info("{0} destructor called", *this);
+    spdlog::debug("{0} destructor called", *this);
 
     close(m_socketFd);
 }

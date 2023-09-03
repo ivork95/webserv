@@ -3,7 +3,7 @@
 // default constructor
 MultiplexerIO::MultiplexerIO(void)
 {
-    spdlog::info("{} default constructor called", *this);
+    spdlog::debug("{} default constructor called", *this);
 
     m_epollfd = epoll_create(1);
     if (m_epollfd == -1)
@@ -16,19 +16,20 @@ MultiplexerIO::MultiplexerIO(void)
 // destructor
 MultiplexerIO::~MultiplexerIO(void)
 {
-    spdlog::info("{} destructor called", *this);
+    spdlog::debug("{} destructor called", *this);
 
     close(m_epollfd);
 }
 
 // member functions
-void MultiplexerIO::addSocketToEpollFd(Socket *ptr)
+void MultiplexerIO::addSocketToEpollFd(Socket *ptr, int events)
 {
     struct epoll_event ev
     {
     };
     ev.data.ptr = ptr;
-    ev.events = EPOLLIN | EPOLLOUT;
+    // ev.events = EPOLLIN | EPOLLOUT;
+    ev.events = events;
 
     if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, ptr->m_socketFd, &ev) == -1)
     {

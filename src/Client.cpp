@@ -32,13 +32,13 @@ Client::Client(const TcpServer &server) : m_server(server)
 
     timer = new Timer{this};
 
-    spdlog::info("{0} constructor called", *this);
+    spdlog::debug("{0} constructor called", *this);
 }
 
 // destructor
 Client::~Client(void)
 {
-    spdlog::info("{0} destructor called", *this);
+    spdlog::debug("{0} destructor called", *this);
 
     close(m_socketFd);
     delete timer;

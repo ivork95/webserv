@@ -25,6 +25,9 @@ public:
 
     // destructor
     ~Timer(void);
+
+    // outstream operator overload
+    friend std::ostream &operator<<(std::ostream &out, const Timer &timer);
 };
 
 #endif

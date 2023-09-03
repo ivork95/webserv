@@ -3,7 +3,7 @@
 // default constructor
 HttpRequest::HttpRequest(void)
 {
-    spdlog::info("HttpRequest default constructor called");
+    spdlog::debug("HttpRequest default constructor called");
 }
 
 std::string HttpRequest::startLineParse(const std::string &rawMessage)

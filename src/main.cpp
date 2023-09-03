@@ -69,7 +69,7 @@ void run(int argc, char *argv[])
     MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
 
     for (auto &server : servers)
-        multiplexerio.addSocketToEpollFd(server);
+        multiplexerio.addSocketToEpollFd(server, EPOLLIN);
 
     while (true)
     {
@@ -99,17 +99,12 @@ void run(int argc, char *argv[])
                 // If listener is ready to read, handle new connection
                 {
                     Client *client = new Client{*server};
-                    multiplexerio.addSocketToEpollFd(client);
-                    // Timer *timer = new Timer;
-                    multiplexerio.addSocketToEpollFd(client->timer);
+                    multiplexerio.addSocketToEpollFd(client, EPOLLIN | EPOLLOUT);
+                    multiplexerio.addSocketToEpollFd(client->timer, EPOLLIN);
                 }
                 else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
-                    uint64_t exp{};
-
-                    // Read the timer value
-                    read(ePollDataPtr->m_socketFd, &exp, sizeof(uint64_t));
-                    spdlog::warn("Timer expired, count: {}", (unsigned long long)exp);
+                    spdlog::warn("Timeout expired. Closing: {}", *(timer->m_client));
                     delete timer->m_client;
                 }
                 else // If not the listener, we're just a regular client
@@ -121,6 +116,7 @@ void run(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+    spdlog::set_level(spdlog::level::debug);
     /* Catch-all handler
         try
         {

@@ -1,5 +1,10 @@
 #include "Socket.hpp"
 
+Socket::~Socket(void)
+{
+    std::cout << "Socket destructor called\n";
+}
+
 int Socket::setNonBlocking(void)
 {
     int result{};
