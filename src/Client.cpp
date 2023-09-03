@@ -30,6 +30,8 @@ Client::Client(const TcpServer &server) : m_server(server)
     // convert the IP to a string and print it:
     inet_ntop(m_remoteaddr.ss_family, m_addr, m_ipstr, sizeof m_ipstr);
 
+    timer = new Timer{this};
+
     spdlog::info("{0} constructor called", *this);
 }
 
@@ -39,6 +41,7 @@ Client::~Client(void)
     spdlog::info("{0} destructor called", *this);
 
     close(m_socketFd);
+    delete timer;
 }
 
 // outstream operator overload

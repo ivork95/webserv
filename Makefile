@@ -7,12 +7,14 @@ OBJECTS		:=	obj/Client.o \
 				obj/main.o \
 				obj/MultiplexerIO.o \
 				obj/Socket.o \
-				obj/TcpServer.o
+				obj/TcpServer.o \
+				obj/Timer.o
 HEADERS		:=	include/Client.hpp \
 				include/HttpRequest.hpp \
 				include/MultiplexerIO.hpp \
 				include/Socket.hpp \
-				include/TcpServer.hpp
+				include/TcpServer.hpp \
+				include/Timer.hpp
 CONTAINER	:=	webserv-container
 IMAGE		:=	ubuntu-c-plus
 SPDLOGLIB	:=	./spdlog/build/libspdlog.a

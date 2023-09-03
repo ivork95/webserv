@@ -12,8 +12,10 @@
 #include "Socket.hpp"
 #include "TcpServer.hpp"
 #include "HttpRequest.hpp"
+#include "Timer.hpp"
 
 class TcpServer;
+class Timer;
 
 class Client : public Socket
 {
@@ -25,6 +27,8 @@ public:
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
 
     HttpRequest httpRequest{};
+
+    Timer *timer{};
 
     // default constructor
     Client(void) = delete;

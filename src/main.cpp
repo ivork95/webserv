@@ -4,6 +4,7 @@
 #include "MultiplexerIO.hpp"
 #include "HttpRequest.hpp"
 #include <fstream>
+#include "Timer.hpp"
 
 #define BUFSIZE 256
 
@@ -12,6 +13,12 @@ void handleConnectedClient(Client *client)
     char buf[BUFSIZE + 1]{}; // Buffer for client data
 
     int nbytes = recv(client->m_socketFd, buf, BUFSIZE, 0);
+    if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
+    {
+        perror("timerfd_settime");
+        exit(EXIT_FAILURE);
+    }
+
     if (nbytes <= 0) // Got error or connection closed by client
     {
         if (nbytes == 0) // Connection closed
@@ -50,7 +57,6 @@ void handleConnectedClient(Client *client)
             spdlog::info("GET or OPTIONS method");
         }
     }
-    close(client->m_socketFd);
     delete client;
 }
 
@@ -91,8 +97,19 @@ void run(int argc, char *argv[])
                 if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr))
                 // If listener is ready to read, handle new connection
                 {
-                    Client *clientsocket = new Client{*server};
-                    multiplexerio.addSocketToEpollFd(clientsocket);
+                    Client *client = new Client{*server};
+                    multiplexerio.addSocketToEpollFd(client);
+                    // Timer *timer = new Timer;
+                    multiplexerio.addSocketToEpollFd(client->timer);
+                }
+                else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
+                {
+                    uint64_t exp{};
+
+                    // Read the timer value
+                    read(ePollDataPtr->m_socketFd, &exp, sizeof(uint64_t));
+                    spdlog::warn("Timer expired, count: {}", (unsigned long long)exp);
+                    delete timer->m_client;
                 }
                 else // If not the listener, we're just a regular client
                     handleConnectedClient(dynamic_cast<Client *>(ePollDataPtr));
