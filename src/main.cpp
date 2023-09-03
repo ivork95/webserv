@@ -2,89 +2,10 @@
 #include "TcpServer.hpp"
 #include "Client.hpp"
 #include "MultiplexerIO.hpp"
-#include "HttpMessage.hpp"
 #include "HttpRequest.hpp"
-#include "HttpResponse.hpp"
 #include <fstream>
 
 #define BUFSIZE 256
-
-// HttpResponse, misschien HttpResponse laten inheriten van HttpMessage?
-std::string createFilePath(std::string path)
-{
-    for (char c : path)
-    {
-        if (c != '/')
-            return ("./www" + path + ".html");
-    }
-
-    return ("./www/index.html");
-}
-
-void sendResponse(HttpResponse response, int fd)
-{
-    if (response.getStatusCode() == 0)
-    {
-        std::cerr << "Error: Couldn't send response, not a valid status code" << std::endl;
-        return;
-    }
-    std::string res{response.generateResponse()};
-    const void *dataPointer = static_cast<const void *>(res.c_str());
-    std::cout << "Response generated" << std::endl;
-    send(fd, dataPointer, res.length(), 0);
-}
-
-HttpResponse createResponse(HttpRequest request)
-{
-    HttpResponse response;
-
-    if (request.getMethod() == GET)
-    {
-        std::string path = createFilePath(request.getPath());
-        std::cout << "FILEPATH: " << path << "\n\n";
-        std::ifstream file(path);
-
-        if (!file.is_open())
-        {
-            file.open("./www/404.html");
-            if (!file.is_open())
-                throw std::runtime_error("Error: Could not open default error page");
-            response.setStatus(404, "Not Found");
-        }
-        else
-            response.setStatus(200, "OK");
-        response.setHtmlContent(file);
-        file.close();
-    }
-    else if (request.getMethod() == POST)
-    {
-        std::map<std::string, std::string> fileExtension =
-            {
-                {"text/plain", "txt"},
-                {"application/json", "json"},
-                {"image/png", "png"},
-                //  TODO add all file extensions
-                //  define in header
-            };
-        // read content type
-        auto it = request.getHeaders().find("Content-Type");
-        if (it == request.getHeaders().end())
-        {
-            std::cout << "Error finding file type" << std::endl;
-            // handle this error properly
-            return response;
-        }
-        std::cout << "\n\nCONTENT-TYPE: " << it->second << "\n\n";
-        std::cout << "\n\nPATH: " << request.getPath() << "\n\n";
-        std::string filePath = "/www" + request.getPath() + fileExtension[it->second];
-        std::ofstream outputFile(filePath, std::ios::out | std::ios::binary);
-        outputFile << request.getBody();
-        response.setStatus(200, "OK");
-        response.setHeader("Content-Type", "text/html");
-        response.setBody("Data saved!");
-    }
-    return response;
-}
 
 void handleConnectedClient(Client *client)
 {
@@ -103,59 +24,26 @@ void handleConnectedClient(Client *client)
         spdlog::info("nbytes = {}", nbytes);
         spdlog::info("buf = \n|{}|", buf);
 
-        client->m_rawMessage.append(buf);
-        spdlog::info("client->m_rawMessage = \n|{}|", client->m_rawMessage);
+        client->httpRequest.m_rawMessage.append(buf);
+        spdlog::info("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
 
-        size_t headersEndPos = client->m_rawMessage.find("\r\n\r\n");
-        if (headersEndPos == std::string::npos)
+        client->httpRequest.m_fieldLinesEndPos = client->httpRequest.m_rawMessage.find("\r\n\r\n");
+        if (client->httpRequest.m_fieldLinesEndPos == std::string::npos)
         {
             spdlog::warn("message incomplete [...]");
             return;
         }
 
-        if (client->m_method.empty())
+        if (client->httpRequest.m_method.empty())
         {
-            client->setMethodPathVersion(); // redo function with clear input and output
-            client->setHeaders();           // redo function with clear input and output
+            client->httpRequest.setMethodPathVersion();
+            client->httpRequest.setHeaders();
         }
 
-        if (!client->m_method.compare("POST"))
+        if (!client->httpRequest.m_method.compare("POST"))
         {
-            spdlog::info("POST method");
-
-            if (client->m_headers.find("Content-Length") == client->m_headers.end())
-            {
-                spdlog::warn("411 Length Required");
-                close(client->m_socketFd);
-                delete client;
-            }
-
-            if (!client->m_isStoiCalled)
-            {
-                spdlog::info("std::stoi()");
-                try
-                    client->setContentLength();
-                catch (...)
-                {
-                    spdlog::warn("400 Bad Request");
-                    close(client->m_socketFd);
-                    delete client;
-                }
-            }
-
-            if (client->m_contentLength > client->m_client_max_body_size)
-            {
-                spdlog::warn("413 Request Entity Too Large");
-                close(client->m_socketFd);
-                delete client;
-            }
-
-            if (client->m_contentLength > (client->m_rawMessage.length() - (headersEndPos + 4)))
-            {
-                spdlog::warn("Content-Length not reached [...]");
+            if (!client->httpRequest.postRequestHandle())
                 return;
-            }
-            spdlog::info("Content-Length reached!");
         }
         else
         {

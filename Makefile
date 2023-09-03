@@ -3,17 +3,13 @@ NAME		:=	webserv
 CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	obj/Client.o \
-				obj/HttpMessage.o \
 				obj/HttpRequest.o \
-				obj/HttpResponse.o \
 				obj/main.o \
 				obj/MultiplexerIO.o \
 				obj/Socket.o \
 				obj/TcpServer.o
 HEADERS		:=	include/Client.hpp \
-				include/HttpMessage.hpp \
 				include/HttpRequest.hpp \
-				include/HttpResponse.hpp \
 				include/MultiplexerIO.hpp \
 				include/Socket.hpp \
 				include/TcpServer.hpp
@@ -55,7 +51,7 @@ docker-pwd-san:
 	-e LDFLAGS="-g -fsanitize=address -fsanitize=leak" \
 	$(IMAGE) sh -c "cd /pwd; bash"
 
-docker-pwd-val:
+docker-pwd:
 	docker run \
 	-p 12345:12345 \
 	--name $(CONTAINER) \
@@ -70,25 +66,10 @@ docker-pwd-val:
 	-e LDFLAGS="-g -gdwarf-4 -gstrict-dwarf" \
 	$(IMAGE) sh -c "cd /pwd; bash"
 
-docker-pwd:
-	docker run \
-	-p 12345:12345 \
-	--name $(CONTAINER) \
-	-it \
-	--rm \
-	--init \
-	-v "$$PWD:/pwd" \
-	--cap-add=SYS_PTRACE \
-	--security-opt seccomp=unconfined \
-	-e CXX="clang++" \
-	-e CXXFLAGS="-Wall -Wextra -std=c++20" \
-	-e LDFLAGS= \
-	$(IMAGE) sh -c "cd /pwd; bash"
-
 docker-build:
 	docker build -t $(IMAGE) .
 
 docker-exec:
 	docker exec -it $(CONTAINER) sh -c "cd /pwd; bash"
 
-.PHONY	: clean fclean re docker-pwd-san docker-pwd-val docker-build docker-pwd
+.PHONY	: clean fclean re docker-pwd-san docker-pwd-val docker-build

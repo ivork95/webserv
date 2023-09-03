@@ -1,33 +1,41 @@
-#ifndef HTTP_REQUEST_HPP
-# define HTTP_REQUEST_HPP
+#ifndef HTTPREQUEST_HPP
+#define HTTPREQUEST_HPP
 
-# include <map>
-# include <string>
-# include <sstream>
-# include <iostream>
-# include "HttpMessage.hpp"
+#include <iostream>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <arpa/inet.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h> // must be included
+#include <map>
+#include <string>
+#include <sstream>
 
-# define GET "GET"
-# define POST "POST"
-# define DELETE "DELETE"
-
-class HttpRequest : public HttpMessage
+class HttpRequest
 {
-	public:
+public:
+    size_t m_fieldLinesEndPos{};
+    std::string m_rawMessage{};
+    std::string m_method{};
+    std::string m_path{};
+    std::string m_version{};
+    std::map<std::string, std::string> m_headers{};
+    bool isContentLengthConverted{false};
+    int m_contentLength{};
+    int m_client_max_body_size{1000};
 
-		HttpRequest(void);
-		HttpRequest(const HttpMessage &message);
-		~HttpRequest(void);
+    // default constructor
+    HttpRequest(void);
 
-		const std::string &getBody(void) const;
-		const std::map<std::string, std::string>& getHeaders(void) const;
-
-	private:
-
-		std::string m_body{};
-		std::map<std::string, std::string> 	m_headers{};
+    // methods
+    std::string startLineParse(const std::string &rawMessage);
+    void setMethodPathVersion(void);
+    void setHeaders(void);
+    void setContentLength(void);
+    std::pair<std::string, std::string> parseFieldLine(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const;
+    std::map<std::string, std::string> fieldLinesToHeaders(std::string &fieldLines) const;
+    int postRequestHandle(void);
 };
-
-std::ostream &operator<<(std::ostream &os, const HttpRequest &b);
 
 #endif

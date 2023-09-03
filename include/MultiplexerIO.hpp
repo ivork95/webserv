@@ -21,6 +21,9 @@ public:
 
     // member functions
     void addSocketToEpollFd(Socket *ptr);
+
+    // outstream operator overload
+    friend std::ostream &operator<<(std::ostream &out, const MultiplexerIO &multiplexerio);
 };
 
 #endif

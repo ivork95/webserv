@@ -3,7 +3,7 @@
 // default constructor
 MultiplexerIO::MultiplexerIO(void)
 {
-    spdlog::info("MultiplexerIO default constructor called");
+    spdlog::info("{} default constructor called", *this);
 
     m_epollfd = epoll_create(1);
     if (m_epollfd == -1)
@@ -16,7 +16,7 @@ MultiplexerIO::MultiplexerIO(void)
 // destructor
 MultiplexerIO::~MultiplexerIO(void)
 {
-    spdlog::info("MultiplexerIO destructor called");
+    spdlog::info("{} destructor called", *this);
 
     close(m_epollfd);
 }
@@ -35,4 +35,12 @@ void MultiplexerIO::addSocketToEpollFd(Socket *ptr)
         std::perror("epoll_ctl() failed");
         throw std::runtime_error("Error: epoll_ctl() failed\n");
     }
+}
+
+// outstream operator overload
+std::ostream &operator<<(std::ostream &out, const MultiplexerIO &multiplexerio)
+{
+    out << "MultiplexerIO(" << multiplexerio.m_epollfd << ")";
+
+    return out;
 }
