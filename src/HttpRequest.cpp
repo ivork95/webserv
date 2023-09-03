@@ -70,11 +70,8 @@ void headersPrint(const std::map<std::string, std::string> &headers)
 void HttpRequest::setHeaders(void)
 {
     spdlog::info("HttpRequest->setHeaders()");
-
     size_t startLineEndPos = m_rawMessage.find("\r\n");
-    std::string fieldLines = m_rawMessage.substr(startLineEndPos + 2);
-
-    fieldLines = fieldLines.substr(0, m_fieldLinesEndPos + 4);
+    std::string fieldLines = m_rawMessage.substr(startLineEndPos + 2, m_fieldLinesEndPos + 4);
     spdlog::info("fieldLines = \n|{}|", fieldLines);
 
     m_headers = fieldLinesToHeaders(fieldLines);

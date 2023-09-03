@@ -28,7 +28,6 @@ void MultiplexerIO::addSocketToEpollFd(Socket *ptr, int events)
     {
     };
     ev.data.ptr = ptr;
-    // ev.events = EPOLLIN | EPOLLOUT;
     ev.events = events;
 
     if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, ptr->m_socketFd, &ev) == -1)
