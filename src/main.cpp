@@ -1,10 +1,10 @@
 #include <csignal>
-#include "../include/TcpServer.hpp"
-#include "../include/Client.hpp"
-#include "../include/MultiplexerIO.hpp"
-#include "../include/HttpMessage.hpp"
-#include "../include/HttpRequest.hpp"
-#include "../include/HttpResponse.hpp"
+#include "TcpServer.hpp"
+#include "Client.hpp"
+#include "MultiplexerIO.hpp"
+#include "HttpMessage.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
 #include <fstream>
 
 #define BUFSIZE 256
@@ -21,7 +21,6 @@ std::string createFilePath(std::string path)
     return ("./www/index.html");
 }
 
-//
 void sendResponse(HttpResponse response, int fd)
 {
     if (response.getStatusCode() == 0)
@@ -87,21 +86,11 @@ HttpResponse createResponse(HttpRequest request)
     return response;
 }
 
-void do_use_fd(Socket *ePollDataPtr)
+void handleConnectedClient(Client *client)
 {
-    Client *client{};
-
-    if ((client = dynamic_cast<Client *>(ePollDataPtr)))
-        ;
-    else
-    {
-        std::cerr << "Error: the actual type of the object pointed to by ePollDataPtr = Unrecognized\n";
-        return;
-    }
-
     char buf[BUFSIZE + 1]{}; // Buffer for client data
-    int nbytes = recv(ePollDataPtr->m_socketFd, buf, BUFSIZE, 0);
 
+    int nbytes = recv(client->m_socketFd, buf, BUFSIZE, 0);
     if (nbytes <= 0) // Got error or connection closed by client
     {
         if (nbytes == 0) // Connection closed
@@ -111,54 +100,97 @@ void do_use_fd(Socket *ePollDataPtr)
     }
     else // We got some good data from a client
     {
-        std::cout << "nbytes = " << nbytes << '\n';
-        HttpMessage message(buf);
-        std::cout << "\n\nBUF:\n"
-                  << buf << "\n###\n\n";
-        client->requestMessage += message;
-        if (!client->requestMessage.isComplete())
+        spdlog::info("nbytes = {}", nbytes);
+        spdlog::info("buf = \n|{}|", buf);
+
+        client->m_rawMessage.append(buf);
+        spdlog::info("client->m_rawMessage = \n|{}|", client->m_rawMessage);
+
+        size_t headersEndPos = client->m_rawMessage.find("\r\n\r\n");
+        if (headersEndPos == std::string::npos)
         {
-            std::cout << "Message not complete...\n\n";
+            spdlog::warn("message incomplete [...]");
             return;
         }
-        std::cout << "Mission completed!!!\n\n"
-                  << std::endl;
-        std::cout << "\n\n|" << client->requestMessage.getRawRequest() << "|\n\n";
-        if (client->requestMessage.isValidHttpMessage())
+
+        if (client->m_method.empty())
         {
-            std::cout << "HttpMessage is valid\n\n";
-            HttpRequest httpRequest{client->requestMessage};
-            sendResponse(createResponse(httpRequest), client->m_socketFd);
+            client->setMethodPathVersion(); // redo function with clear input and output
+            client->setHeaders();           // redo function with clear input and output
+        }
+
+        if (!client->m_method.compare("POST"))
+        {
+            spdlog::info("POST method");
+
+            if (client->m_headers.find("Content-Length") == client->m_headers.end())
+            {
+                spdlog::warn("411 Length Required");
+                close(client->m_socketFd);
+                delete client;
+            }
+
+            if (!client->m_isStoiCalled)
+            {
+                spdlog::info("std::stoi()");
+                try
+                    client->setContentLength();
+                catch (...)
+                {
+                    spdlog::warn("400 Bad Request");
+                    close(client->m_socketFd);
+                    delete client;
+                }
+            }
+
+            if (client->m_contentLength > client->m_client_max_body_size)
+            {
+                spdlog::warn("413 Request Entity Too Large");
+                close(client->m_socketFd);
+                delete client;
+            }
+
+            if (client->m_contentLength > (client->m_rawMessage.length() - (headersEndPos + 4)))
+            {
+                spdlog::warn("Content-Length not reached [...]");
+                return;
+            }
+            spdlog::info("Content-Length reached!");
+        }
+        else
+        {
+            spdlog::info("GET or OPTIONS method");
         }
     }
-    close(ePollDataPtr->m_socketFd);
+    close(client->m_socketFd);
     delete client;
-    return;
 }
 
-int main(int argc, char *argv[])
+void run(int argc, char *argv[])
 {
-    if (argc < 2)
-        throw std::runtime_error("usage: webserv [port]\n\n\n");
+    std::vector<TcpServer *> servers{};
+    for (int i{1}; i < argc; i++)
+        servers.push_back(new TcpServer{argv[i]});
 
     MultiplexerIO multiplexerio{};
-
-    for (int i{1}; i < argc; i++)
-    {
-        TcpServer *tcpserver = new TcpServer{argv[i]};
-        multiplexerio.m_servers.push_back(tcpserver);
-    }
-
-    for (auto &server : multiplexerio.m_servers)
+    for (auto &server : servers)
         multiplexerio.addSocketToEpollFd(server);
 
     while (true)
     {
-        int epollCount{epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, (3 * 60 * 1000))};
-        if (epollCount == -1)
+        int epollCount{epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, (60 * 1000 * 3))};
+        if (epollCount <= 0)
         {
-            std::perror("epoll_wait() failed");
-            throw std::runtime_error("Error: epoll_wait() failed\n");
+            if (epollCount == 0)
+            {
+                std::perror("no file descriptor became ready during the requested timeout");
+                throw std::runtime_error("Error: no file descriptor became ready during the requested timeout\n");
+            }
+            else
+            {
+                std::perror("epoll_wait() failed");
+                throw std::runtime_error("Error: epoll_wait() failed\n");
+            }
         }
 
         for (int i{0}; i < epollCount; i++) // Run through the existing connections looking for data to read
@@ -171,13 +203,32 @@ int main(int argc, char *argv[])
                 if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr))
                 // If listener is ready to read, handle new connection
                 {
-                    Client *clientsocket = new Client{server->m_socketFd};
+                    Client *clientsocket = new Client{*server};
                     multiplexerio.addSocketToEpollFd(clientsocket);
-                    server->m_clientSockets.push_back(clientsocket);
                 }
                 else // If not the listener, we're just a regular client
-                    do_use_fd(ePollDataPtr);
+                    handleConnectedClient(dynamic_cast<Client *>(ePollDataPtr));
             }
         }
     }
+}
+
+int main(int argc, char *argv[])
+{
+    /* Catch-all handler
+        try
+        {
+            runGame();
+        }
+        catch(...)
+        {
+            std::cerr << "Abnormal termination\n";
+        }
+    */
+    if (argc < 2)
+        throw std::runtime_error("usage: webserv [port]\n\n\n");
+
+    run(argc, argv);
+
+    return 0;
 }

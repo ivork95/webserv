@@ -11,13 +11,26 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h> // must be included
 #include "TcpServer.hpp"
+#include <map>
 
 class TcpServer;
 
 class Client : public Socket
 {
 public:
-    std::string m_str{};
+    bool m_isStoiCalled{false};
+    int m_contentLength{};
+    std::string m_rawMessage{};
+    std::string m_method{};
+    std::string m_path{};
+    std::string m_version{};
+    int m_client_max_body_size{1000};
+    std::map<std::string, std::string> m_headers{};
+    std::string startLineParse(const std::string &rawMessage);
+    void setMethodPathVersion(void);
+    void setHeaders(void);
+    void setContentLength(void);
+
     const TcpServer &m_server;
     struct sockaddr_storage m_remoteaddr
     {
