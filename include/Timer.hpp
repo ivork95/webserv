@@ -18,6 +18,9 @@ public:
     Client *m_client{};
 
     // default constructor
+    Timer(void) = delete;
+
+    // client constructor
     Timer(Client *client);
 
     // destructor

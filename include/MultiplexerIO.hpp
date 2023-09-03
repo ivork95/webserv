@@ -9,17 +9,29 @@
 
 class MultiplexerIO
 {
+private:
+    // default constructor
+    MultiplexerIO(void);
+
 public:
     int m_epollfd{};
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
 
-    // default constructor
-    MultiplexerIO(void);
-
     // destructor
     ~MultiplexerIO(void);
 
+    // copy constructor
+    MultiplexerIO(const MultiplexerIO &) = delete;
+
+    // copy assignment operator overload
+    MultiplexerIO &operator=(const MultiplexerIO &) = delete;
+
     // member functions
+    static MultiplexerIO &getInstance()
+    {
+        static MultiplexerIO instance;
+        return instance;
+    }
     void addSocketToEpollFd(Socket *ptr);
 
     // outstream operator overload

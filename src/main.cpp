@@ -66,7 +66,8 @@ void run(int argc, char *argv[])
     for (int i{1}; i < argc; i++)
         servers.push_back(new TcpServer{argv[i]});
 
-    MultiplexerIO multiplexerio{};
+    MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
+
     for (auto &server : servers)
         multiplexerio.addSocketToEpollFd(server);
 
