@@ -29,3 +29,14 @@ int HttpResponse::targetRead(const std::string &requestTarget)
 
     return 0;
 }
+
+std::string HttpResponse::targetPathCreate(const std::string &target)
+{
+    for (auto c : target)
+    {
+        if (c != '/')
+            return ("./www" + target);
+    }
+
+    return ("./www/index.html");
+}

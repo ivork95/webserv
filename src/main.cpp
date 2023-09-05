@@ -64,9 +64,10 @@ void handleConnectedClient(Client *client)
         {
             spdlog::info("GET method");
 
+            std::string targetPath = httpresponse.targetPathCreate(client->httpRequest.m_target);
             try
             {
-                httpresponse.targetRead("www/hello.txt");
+                httpresponse.targetRead(targetPath);
             }
             catch (...)
             {
@@ -78,10 +79,10 @@ void handleConnectedClient(Client *client)
         {
             spdlog::info("OPTIONS method");
         }
+        std::string httpResponse = httpresponse.responseBuild();
+        send(client->m_socketFd, httpResponse.data(), httpResponse.length(), 0);
     }
 
-    std::string httpResponse = httpresponse.responseBuild();
-    send(client->m_socketFd, httpResponse.data(), httpResponse.length(), 0);
     delete client;
 }
 

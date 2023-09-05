@@ -23,6 +23,7 @@ public:
 
     std::string responseBuild(void);
     int targetRead(const std::string &requestTarget);
+    std::string targetPathCreate(const std::string &target);
 };
 
 /*
