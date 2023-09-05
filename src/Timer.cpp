@@ -2,7 +2,7 @@
 
 Timer::Timer(Client *client) : m_client(client)
 {
-    m_spec.it_value.tv_sec = 10;
+    m_spec.it_value.tv_sec = 180;
     m_spec.it_value.tv_nsec = 0;
     m_spec.it_interval.tv_sec = 0;
     m_spec.it_interval.tv_nsec = 0;

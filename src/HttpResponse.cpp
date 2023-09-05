@@ -14,3 +14,18 @@ std::string HttpResponse::responseBuild(void)
 
     return httpResponse;
 }
+
+int HttpResponse::targetRead(const std::string &requestTarget)
+{
+    std::ifstream inf{requestTarget};
+    if (!inf)
+        throw std::runtime_error("404 NOT FOUND\n");
+    while (inf)
+    {
+        std::string strInput;
+        std::getline(inf, strInput);
+        m_body.append(strInput);
+    }
+
+    return 0;
+}

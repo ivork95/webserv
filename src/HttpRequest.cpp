@@ -6,25 +6,25 @@ HttpRequest::HttpRequest(void)
     spdlog::debug("HttpRequest default constructor called");
 }
 
-std::string HttpRequest::startLineParse(const std::string &rawMessage)
+std::string HttpRequest::requestLineParse(const std::string &rawMessage)
 {
-    // StartAndFields -> startLine
-    size_t startLineEndPos = rawMessage.find("\r\n");
-    std::string startLine = rawMessage.substr(0, startLineEndPos);
+    // StartAndFields -> requestLine
+    size_t requestLineEndPos = rawMessage.find("\r\n");
+    std::string requestLine = rawMessage.substr(0, requestLineEndPos);
 
-    spdlog::info("startLine = \n|{}|", startLine);
-    return startLine;
+    spdlog::info("requestLine = \n|{}|", requestLine);
+    return requestLine;
 }
 
 void HttpRequest::setMethodPathVersion(void)
 {
     spdlog::info("HttpRequest->setMethodPathVersion()");
 
-    std::istringstream stream{startLineParse(m_rawMessage)};
+    std::istringstream stream{requestLineParse(m_rawMessage)};
     std::string str{};
     std::getline(stream, str);
     std::istringstream streamTwee{str};
-    streamTwee >> m_method >> m_path >> m_version;
+    streamTwee >> m_method >> m_target >> m_version;
     spdlog::info("m_method = {}", m_method);
 }
 
@@ -70,8 +70,8 @@ void headersPrint(const std::map<std::string, std::string> &headers)
 void HttpRequest::setHeaders(void)
 {
     spdlog::info("HttpRequest->setHeaders()");
-    size_t startLineEndPos = m_rawMessage.find("\r\n");
-    std::string fieldLines = m_rawMessage.substr(startLineEndPos + 2, m_fieldLinesEndPos + 4);
+    size_t requestLineEndPos = m_rawMessage.find("\r\n");
+    std::string fieldLines = m_rawMessage.substr(requestLineEndPos + 2, m_fieldLinesEndPos + 4);
     spdlog::info("fieldLines = \n|{}|", fieldLines);
 
     m_headers = fieldLinesToHeaders(fieldLines);

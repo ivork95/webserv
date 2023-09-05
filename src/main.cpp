@@ -47,23 +47,41 @@ void handleConnectedClient(Client *client)
             client->httpRequest.setMethodPathVersion();
             client->httpRequest.setHeaders();
         }
+        spdlog::info("message complete!");
+
+        /*
+        A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value.
+        */
+
+        HttpResponse httpresponse{};
 
         if (!client->httpRequest.m_method.compare("POST"))
         {
             if (!client->httpRequest.postRequestHandle())
                 return;
         }
+        else if (!client->httpRequest.m_method.compare("GET"))
+        {
+            spdlog::info("GET method");
+
+            try
+            {
+                httpresponse.targetRead("www/hello.txt");
+            }
+            catch (...)
+            {
+                // vang 404 NOT FOUND en gebruik em om response object te vullen
+                ;
+            }
+        }
         else
         {
-            spdlog::info("GET or OPTIONS method");
+            spdlog::info("OPTIONS method");
         }
     }
 
-    HttpResponse httpresponse{};
     std::string httpResponse = httpresponse.responseBuild();
-    std::cout << "Formatted HTTP Response:\n";
-    std::cout << httpResponse;
-
+    send(client->m_socketFd, httpResponse.data(), httpResponse.length(), 0);
     delete client;
 }
 

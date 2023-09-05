@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <fstream>
 
 class HttpResponse
 {
@@ -17,9 +18,11 @@ public:
         {"Content-Length", "51"},
         {"Vary", "Accept-Encoding"},
         {"Content-Type", "text/plain"}};
-    std::string m_body{"Hello World! My content includes a trailing CRLF."};
+    // std::string m_body{"Hello World! My content includes a trailing CRLF."};
+    std::string m_body{};
 
     std::string responseBuild(void);
+    int targetRead(const std::string &requestTarget);
 };
 
 /*
