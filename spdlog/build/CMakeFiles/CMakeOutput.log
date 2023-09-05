@@ -15,11 +15,11 @@ The CXX compiler identification is Clang, found in "/pwd/spdlog/build/CMakeFiles
 Detecting CXX compiler ABI info compiled with the following output:
 Change Dir: /pwd/spdlog/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_6b45b/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_6b45b.dir/build.make CMakeFiles/cmTC_6b45b.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_24c61/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_24c61.dir/build.make CMakeFiles/cmTC_24c61.dir/build
 gmake[1]: Entering directory '/pwd/spdlog/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o
-/usr/bin/clang++   -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf    -v -MD -MT CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
-Ubuntu clang version 14.0.0-1ubuntu1.1
+Building CXX object CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o
+/usr/bin/clang++   -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf    -v -MD -MT CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
+Ubuntu clang version 14.0.0-1ubuntu1
 Target: x86_64-pc-linux-gnu
 Thread model: posix
 InstalledDir: /usr/bin
@@ -28,7 +28,7 @@ Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/11
 Candidate multilib: .;@m64
 Selected multilib: .;@m64
  (in-process)
- "/usr/lib/llvm-14/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -mllvm -treat-scalable-fixed-error-as-warning -gstrict-dwarf -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -v -fcoverage-compilation-dir=/pwd/spdlog/build/CMakeFiles/CMakeTmp -resource-dir /usr/lib/llvm-14/lib/clang/14.0.0 -dependency-file CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11 -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/x86_64-linux-gnu/c++/11 -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/backward -internal-isystem /usr/lib/llvm-14/lib/clang/14.0.0/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -Wall -Wextra -std=c++20 -fdeprecated-macro -fdebug-compilation-dir=/pwd/spdlog/build/CMakeFiles/CMakeTmp -ferror-limit 19 -fgnuc-version=4.2.1 -fno-implicit-modules -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
+ "/usr/lib/llvm-14/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -mllvm -treat-scalable-fixed-error-as-warning -gstrict-dwarf -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -v -fcoverage-compilation-dir=/pwd/spdlog/build/CMakeFiles/CMakeTmp -resource-dir /usr/lib/llvm-14/lib/clang/14.0.0 -dependency-file CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11 -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/x86_64-linux-gnu/c++/11 -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/backward -internal-isystem /usr/lib/llvm-14/lib/clang/14.0.0/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -Wall -Wextra -std=c++20 -fdeprecated-macro -fdebug-compilation-dir=/pwd/spdlog/build/CMakeFiles/CMakeTmp -ferror-limit 19 -fgnuc-version=4.2.1 -fno-implicit-modules -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
 clang -cc1 version 14.0.0 based upon LLVM 14.0.0 default target x86_64-pc-linux-gnu
 ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/include"
 ignoring nonexistent directory "/include"
@@ -42,10 +42,10 @@ ignoring nonexistent directory "/include"
  /usr/include/x86_64-linux-gnu
  /usr/include
 End of search list.
-Linking CXX executable cmTC_6b45b
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6b45b.dir/link.txt --verbose=1
-/usr/bin/clang++ -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -g -gdwarf-4 -gstrict-dwarf -v CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_6b45b 
-Ubuntu clang version 14.0.0-1ubuntu1.1
+Linking CXX executable cmTC_24c61
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_24c61.dir/link.txt --verbose=1
+/usr/bin/clang++ -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -g -gdwarf-4 -gstrict-dwarf -v CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_24c61 
+Ubuntu clang version 14.0.0-1ubuntu1
 Target: x86_64-pc-linux-gnu
 Thread model: posix
 InstalledDir: /usr/bin
@@ -53,7 +53,7 @@ Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/11
 Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/11
 Candidate multilib: .;@m64
 Selected multilib: .;@m64
- "/usr/bin/ld" -pie -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_6b45b /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/11 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-14/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtendS.o /lib/x86_64-linux-gnu/crtn.o
+ "/usr/bin/ld" -pie -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_24c61 /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/11 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-14/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtendS.o /lib/x86_64-linux-gnu/crtn.o
 gmake[1]: Leaving directory '/pwd/spdlog/build/CMakeFiles/CMakeTmp'
 
 
@@ -83,11 +83,11 @@ Parsed CXX implicit link information from above output:
   link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
   ignore line: [Change Dir: /pwd/spdlog/build/CMakeFiles/CMakeTmp]
   ignore line: []
-  ignore line: [Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_6b45b/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_6b45b.dir/build.make CMakeFiles/cmTC_6b45b.dir/build]
+  ignore line: [Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_24c61/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_24c61.dir/build.make CMakeFiles/cmTC_24c61.dir/build]
   ignore line: [gmake[1]: Entering directory '/pwd/spdlog/build/CMakeFiles/CMakeTmp']
-  ignore line: [Building CXX object CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o]
-  ignore line: [/usr/bin/clang++   -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf    -v -MD -MT CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp]
-  ignore line: [Ubuntu clang version 14.0.0-1ubuntu1.1]
+  ignore line: [Building CXX object CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [/usr/bin/clang++   -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf    -v -MD -MT CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [Ubuntu clang version 14.0.0-1ubuntu1]
   ignore line: [Target: x86_64-pc-linux-gnu]
   ignore line: [Thread model: posix]
   ignore line: [InstalledDir: /usr/bin]
@@ -98,7 +98,7 @@ Parsed CXX implicit link information from above output:
   ignore line: [Selected multilib: .]
   ignore line: [@m64]
   ignore line: [ (in-process)]
-  ignore line: [ "/usr/lib/llvm-14/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -mllvm -treat-scalable-fixed-error-as-warning -gstrict-dwarf -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -v -fcoverage-compilation-dir=/pwd/spdlog/build/CMakeFiles/CMakeTmp -resource-dir /usr/lib/llvm-14/lib/clang/14.0.0 -dependency-file CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11 -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/x86_64-linux-gnu/c++/11 -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/backward -internal-isystem /usr/lib/llvm-14/lib/clang/14.0.0/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -Wall -Wextra -std=c++20 -fdeprecated-macro -fdebug-compilation-dir=/pwd/spdlog/build/CMakeFiles/CMakeTmp -ferror-limit 19 -fgnuc-version=4.2.1 -fno-implicit-modules -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [ "/usr/lib/llvm-14/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -mllvm -treat-scalable-fixed-error-as-warning -gstrict-dwarf -debug-info-kind=constructor -dwarf-version=4 -debugger-tuning=gdb -v -fcoverage-compilation-dir=/pwd/spdlog/build/CMakeFiles/CMakeTmp -resource-dir /usr/lib/llvm-14/lib/clang/14.0.0 -dependency-file CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11 -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/x86_64-linux-gnu/c++/11 -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/backward -internal-isystem /usr/lib/llvm-14/lib/clang/14.0.0/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -Wall -Wextra -std=c++20 -fdeprecated-macro -fdebug-compilation-dir=/pwd/spdlog/build/CMakeFiles/CMakeTmp -ferror-limit 19 -fgnuc-version=4.2.1 -fno-implicit-modules -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp]
   ignore line: [clang -cc1 version 14.0.0 based upon LLVM 14.0.0 default target x86_64-pc-linux-gnu]
   ignore line: [ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/include"]
   ignore line: [ignoring nonexistent directory "/include"]
@@ -112,10 +112,10 @@ Parsed CXX implicit link information from above output:
   ignore line: [ /usr/include/x86_64-linux-gnu]
   ignore line: [ /usr/include]
   ignore line: [End of search list.]
-  ignore line: [Linking CXX executable cmTC_6b45b]
-  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6b45b.dir/link.txt --verbose=1]
-  ignore line: [/usr/bin/clang++ -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -g -gdwarf-4 -gstrict-dwarf -v CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_6b45b ]
-  ignore line: [Ubuntu clang version 14.0.0-1ubuntu1.1]
+  ignore line: [Linking CXX executable cmTC_24c61]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_24c61.dir/link.txt --verbose=1]
+  ignore line: [/usr/bin/clang++ -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -g -gdwarf-4 -gstrict-dwarf -v CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_24c61 ]
+  ignore line: [Ubuntu clang version 14.0.0-1ubuntu1]
   ignore line: [Target: x86_64-pc-linux-gnu]
   ignore line: [Thread model: posix]
   ignore line: [InstalledDir: /usr/bin]
@@ -125,7 +125,7 @@ Parsed CXX implicit link information from above output:
   ignore line: [@m64]
   ignore line: [Selected multilib: .]
   ignore line: [@m64]
-  link line: [ "/usr/bin/ld" -pie -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_6b45b /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/11 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-14/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtendS.o /lib/x86_64-linux-gnu/crtn.o]
+  link line: [ "/usr/bin/ld" -pie -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_24c61 /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/11 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-14/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtendS.o /lib/x86_64-linux-gnu/crtn.o]
     arg [/usr/bin/ld] ==> ignore
     arg [-pie] ==> ignore
     arg [-zrelro] ==> ignore
@@ -137,7 +137,7 @@ Parsed CXX implicit link information from above output:
     arg [-dynamic-linker] ==> ignore
     arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
     arg [-o] ==> ignore
-    arg [cmTC_6b45b] ==> ignore
+    arg [cmTC_24c61] ==> ignore
     arg [/lib/x86_64-linux-gnu/Scrt1.o] ==> obj [/lib/x86_64-linux-gnu/Scrt1.o]
     arg [/lib/x86_64-linux-gnu/crti.o] ==> obj [/lib/x86_64-linux-gnu/crti.o]
     arg [/usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtbeginS.o] ==> obj [/usr/bin/../lib/gcc/x86_64-linux-gnu/11/crtbeginS.o]
@@ -150,7 +150,7 @@ Parsed CXX implicit link information from above output:
     arg [-L/usr/lib/llvm-14/bin/../lib] ==> dir [/usr/lib/llvm-14/bin/../lib]
     arg [-L/lib] ==> dir [/lib]
     arg [-L/usr/lib] ==> dir [/usr/lib]
-    arg [CMakeFiles/cmTC_6b45b.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [CMakeFiles/cmTC_24c61.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
     arg [-lstdc++] ==> lib [stdc++]
     arg [-lm] ==> lib [m]
     arg [-lgcc_s] ==> lib [gcc_s]
@@ -180,13 +180,13 @@ Parsed CXX implicit link information from above output:
 Determining if the include file pthread.h exists passed with the following output:
 Change Dir: /pwd/spdlog/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_c86e0/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_c86e0.dir/build.make CMakeFiles/cmTC_c86e0.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_96c76/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_96c76.dir/build.make CMakeFiles/cmTC_96c76.dir/build
 gmake[1]: Entering directory '/pwd/spdlog/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_c86e0.dir/CheckIncludeFile.cxx.o
-/usr/bin/clang++   -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -std=c++11 -MD -MT CMakeFiles/cmTC_c86e0.dir/CheckIncludeFile.cxx.o -MF CMakeFiles/cmTC_c86e0.dir/CheckIncludeFile.cxx.o.d -o CMakeFiles/cmTC_c86e0.dir/CheckIncludeFile.cxx.o -c /pwd/spdlog/build/CMakeFiles/CMakeTmp/CheckIncludeFile.cxx
-Linking CXX executable cmTC_c86e0
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c86e0.dir/link.txt --verbose=1
-/usr/bin/clang++ -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -g -gdwarf-4 -gstrict-dwarf  CMakeFiles/cmTC_c86e0.dir/CheckIncludeFile.cxx.o -o cmTC_c86e0 
+Building CXX object CMakeFiles/cmTC_96c76.dir/CheckIncludeFile.cxx.o
+/usr/bin/clang++   -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -std=c++11 -MD -MT CMakeFiles/cmTC_96c76.dir/CheckIncludeFile.cxx.o -MF CMakeFiles/cmTC_96c76.dir/CheckIncludeFile.cxx.o.d -o CMakeFiles/cmTC_96c76.dir/CheckIncludeFile.cxx.o -c /pwd/spdlog/build/CMakeFiles/CMakeTmp/CheckIncludeFile.cxx
+Linking CXX executable cmTC_96c76
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_96c76.dir/link.txt --verbose=1
+/usr/bin/clang++ -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -g -gdwarf-4 -gstrict-dwarf  CMakeFiles/cmTC_96c76.dir/CheckIncludeFile.cxx.o -o cmTC_96c76 
 gmake[1]: Leaving directory '/pwd/spdlog/build/CMakeFiles/CMakeTmp'
 
 
@@ -194,13 +194,13 @@ gmake[1]: Leaving directory '/pwd/spdlog/build/CMakeFiles/CMakeTmp'
 Performing C++ SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD succeeded with the following output:
 Change Dir: /pwd/spdlog/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_98646/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_98646.dir/build.make CMakeFiles/cmTC_98646.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_98df3/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_98df3.dir/build.make CMakeFiles/cmTC_98df3.dir/build
 gmake[1]: Entering directory '/pwd/spdlog/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_98646.dir/src.cxx.o
-/usr/bin/clang++ -DCMAKE_HAVE_LIBC_PTHREAD  -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -std=c++11 -MD -MT CMakeFiles/cmTC_98646.dir/src.cxx.o -MF CMakeFiles/cmTC_98646.dir/src.cxx.o.d -o CMakeFiles/cmTC_98646.dir/src.cxx.o -c /pwd/spdlog/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_98646
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_98646.dir/link.txt --verbose=1
-/usr/bin/clang++ -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -g -gdwarf-4 -gstrict-dwarf  CMakeFiles/cmTC_98646.dir/src.cxx.o -o cmTC_98646 
+Building CXX object CMakeFiles/cmTC_98df3.dir/src.cxx.o
+/usr/bin/clang++ -DCMAKE_HAVE_LIBC_PTHREAD  -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -std=c++11 -MD -MT CMakeFiles/cmTC_98df3.dir/src.cxx.o -MF CMakeFiles/cmTC_98df3.dir/src.cxx.o.d -o CMakeFiles/cmTC_98df3.dir/src.cxx.o -c /pwd/spdlog/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_98df3
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_98df3.dir/link.txt --verbose=1
+/usr/bin/clang++ -Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf  -g -gdwarf-4 -gstrict-dwarf  CMakeFiles/cmTC_98df3.dir/src.cxx.o -o cmTC_98df3 
 gmake[1]: Leaving directory '/pwd/spdlog/build/CMakeFiles/CMakeTmp'
 
 

@@ -5,6 +5,7 @@
 #include "HttpRequest.hpp"
 #include <fstream>
 #include "Timer.hpp"
+#include "HttpResponse.hpp"
 
 #define BUFSIZE 256
 
@@ -57,6 +58,12 @@ void handleConnectedClient(Client *client)
             spdlog::info("GET or OPTIONS method");
         }
     }
+
+    HttpResponse httpresponse{};
+    std::string httpResponse = httpresponse.responseBuild();
+    std::cout << "Formatted HTTP Response:\n";
+    std::cout << httpResponse;
+
     delete client;
 }
 

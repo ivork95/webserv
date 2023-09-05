@@ -42,11 +42,6 @@ if(NOT DEFINED CMAKE_OBJDUMP)
   set(CMAKE_OBJDUMP "/usr/bin/objdump")
 endif()
 
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for the subdirectory.
-  include("/pwd/spdlog/build/example/cmake_install.cmake")
-endif()
-
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/pwd/spdlog/include/" REGEX "/fmt\\/bundled$" EXCLUDE)
 endif()
@@ -87,6 +82,12 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/pwd/spdlog/build/spdlogConfig.cmake"
     "/pwd/spdlog/build/spdlogConfigVersion.cmake"
     )
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for each subdirectory.
+  include("/pwd/spdlog/build/example/cmake_install.cmake")
+
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)

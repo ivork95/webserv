@@ -15,14 +15,14 @@
 class HttpRequest
 {
 public:
-    size_t m_fieldLinesEndPos{};
-    std::string m_rawMessage{};
+    size_t m_fieldLinesEndPos{}; // deze misschien later naar Message class
+    std::string m_rawMessage{};  // deze misschien later naar Message class
     std::string m_method{};
     std::string m_path{};
     std::string m_version{};
-    std::map<std::string, std::string> m_headers{};
-    bool isContentLengthConverted{false};
-    int m_contentLength{};
+    std::map<std::string, std::string> m_headers{}; // deze misschien later naar Message class
+    bool isContentLengthConverted{false};           // deze misschien later naar Message class
+    int m_contentLength{};                          // deze misschien later naar Message class
     int m_client_max_body_size{1000};
 
     // default constructor

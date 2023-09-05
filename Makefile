@@ -4,6 +4,7 @@ CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	obj/Client.o \
 				obj/HttpRequest.o \
+				obj/HttpResponse.o \
 				obj/main.o \
 				obj/MultiplexerIO.o \
 				obj/Socket.o \
@@ -11,6 +12,7 @@ OBJECTS		:=	obj/Client.o \
 				obj/Timer.o
 HEADERS		:=	include/Client.hpp \
 				include/HttpRequest.hpp \
+				include/HttpResponse.hpp \
 				include/MultiplexerIO.hpp \
 				include/Socket.hpp \
 				include/TcpServer.hpp \
