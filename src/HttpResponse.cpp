@@ -17,6 +17,7 @@ std::string HttpResponse::responseBuild(void)
 
 int HttpResponse::targetRead(const std::string &requestTarget)
 {
+    int n{};
     std::ifstream inf{requestTarget};
     if (!inf)
         throw std::runtime_error("404 NOT FOUND\n");
@@ -25,18 +26,24 @@ int HttpResponse::targetRead(const std::string &requestTarget)
         std::string strInput;
         std::getline(inf, strInput);
         m_body.append(strInput);
+        n = n + strInput.length();
     }
 
-    return 0;
+    return n;
 }
 
+/*
+deze functie moet beter
+/index kan opgevraagd worden
+/directories kunnen ook opgevraagd worden
+/ kan ook opgevraagd worden
+moet minsten een / zijn
+...
+*/
 std::string HttpResponse::targetPathCreate(const std::string &target)
 {
-    for (auto c : target)
-    {
-        if (c != '/')
-            return ("./www" + target);
-    }
+    if (!target.compare("/"))
+        return "./www/index.html";
 
-    return ("./www/index.html");
+    return "./www" + target + ".html";
 }

@@ -54,6 +54,7 @@ void handleConnectedClient(Client *client)
         */
 
         HttpResponse httpresponse{};
+        int n{};
 
         if (!client->httpRequest.m_method.compare("POST"))
         {
@@ -67,22 +68,23 @@ void handleConnectedClient(Client *client)
             std::string targetPath = httpresponse.targetPathCreate(client->httpRequest.m_target);
             try
             {
-                httpresponse.targetRead(targetPath);
+                n = httpresponse.targetRead(targetPath);
             }
             catch (...)
             {
-                // vang 404 NOT FOUND en gebruik em om response object te vullen
-                ;
+                httpresponse.m_statusLine = "HTTP/1.1 404 NOT FOUND";
+                n = httpresponse.targetRead(httpresponse.targetPathCreate("/404"));
             }
         }
         else
         {
             spdlog::info("OPTIONS method");
         }
+        httpresponse.m_headers.insert(std::make_pair("Content-Length", std::to_string(n)));
+        httpresponse.m_headers.insert(std::make_pair("Content-Type", "text/html"));
         std::string httpResponse = httpresponse.responseBuild();
         send(client->m_socketFd, httpResponse.data(), httpResponse.length(), 0);
     }
-
     delete client;
 }
 
@@ -99,7 +101,7 @@ void run(int argc, char *argv[])
 
     while (true)
     {
-        int epollCount{epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, (60 * 1000 * 3))};
+        int epollCount{epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, -1)};
         if (epollCount <= 0)
         {
             if (epollCount == 0)
