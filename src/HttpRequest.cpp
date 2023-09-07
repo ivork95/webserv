@@ -119,3 +119,53 @@ std::string HttpRequest::postRequestHandle(void)
     spdlog::info("Content-Length reached!");
     return "HTTP/1.1 200 OK";
 }
+
+std::string HttpRequest::getBoundaryCode(void)
+{
+    if (m_headers.find("Content-Type") == m_headers.end())
+    {
+        throw;
+    }
+    std::string contentType = m_headers["Content-Type"];
+
+    std::string_view boundary{"boundary="};
+    size_t boundaryStartPos = contentType.find(boundary);
+    if (boundaryStartPos == std::string::npos)
+    {
+        throw;
+    }
+
+    return contentType.substr(boundaryStartPos + boundary.length());
+}
+
+std::string HttpRequest::getBody(const std::string &boundaryCode)
+{
+    const std::string headersEnd = "\r\n\r\n";
+    size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
+    size_t generalHeadersEndPos = m_rawMessage.find(headersEnd, requestHeadersEndPos + 1);
+
+    const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
+    size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
+
+    return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
+}
+
+std::string HttpRequest::getGeneralHeaders(const std::string &boundaryCode)
+{
+    const std::string boundaryStart = "--" + boundaryCode + "\r\n";
+    const std::string generalHeadersEnd = "\r\n\r\n";
+
+    size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
+    if (BoundaryStartPos == std::string::npos)
+    {
+        std::cerr << "Boundary not found!" << std::endl;
+    }
+
+    size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
+    if (generalHeadersEndPos == std::string::npos)
+    {
+        std::cerr << "Second boundary not found!" << std::endl;
+    }
+
+    return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), generalHeadersEndPos - (BoundaryStartPos + boundaryStart.length()));
+}

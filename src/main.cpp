@@ -62,52 +62,11 @@ void handleConnectedClient(Client *client)
             if (httpresponse.m_statusLine.empty())
                 return;
 
-            spdlog::debug("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
+            // spdlog::debug("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
 
-            std::string contentType = client->httpRequest.m_headers["Content-Type"];
-            // handle not found
-            std::string boundary{"boundary="};
-            size_t boundaryStartPos = contentType.find(boundary);
-            // handle not found
-            std::string boundaryCode = contentType.substr(boundaryStartPos + boundary.length());
-            spdlog::debug("boundaryCode = {}", boundaryCode);
-
-            // Finding the first occurrence of the boundary
-            size_t firstBoundaryPos = client->httpRequest.m_rawMessage.find("--" + boundaryCode);
-            if (firstBoundaryPos == std::string::npos)
-            {
-                std::cerr << "Boundary not found!" << std::endl;
-            }
-
-            // Finding the second occurrence of the boundary
-            size_t secondBoundaryPos = client->httpRequest.m_rawMessage.find(boundaryCode + "--", firstBoundaryPos + (boundaryCode.length() + 2));
-            if (secondBoundaryPos == std::string::npos)
-            {
-                std::cerr << "Second boundary not found!" << std::endl;
-            }
-
-            // Extracting content between boundaries
-            size_t contentStart = firstBoundaryPos + boundaryCode.length() + 4; // +2 for the CRLF after the boundary
-            size_t contentEnd = secondBoundaryPos - 4;                          // -2 for the CRLF before the second boundary
-            std::string content = client->httpRequest.m_rawMessage.substr(contentStart, contentEnd - contentStart);
-
-            std::cout << "Content between boundaries:\n"
-                      << content << std::endl;
-
-            // size_t startBodyPos = client->httpRequest.m_rawMessage.find("--" + boundaryCode) + boundaryCode.length() + 2;
-            // spdlog::debug("startBodyPos: {}", startBodyPos);
-            // size_t endBodyPos = client->httpRequest.m_rawMessage.find("--" + boundaryCode + "--");
-            // spdlog::debug("endBodyPos: {}", endBodyPos);
-            // size_t bodySize = client->httpRequest.m_rawMessage.length() - startBodyPos;
-            // spdlog::debug("bodySize: {}", bodySize);
-            // std::string body = client->httpRequest.m_rawMessage.substr(startBodyPos, bodySize);
-            // spdlog::debug("BODY: {}", body);
-            // 1. We moeten weten wat de boundary string is
-            //      ----WebKitFormBoundary4nSB0wtYkKHiEnBy
-            // 2. Dan twee streepjes voor dat ding zetten
-            // 3. Find startPoint
-            // 4. Find endPoint
-            // 5. Substring(startpoint, Endpoint);
+            std::string boundaryCode = client->httpRequest.getBoundaryCode();
+            spdlog::warn("body = \n|{}|", client->httpRequest.getBody(boundaryCode));
+            spdlog::warn("generalHeaders = \n|{}|", client->httpRequest.getGeneralHeaders(boundaryCode));
         }
         else if (!client->httpRequest.m_method.compare("GET"))
         {

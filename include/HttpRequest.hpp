@@ -15,14 +15,14 @@
 class HttpRequest
 {
 public:
-    size_t m_fieldLinesEndPos{}; // deze misschien later naar Message class
-    std::string m_rawMessage{};  // deze misschien later naar Message class
+    size_t m_fieldLinesEndPos{};
+    std::string m_rawMessage{};
     std::string m_method{};
     std::string m_target{};
     std::string m_version{};
-    std::map<std::string, std::string> m_headers{}; // deze misschien later naar Message class
-    bool isContentLengthConverted{false};           // deze misschien later naar Message class
-    int m_contentLength{};                          // deze misschien later naar Message class
+    std::map<std::string, std::string> m_headers{};
+    bool isContentLengthConverted{false};
+    int m_contentLength{};
     int m_client_max_body_size{999999};
 
     // default constructor
@@ -37,6 +37,9 @@ public:
     std::map<std::string, std::string> fieldLinesToHeaders(std::string &fieldLines) const;
     std::string postRequestHandle(void);
     void headersPrint(const std::map<std::string, std::string> &headers);
+    std::string getBody(const std::string &boundaryCode);
+    std::string getGeneralHeaders(const std::string &boundaryCode);
+    std::string getBoundaryCode(void);
 };
 
 #endif
