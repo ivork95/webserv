@@ -47,3 +47,11 @@ std::string HttpResponse::targetPathCreate(const std::string &target)
 
     return "./www" + target + ".html";
 }
+
+// outstream operator overload
+std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
+{
+    out << "HttpResponse(" << httpresponse.m_statusLine << ")";
+
+    return out;
+}

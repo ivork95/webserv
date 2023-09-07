@@ -23,7 +23,7 @@ public:
     std::map<std::string, std::string> m_headers{}; // deze misschien later naar Message class
     bool isContentLengthConverted{false};           // deze misschien later naar Message class
     int m_contentLength{};                          // deze misschien later naar Message class
-    int m_client_max_body_size{1000};
+    int m_client_max_body_size{999999};
 
     // default constructor
     HttpRequest(void);
@@ -35,7 +35,8 @@ public:
     void setContentLength(void);
     std::pair<std::string, std::string> parseFieldLine(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const;
     std::map<std::string, std::string> fieldLinesToHeaders(std::string &fieldLines) const;
-    int postRequestHandle(void);
+    std::string postRequestHandle(void);
+    void headersPrint(const std::map<std::string, std::string> &headers);
 };
 
 #endif

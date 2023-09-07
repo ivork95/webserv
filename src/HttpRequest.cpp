@@ -56,7 +56,7 @@ std::map<std::string, std::string> HttpRequest::fieldLinesToHeaders(std::string 
     return headers;
 }
 
-void headersPrint(const std::map<std::string, std::string> &headers)
+void HttpRequest::headersPrint(const std::map<std::string, std::string> &headers)
 {
     int i{};
 
@@ -86,13 +86,12 @@ void HttpRequest::setContentLength(void)
         throw std::out_of_range("Negative value");
 }
 
-int HttpRequest::postRequestHandle(void)
+std::string HttpRequest::postRequestHandle(void)
 {
     spdlog::info("POST method");
-    int response{};
 
     if (m_headers.find("Content-Length") == m_headers.end())
-        response = 411;
+        return "HTTP/1.1 411 Length Required";
 
     if (!isContentLengthConverted)
     {
@@ -103,21 +102,20 @@ int HttpRequest::postRequestHandle(void)
         }
         catch (...)
         {
-            response = 400;
+            return "HTTP/1.1 400 Bad Request";
         }
     }
 
     if (m_contentLength > m_client_max_body_size)
-        response = 413;
+        return "HTTP/1.1 413 Payload Too Large";
 
     if (m_contentLength > static_cast<int>((m_rawMessage.length() - (m_fieldLinesEndPos + 4))))
     {
         spdlog::warn("Content-Length not reached [...]");
-        return 0;
+        return "";
     }
+
     // Create and send response
     spdlog::info("Content-Length reached!");
-    response = 200;
-
-    return response;
+    return "HTTP/1.1 200 OK";
 }

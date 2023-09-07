@@ -14,6 +14,7 @@ void handleConnectedClient(Client *client)
     char buf[BUFSIZE + 1]{}; // Buffer for client data
 
     int nbytes = recv(client->m_socketFd, buf, BUFSIZE, 0);
+
     if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
     {
         perror("timerfd_settime");
@@ -29,11 +30,10 @@ void handleConnectedClient(Client *client)
     }
     else // We got some good data from a client
     {
-        spdlog::info("nbytes = {}", nbytes);
-        spdlog::info("buf = \n|{}|", buf);
+        spdlog::debug("nbytes = {}", nbytes);
 
-        client->httpRequest.m_rawMessage.append(buf);
-        spdlog::info("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
+        client->httpRequest.m_rawMessage.append(std::string(buf, buf + nbytes));
+        // spdlog::debug("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
 
         client->httpRequest.m_fieldLinesEndPos = client->httpRequest.m_rawMessage.find("\r\n\r\n");
         if (client->httpRequest.m_fieldLinesEndPos == std::string::npos)
@@ -42,12 +42,12 @@ void handleConnectedClient(Client *client)
             return;
         }
 
+        spdlog::info("message complete!");
         if (client->httpRequest.m_method.empty())
         {
             client->httpRequest.setMethodPathVersion();
             client->httpRequest.setHeaders();
         }
-        spdlog::info("message complete!");
 
         /*
         A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value.
@@ -58,12 +58,60 @@ void handleConnectedClient(Client *client)
 
         if (!client->httpRequest.m_method.compare("POST"))
         {
-            if (!client->httpRequest.postRequestHandle())
+            httpresponse.m_statusLine = client->httpRequest.postRequestHandle();
+            if (httpresponse.m_statusLine.empty())
                 return;
+
+            spdlog::debug("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
+
+            std::string contentType = client->httpRequest.m_headers["Content-Type"];
+            // handle not found
+            std::string boundary{"boundary="};
+            size_t boundaryStartPos = contentType.find(boundary);
+            // handle not found
+            std::string boundaryCode = contentType.substr(boundaryStartPos + boundary.length());
+            spdlog::debug("boundaryCode = {}", boundaryCode);
+
+            // Finding the first occurrence of the boundary
+            size_t firstBoundaryPos = client->httpRequest.m_rawMessage.find("--" + boundaryCode);
+            if (firstBoundaryPos == std::string::npos)
+            {
+                std::cerr << "Boundary not found!" << std::endl;
+            }
+
+            // Finding the second occurrence of the boundary
+            size_t secondBoundaryPos = client->httpRequest.m_rawMessage.find(boundaryCode + "--", firstBoundaryPos + (boundaryCode.length() + 2));
+            if (secondBoundaryPos == std::string::npos)
+            {
+                std::cerr << "Second boundary not found!" << std::endl;
+            }
+
+            // Extracting content between boundaries
+            size_t contentStart = firstBoundaryPos + boundaryCode.length() + 4; // +2 for the CRLF after the boundary
+            size_t contentEnd = secondBoundaryPos - 4;                          // -2 for the CRLF before the second boundary
+            std::string content = client->httpRequest.m_rawMessage.substr(contentStart, contentEnd - contentStart);
+
+            std::cout << "Content between boundaries:\n"
+                      << content << std::endl;
+
+            // size_t startBodyPos = client->httpRequest.m_rawMessage.find("--" + boundaryCode) + boundaryCode.length() + 2;
+            // spdlog::debug("startBodyPos: {}", startBodyPos);
+            // size_t endBodyPos = client->httpRequest.m_rawMessage.find("--" + boundaryCode + "--");
+            // spdlog::debug("endBodyPos: {}", endBodyPos);
+            // size_t bodySize = client->httpRequest.m_rawMessage.length() - startBodyPos;
+            // spdlog::debug("bodySize: {}", bodySize);
+            // std::string body = client->httpRequest.m_rawMessage.substr(startBodyPos, bodySize);
+            // spdlog::debug("BODY: {}", body);
+            // 1. We moeten weten wat de boundary string is
+            //      ----WebKitFormBoundary4nSB0wtYkKHiEnBy
+            // 2. Dan twee streepjes voor dat ding zetten
+            // 3. Find startPoint
+            // 4. Find endPoint
+            // 5. Substring(startpoint, Endpoint);
         }
         else if (!client->httpRequest.m_method.compare("GET"))
         {
-            spdlog::info("GET method");
+            spdlog::debug("GET method");
 
             std::string targetPath = httpresponse.targetPathCreate(client->httpRequest.m_target);
             try
@@ -78,11 +126,16 @@ void handleConnectedClient(Client *client)
         }
         else
         {
-            spdlog::info("OPTIONS method");
+            spdlog::debug("OPTIONS method");
         }
+        spdlog::debug("{}", httpresponse);
         httpresponse.m_headers.insert(std::make_pair("Content-Length", std::to_string(n)));
         httpresponse.m_headers.insert(std::make_pair("Content-Type", "text/html"));
         std::string httpResponse = httpresponse.responseBuild();
+
+        std::cout << "Content-length value: " << client->httpRequest.m_contentLength << std::endl;
+        std::cout << "body-lenght value: " << client->httpRequest.m_rawMessage.length() - (client->httpRequest.m_fieldLinesEndPos + 4) << std::endl;
+
         send(client->m_socketFd, httpResponse.data(), httpResponse.length(), 0);
     }
     delete client;

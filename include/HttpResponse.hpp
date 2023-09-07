@@ -25,6 +25,9 @@ public:
     std::string responseBuild(void);
     int targetRead(const std::string &requestTarget);
     std::string targetPathCreate(const std::string &target);
+
+    // outstream operator overload
+    friend std::ostream &operator<<(std::ostream &out, const HttpResponse &HttpResponse);
 };
 
 /*
