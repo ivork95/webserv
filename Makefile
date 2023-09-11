@@ -3,6 +3,7 @@ NAME		:=	webserv
 CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	obj/Client.o \
+				obj/HttpMessage.o \
 				obj/HttpRequest.o \
 				obj/HttpResponse.o \
 				obj/main.o \
@@ -11,6 +12,7 @@ OBJECTS		:=	obj/Client.o \
 				obj/TcpServer.o \
 				obj/Timer.o
 HEADERS		:=	include/Client.hpp \
+				include/HttpMessage.hpp \
 				include/HttpRequest.hpp \
 				include/HttpResponse.hpp \
 				include/MultiplexerIO.hpp \

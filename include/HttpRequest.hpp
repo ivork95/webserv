@@ -11,35 +11,30 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include "HttpMessage.hpp"
 
 class HttpRequest
 {
 public:
-    size_t m_fieldLinesEndPos{};
+    std::vector<std::string> m_methodPathVersion{};
     std::string m_rawMessage{};
-    std::string m_method{};
-    std::string m_target{};
-    std::string m_version{};
-    std::map<std::string, std::string> m_headers{};
-    bool isContentLengthConverted{false};
+    std::map<std::string, std::string> m_requestHeaders{};
     int m_contentLength{};
     int m_client_max_body_size{999999};
 
-    // default constructor
-    HttpRequest(void);
+    // constructor
+    HttpRequest(std::string rawMessage, std::map<std::string, std::string> requestHeaders, int m_contentLength);
 
     // methods
-    std::string requestLineParse(const std::string &rawMessage);
-    void setMethodPathVersion(void);
-    void setHeaders(void);
-    void setContentLength(void);
-    std::pair<std::string, std::string> parseFieldLine(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const;
-    std::map<std::string, std::string> fieldLinesToHeaders(std::string &fieldLines) const;
+    std::vector<std::string> split(const std::string &str);
+
     std::string postRequestHandle(void);
-    void headersPrint(const std::map<std::string, std::string> &headers);
     std::string getBody(const std::string &boundaryCode);
     std::string getGeneralHeaders(const std::string &boundaryCode);
     std::string getBoundaryCode(void);
+
+    // outstream operator overload
+    friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);
 };
 
 #endif

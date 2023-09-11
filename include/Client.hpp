@@ -13,6 +13,7 @@
 #include "TcpServer.hpp"
 #include "HttpRequest.hpp"
 #include "Timer.hpp"
+#include "HttpMessage.hpp"
 
 class TcpServer;
 class Timer;
@@ -26,7 +27,8 @@ public:
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
 
-    HttpRequest httpRequest{};
+    // HttpRequest httpRequest{};
+    HttpMessage httpMessage{};
 
     Timer *timer{};
 

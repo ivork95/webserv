@@ -32,70 +32,86 @@ void handleConnectedClient(Client *client)
     {
         spdlog::debug("nbytes = {}", nbytes);
 
-        client->httpRequest.m_rawMessage.append(std::string(buf, buf + nbytes));
-        // spdlog::debug("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
+        client->httpMessage.m_rawMessage.append(buf, buf + nbytes);
 
-        client->httpRequest.m_fieldLinesEndPos = client->httpRequest.m_rawMessage.find("\r\n\r\n");
-        if (client->httpRequest.m_fieldLinesEndPos == std::string::npos)
+        size_t fieldLinesEndPos = client->httpMessage.m_rawMessage.find("\r\n\r\n");
+        if (fieldLinesEndPos == std::string::npos)
         {
             spdlog::warn("message incomplete [...]");
             return;
         }
 
-        spdlog::info("message complete!");
-        if (client->httpRequest.m_method.empty())
+        if (client->httpMessage.m_requestHeaders.empty())
+            client->httpMessage.setRequestHeaders();
+
+        if (client->httpMessage.m_requestHeaders.contains("Content-Length"))
         {
-            client->httpRequest.setMethodPathVersion();
-            client->httpRequest.setHeaders();
+            if (!client->httpMessage.isContentLengthConverted)
+            {
+                client->httpMessage.setContentLength();
+            }
+            if (client->httpMessage.m_contentLength > static_cast<int>((client->httpMessage.m_rawMessage.length() - (fieldLinesEndPos + 4))))
+            {
+                spdlog::warn("Content-Length not reached [...]");
+                return;
+            }
+            spdlog::debug("Content-Length reached!");
+            spdlog::debug("Content-Length = {}", client->httpMessage.m_contentLength);
+            spdlog::debug("Body length = {}", client->httpMessage.m_rawMessage.length() - (fieldLinesEndPos + 4));
         }
+
+        spdlog::debug("message complete!");
+        spdlog::debug(client->httpMessage);
+
+        HttpRequest httprequest{client->httpMessage.m_rawMessage, client->httpMessage.m_requestHeaders, client->httpMessage.m_contentLength};
 
         /*
         A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value.
         */
 
-        HttpResponse httpresponse{};
-        int n{};
+        // HttpResponse httpresponse{};
+        // int n{};
 
-        if (!client->httpRequest.m_method.compare("POST"))
-        {
-            httpresponse.m_statusLine = client->httpRequest.postRequestHandle();
-            if (httpresponse.m_statusLine.empty())
-                return;
+        // if (!client->httpRequest.m_method.compare("POST"))
+        // {
+        //     httpresponse.m_statusLine = client->httpRequest.postRequestHandle();
+        //     if (httpresponse.m_statusLine.empty())
+        //         return;
 
-            // spdlog::debug("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
+        //     // spdlog::debug("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
 
-            std::string boundaryCode = client->httpRequest.getBoundaryCode();
-            spdlog::warn("body = \n|{}|", client->httpRequest.getBody(boundaryCode));
-            spdlog::warn("generalHeaders = \n|{}|", client->httpRequest.getGeneralHeaders(boundaryCode));
-        }
-        else if (!client->httpRequest.m_method.compare("GET"))
-        {
-            spdlog::debug("GET method");
+        //     std::string boundaryCode = client->httpRequest.getBoundaryCode();
+        //     spdlog::warn("body = \n|{}|", client->httpRequest.getBody(boundaryCode));
+        //     spdlog::warn("generalHeaders = \n|{}|", client->httpRequest.getGeneralHeaders(boundaryCode));
+        // }
+        // else if (!client->httpRequest.m_method.compare("GET"))
+        // {
+        //     spdlog::debug("GET method");
 
-            std::string targetPath = httpresponse.targetPathCreate(client->httpRequest.m_target);
-            try
-            {
-                n = httpresponse.targetRead(targetPath);
-            }
-            catch (...)
-            {
-                httpresponse.m_statusLine = "HTTP/1.1 404 NOT FOUND";
-                n = httpresponse.targetRead(httpresponse.targetPathCreate("/404"));
-            }
-        }
-        else
-        {
-            spdlog::debug("OPTIONS method");
-        }
-        spdlog::debug("{}", httpresponse);
-        httpresponse.m_headers.insert(std::make_pair("Content-Length", std::to_string(n)));
-        httpresponse.m_headers.insert(std::make_pair("Content-Type", "text/html"));
-        std::string httpResponse = httpresponse.responseBuild();
+        //     std::string targetPath = httpresponse.targetPathCreate(client->httpRequest.m_target);
+        //     try
+        //     {
+        //         n = httpresponse.targetRead(targetPath);
+        //     }
+        //     catch (...)
+        //     {
+        //         httpresponse.m_statusLine = "HTTP/1.1 404 NOT FOUND";
+        //         n = httpresponse.targetRead(httpresponse.targetPathCreate("/404"));
+        //     }
+        // }
+        // else
+        // {
+        //     spdlog::debug("OPTIONS method");
+        // }
+        // spdlog::debug("{}", httpresponse);
+        // httpresponse.m_headers.insert(std::make_pair("Content-Length", std::to_string(n)));
+        // httpresponse.m_headers.insert(std::make_pair("Content-Type", "text/html"));
+        // std::string httpResponse = httpresponse.responseBuild();
 
-        std::cout << "Content-length value: " << client->httpRequest.m_contentLength << std::endl;
-        std::cout << "body-lenght value: " << client->httpRequest.m_rawMessage.length() - (client->httpRequest.m_fieldLinesEndPos + 4) << std::endl;
+        // std::cout << "Content-length value: " << client->httpRequest.m_contentLength << std::endl;
+        // std::cout << "body-lenght value: " << client->httpRequest.m_rawMessage.length() - (client->httpRequest.m_fieldLinesEndPos + 4) << std::endl;
 
-        send(client->m_socketFd, httpResponse.data(), httpResponse.length(), 0);
+        // send(client->m_socketFd, httpResponse.data(), httpResponse.length(), 0);
     }
     delete client;
 }
