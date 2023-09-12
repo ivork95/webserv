@@ -16,27 +16,10 @@ std::vector<std::string> HttpRequest::split(const std::string &str)
     std::istringstream iss(str);
     std::string keyword;
 
-    while (getline(iss, keyword))
-    {
+    while (getline(iss, keyword, ' '))
         methodPathVersion.push_back(keyword);
-    }
 
     return methodPathVersion;
-}
-
-std::string HttpRequest::postRequestHandle(void)
-{
-    spdlog::info("POST method");
-
-    if (m_requestHeaders.find("Content-Length") == m_requestHeaders.end())
-        return "HTTP/1.1 411 Length Required";
-
-    if (m_contentLength > m_client_max_body_size)
-        return "HTTP/1.1 413 Payload Too Large";
-
-    // Create and send response
-    spdlog::info("Content-Length reached!");
-    return "HTTP/1.1 200 OK";
 }
 
 std::string HttpRequest::getBoundaryCode(void)

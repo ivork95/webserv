@@ -64,10 +64,70 @@ void handleConnectedClient(Client *client)
         spdlog::debug(client->httpMessage);
 
         HttpRequest httprequest{client->httpMessage.m_rawMessage, client->httpMessage.m_requestHeaders, client->httpMessage.m_contentLength};
+        HttpResponse httpresponse{};
 
         /*
         A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value.
         */
+
+        if (!httprequest.m_methodPathVersion[0].compare("GET"))
+        {
+            spdlog::debug("GET method");
+
+            std::string path{httprequest.m_methodPathVersion[1]};
+            if (!path.compare("/"))
+                path = "./www/index.html";
+            else
+            {
+                path = "./www" + httprequest.m_methodPathVersion[1] + ".html";
+            }
+
+            std::ifstream inf(path);
+            if (!inf)
+            {
+                httpresponse.m_statusLine = "HTTP/1.1 404 NOT FOUND";
+                std::string s{httpresponse.responseBuild()};
+                send(client->m_socketFd, s.data(), s.length(), 0);
+                delete (client);
+                return;
+            }
+
+            int n{};
+            while (inf)
+            {
+                std::string strInput;
+                std::getline(inf, strInput);
+                httpresponse.m_body.append(strInput);
+                n = n + strInput.length();
+            }
+
+            std::string s{httpresponse.responseBuild()};
+            send(client->m_socketFd, s.data(), s.length(), 0);
+            delete client;
+            return;
+        }
+        else if (!httprequest.m_methodPathVersion[0].compare("POST"))
+        {
+            spdlog::debug("POST method");
+
+            if (httprequest.m_requestHeaders.contains("Content-Length"))
+            {
+                httpresponse.m_statusLine = "HTTP/1.1 411 Length Required";
+                std::string s{httpresponse.responseBuild()};
+                send(client->m_socketFd, s.data(), s.length(), 0);
+                delete (client);
+                return;
+            }
+
+            if (httprequest.m_contentLength > httprequest.m_client_max_body_size)
+            {
+                httpresponse.m_statusLine = "HTTP/1.1 413 Payload Too Large";
+                std::string s{httpresponse.responseBuild()};
+                send(client->m_socketFd, s.data(), s.length(), 0);
+                delete (client);
+                return;
+            }
+        }
 
         // HttpResponse httpresponse{};
         // int n{};

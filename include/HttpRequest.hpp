@@ -28,7 +28,6 @@ public:
     // methods
     std::vector<std::string> split(const std::string &str);
 
-    std::string postRequestHandle(void);
     std::string getBody(const std::string &boundaryCode);
     std::string getGeneralHeaders(const std::string &boundaryCode);
     std::string getBoundaryCode(void);
