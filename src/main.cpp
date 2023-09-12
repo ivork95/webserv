@@ -12,13 +12,12 @@
 void handleConnectedClient(Client *client)
 {
     char buf[BUFSIZE + 1]{}; // Buffer for client data
-
     int nbytes = recv(client->m_socketFd, buf, BUFSIZE, 0);
 
     if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
     {
-        perror("timerfd_settime");
-        exit(EXIT_FAILURE);
+        std::perror("timerfd_settime()");
+        throw std::runtime_error("Error: timerfd_settime()\n");
     }
 
     if (nbytes <= 0) // Got error or connection closed by client
@@ -110,7 +109,9 @@ void handleConnectedClient(Client *client)
         {
             spdlog::debug("POST method");
 
-            if (httprequest.m_requestHeaders.contains("Content-Length"))
+            httprequest.requestHeadersPrint(httprequest.m_requestHeaders);
+
+            if (!httprequest.m_requestHeaders.contains("Content-Length"))
             {
                 httpresponse.m_statusLine = "HTTP/1.1 411 Length Required";
                 std::string s{httpresponse.responseBuild()};
@@ -127,6 +128,15 @@ void handleConnectedClient(Client *client)
                 delete (client);
                 return;
             }
+
+            httprequest.setBoundaryCode();
+            httprequest.setBody();
+            httprequest.setFileName();
+
+            std::string s{httpresponse.responseBuild()};
+            send(client->m_socketFd, s.data(), s.length(), 0);
+            delete client;
+            return;
         }
 
         // HttpResponse httpresponse{};
