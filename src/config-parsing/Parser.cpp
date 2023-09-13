@@ -210,9 +210,6 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
  * client_max_body_size 1m
  * client_max_body_size <size>
 */
-/**
- * TODO valid size ? (only integers? max size?)
-*/
 void	Parser::_parseClientSize(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	const std::string rawValue = tokens.at(*i)._getWord();
 	if (rawValue == "0")
@@ -230,6 +227,7 @@ void	Parser::_parseClientSize(ServerConfig *server, std::vector<Token> tokens, s
 */
 /**
  * TODO valid error code ? (400 to 599?)
+ * ? wip
 */
 void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing error_page directive\n";
@@ -265,7 +263,7 @@ void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, s
 	// std::cout << "Parsing server_name directive\n";
 	const std::string	serverName = tokens.at(*i)._getWord();
 	if (!isValidServerName(serverName)) {
-		std::cout << "Invalid server name: " << serverName << std::endl;
+		// std::cout << "Invalid server name: " << serverName << std::endl; // ? debug
 		throw InvalidServerNameException();
 	}
 	server->setServerName(serverName);

@@ -80,7 +80,7 @@ class Parser {
 		class InvalidClientMaxBodySizeValueException : public InvalidTokenException {
 			public:
 				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Invalid client_max_body_size value (only integers)";
+					static std::string message = std::string(InvalidTokenException::what()) + "Invalid client_max_body_size value (only positive integers)";
 					return (message.c_str());
 				}
 		};
