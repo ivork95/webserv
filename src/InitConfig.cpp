@@ -85,9 +85,11 @@ int initConfig(const std::string &filePath) {
 	if (parseTokens(&config))
 		return (1);
 
-	for (size_t i = 0; i < config.serversConfig.size(); ++i) {
-		std::cout << config.serversConfig[i];
-	}
+	// ? debug
+	// std::cout << "\n\n\t\t[SERVERS CONFIG ]\n\n";
+	// for (size_t i = 0; i < config.serversConfig.size(); ++i) {
+	// 	std::cout << config.serversConfig[i];
+	// }
 
 	return (0);
 }

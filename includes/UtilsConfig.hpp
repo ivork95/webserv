@@ -17,4 +17,12 @@ bool	isValidErrorCode(const std::string &errorCode);
 
 bool	isValidPortNumber(const std::string &portNumber);
 
+bool	isValidServerName(const std::string &serverName);
+
+bool	isLetter(const std::string &str);
+
+bool	isAlphaNum(const std::string &str);
+
+bool	isValidIpv4(const std::string &str);
+
 #endif

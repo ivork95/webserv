@@ -134,6 +134,15 @@ class Parser {
 					return (message.c_str());
 				}
 		};
+
+		class InvalidServerNameException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + \
+												"Invalid server name (only alphanumeric characters, 'localhost' or '_', or valid IPv4 address)";
+					return (message.c_str());
+				}
+		};
 };
 
 #endif

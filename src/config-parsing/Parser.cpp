@@ -236,7 +236,7 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 	size_t						j = *i;
 	std::vector<std::string>	errorCodes;
 	while (tokens.at(j)._getType() == Token::WORD && isNumber(tokens.at(j)._getWord())) {
-		std::string	errorCode = tokens.at(j)._getWord();
+		const std::string	errorCode = tokens.at(j)._getWord();
 		// TODO check if valid (// error code validity?)
 		if (isValidErrorCode(errorCode)) {
 			errorCodes.push_back(tokens.at(j)._getWord());
@@ -245,7 +245,7 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 		}
 		j++;
 	}
-	std::string		filePath = tokens.at(j)._getWord();
+	const std::string		filePath = tokens.at(j)._getWord();
 	// TODO check if filePath is valid
 	ErrorPageConfig	errorPage(errorCodes, filePath);
 	server->setErrorPagesConfig(errorPage);
@@ -255,25 +255,29 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 /**
  * server_name localhost
  * server_name <server_name>
+ * server_name <server_name> (<server_name> ...)
 */
 /**
- * TODO valid server name ? (only letters, numbers, and dashes?)
+ * TODO valid server name ? localhost, example.com, www.example.com, 192.168.1.100
+ * ? wip
 */
 void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing server_name directive\n";
-	server->setServerName(tokens.at(*i)._getWord());
+	const std::string	serverName = tokens.at(*i)._getWord();
+	if (!isValidServerName(serverName)) {
+		std::cout << "Invalid server name: " << serverName << std::endl;
+		throw InvalidServerNameException();
+	}
+	server->setServerName(serverName);
 }
 
 /**
  * listen 8080
  * listen <port_number>
 */
-/**
- * TODO valid port nb ? (1024 to 65535??)
-*/
 void	Parser::_parseListen(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing listen directive\n";
-	std::string	portNumber = tokens.at(*i)._getWord();
+	const std::string	portNumber = tokens.at(*i)._getWord();
 	if (!isValidPortNumber(portNumber))
 		throw InvalidPortNumberException();
 	server->setPortNb(portNumber);

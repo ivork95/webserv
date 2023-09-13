@@ -20,6 +20,10 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/hasConversionUnit.o \
 				obj/utils/config/isValidErrorCode.o \
 				obj/utils/config/isValidPortNumber.o \
+				obj/utils/config/isValidServerName.o \
+				obj/utils/config/isLetter.o \
+				obj/utils/config/isAlphaNum.o \
+				obj/utils/config/isValidIpv4.o \
 				obj/logger/Logger.o \
 
 # HEADERS		:=	TcpServer.hpp \
