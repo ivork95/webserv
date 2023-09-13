@@ -6,6 +6,7 @@
 #include <fstream>
 #include "Timer.hpp"
 #include "HttpResponse.hpp"
+#include "Cgi.hpp"
 
 #define BUFSIZE 256
 
@@ -73,10 +74,52 @@ void handleConnectedClient(Client *client)
         if (!httprequest.m_methodPathVersion[0].compare("GET"))
         {
             spdlog::debug("GET method");
-
             std::string path{httprequest.m_methodPathVersion[1]};
             if (!path.compare("/"))
                 path = "./www/index.html";
+            else if (path.find("/cgi-bin/") != std::string::npos)
+            {
+                CGI CGI(path);
+                std::fstream file(CGI.m_executable);                
+
+                if (!file.is_open())
+                {
+                    throw;
+                }
+                int pid = fork();
+                if (pid == -1)
+                {
+                    throw;
+                }
+                else if (pid == 0)
+                {
+                    const char* scriptPath = "/cgi-bin/script.py";
+
+                    // Command-line arguments
+                    std::vector<const char*> args;
+                    args.push_back(scriptPath);
+                    args.insert(args.end(), CGI.m_params.begin());
+                    args.push_back(nullptr);
+
+                    // Execute the script using execve
+                    std::cout << "EXECUTING CG AIIIII\n\n";
+                    if (execve("/usr/bin/python3", const_cast<char* const*>(args.data()), nullptr)) {
+                        perror("execve");
+                        return 1;
+                    }
+
+                }
+                return ;
+                //parse path string into file
+                //create cgi-class met executable, parameters, en output value
+                //check of file bestaat
+                //fork met client als parameter
+                //execve executable
+                //create response
+                //send response
+
+
+            }
             else
             {
                 path = "./www" + httprequest.m_methodPathVersion[1] + ".html";
