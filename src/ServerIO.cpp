@@ -21,7 +21,7 @@ ServerIO::~ServerIO(void)
     close(m_epollfd);
 }
 
-// member functions
+// MEMBER FUNCTIONS
 void ServerIO::addSocketToEpollFd(int socket)
 {
     struct epoll_event ev

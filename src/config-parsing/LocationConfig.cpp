@@ -2,7 +2,7 @@
 #include "LocationConfig.hpp"
 
 /**
- * Constructors and destructor
+ * CONSTRUCTORS / DESTRUCTORS
  */
 /**
  * TODO set default values ?
@@ -31,7 +31,7 @@ LocationConfig::~LocationConfig(void) {
 }
 
 /**
- * Getters / setters
+ * GETTERS / SETTERS
 */
 const std::string &LocationConfig::getRequestURI(void) const {
 	return (_requestURI);
@@ -94,7 +94,7 @@ void LocationConfig::setHttpMethods(const std::vector<std::string> &httpMethods)
 */
 std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
 	out << "\nLocationConfig:\n";
-	out << "\trequestURI: " << route.getRequestURI() << std::endl;
+	out << "\trequestUri: " << route.getRequestURI() << std::endl;
 	out << "\trootPath: " << route.getRootPath() << std::endl;
 	out << "\tclientMaxBodySize: " << route.getClientMaxBodySize() << std::endl;
 	out << "\tautoIndex: " << route.getAutoIndex() << std::endl;

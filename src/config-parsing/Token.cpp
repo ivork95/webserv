@@ -17,7 +17,7 @@ Token::~Token(void) {
 }
 
 /**
- * Getters / setters
+ * GETTERS / SETTERS
 */
 const Token::ETokenType &Token::_getType(void) const {
 	return (_type);
@@ -39,10 +39,11 @@ void	Token::setWord(const std::string &word) {
  * OPERATOR OVERLOADS
 */
 std::ostream &operator << (std::ostream &out, const Token &token) {
+	// out << token._getWord() << " | " << token._getType() << std::endl;
 	if (token._getType() != Token::WORD)
-		out << "type: " << token._getType();
+		out << token._getType();
 	else
-		out << "word: " << token._getWord();
+		out << token._getWord();
 	return (out);
 }
 

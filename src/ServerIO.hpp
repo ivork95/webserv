@@ -20,7 +20,7 @@ public:
     // destructor
     ~ServerIO(void);
 
-    // member functions
+    // MEMBER FUNCTIONS
     void addSocketToEpollFd(int socket);
     void deleteSocketFromEpollFd(int socket);
 };

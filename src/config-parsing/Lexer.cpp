@@ -12,8 +12,12 @@ Lexer::~Lexer(void) {
 	// std::cout << "Lexer destructor called\n";
 }
 
-static bool	isSpecialChar(char c) {
+static bool	isSpecialChar(const char &c) {
 	return (c == '{' || c == '}' || c == ';' || c == '\n');
+}
+
+static bool	isNotSpecialChar(const char &c) {
+	return (c != '{' && c != '}' && c != ';' && c != '\n');
 }
 
 /**
@@ -48,7 +52,7 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 			std::string word;
 
 			// Loop until reaching another space, special char or end to have a full word
-			while (!isspace(*it) && *it != '{' && *it != '}' && *it != ';' && *it != '\n' && it != line.end()) {
+			while (!isspace(*it) && isNotSpecialChar(*it) && it != line.end()) {
 				word += *it;
 				it++;
 			}
@@ -68,7 +72,7 @@ std::vector<Token> Lexer::tokenizeServer(const std::string &rawData) {
     std::string line;
 
     while (std::getline(linesStream, line)) {
-		// std::cout << line.back() << std::endl; // ? testing
+		// std::cout << line.back() << std::endl; // ? debug
 		if (line.empty())
 			continue ;
 		else if (line.back() != ';' && line.back() != '{' && line.back() != '}')
@@ -99,12 +103,14 @@ std::vector<std::string> Lexer::splitServers(std::ifstream &configFile) {
                 if (braceStack.empty()) {
                     sections.push_back(content.substr(startPos, i - startPos + 1));
                 }
-            }
+            } else {
+				throw UnmatchedBracesException();
+				return std::vector<std::string>();
+			}
         }
     }
 	if (!braceStack.empty()) {
-		// throw UnmatchedBracesException();
-		std::cerr << "Error: unmatched braces" << std::endl;
+		throw UnmatchedBracesException();
 		return std::vector<std::string>();
 	}
     return (sections);

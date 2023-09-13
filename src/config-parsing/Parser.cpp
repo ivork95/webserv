@@ -16,7 +16,7 @@ Parser::~Parser(void) {
  * STATIC FUNCTIONS
 */
 static void	printCurrentToken(std::vector<Token> tokens, size_t i) {
-	std::cout << "[" << i << "] " << tokens.at(i)._getWord() << " | " << tokens.at(i)._getType() << std::endl;
+	std::cout << "[" << i << "] " << tokens.at(i) << std::endl;
 }
 
 static std::string convertToBytes(const std::string &rawValue) {
@@ -45,7 +45,7 @@ static std::string convertToBytes(const std::string &rawValue) {
  * limit_except <method> (<method> ...)
 */
 void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing limit_except directive\n";
+	// std::cout << "\tParsing limit_except directive\n"; // ? debug
 	size_t						j = *i;
 	std::vector<std::string>	httpMethods;
 	while (tokens.at(j)._getType() == Token::WORD) {
@@ -63,18 +63,22 @@ void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationCon
 /**
  * cgi .php cgi-bin
  * cgi <file_extension> <path_to_cgi>
- * TODO 1. check file_extension (only file extensions ?)
+ * TODO 1. check file_extension (only file extensions ?) 
+ * 			? wip
  * TODO 2. check path_to_cgi
+ * 			? wip
 */
 void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing cgi directive\n";
+	// std::cout << "\tParsing cgi directive\n"; // ? debug
 	if (tokens.at(*i)._getWord()[0] == '.') {
 		const std::string cgiExtension = tokens.at(*i)._getWord();
-		// TODO check if cgiExtension is valid
+		if (!isValidCgiExtension(cgiExtension))
+			throw InvalidCgiExtensionException();
 		if (tokens.at(*i + 1)._getType() == Token::WORD) {
 			(*i)++;
 			const std::string					cgiPath = tokens.at(*i)._getWord();
-			// TODO check if cgiPath is valid
+			if (!isValidPath(cgiPath))
+				throw InvalidPathException();
 			std::map<std::string, std::string>	cgiHandler;
 			cgiHandler[cgiExtension] = cgiPath;
 			route.setCgiHandler(cgiExtension, cgiPath);
@@ -94,7 +98,7 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
  * TODO what extension can the files have ?
 */
 void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing index directive\n";
+	// std::cout << "\tParsing index directive\n"; // ? debug
 	size_t						j = *i;
 	std::vector<std::string>	indexFile;
 	while (tokens.at(j)._getType() == Token::WORD) {
@@ -114,7 +118,7 @@ void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &r
  * autoindex <on/off>
 */
 void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing autoindex directive\n";
+	// std::cout << "\tParsing autoindex directive\n"; // ? debug
 	if (tokens.at(*i)._getWord() == "off")
 		route.setAutoIndex(false);
 	else if (tokens.at(*i)._getWord() == "on")
@@ -128,7 +132,7 @@ void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, LocationConfi
  * client_max_body_size <size> (where size is a number followed by k, m, or g)
 */
 void	Parser::_parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing client_max_body_size directive\n";
+	// std::cout << "\tParsing client_max_body_size directive\n"; // ? debug
 	const std::string rawValue = tokens.at(*i)._getWord();
 	if (rawValue == "0")
 		route.setClientMaxBodySize(rawValue);
@@ -145,9 +149,13 @@ void	Parser::_parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, Locat
 */
 /**
  * TODO check if path_to_root is valid => if it exists and is a directory ?
+ * 		? wip
 */
 void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing root directive\n";
+	// std::cout << "\tParsing root directive\n"; // ? debug
+	const std::string	rootPath = tokens.at(*i)._getWord();
+	if (!isValidPath(rootPath))
+		throw InvalidPathException();
 	route.setRootPath(tokens.at(*i)._getWord());
 }
 
@@ -159,13 +167,15 @@ void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &ro
  *     cgi .php cgi-bin;
  *     limit_except GET POST;
  * }
- * location <requestURI> { ... }
+ * location <requestUri> { ... }
 */
 void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// std::cout << "Parsing location block\n";
+	// std::cout << "Parsing location block\n"; // ? debug
 	size_t			j = *i;
-	std::string		requestURI = tokens.at(j)._getWord();
-	LocationConfig	route(requestURI);
+	std::string		requestUri = tokens.at(j)._getWord();
+	if (!isValidUri(requestUri))
+		throw InvalidUriException();
+	LocationConfig	route(requestUri);
 
 	j += 2; // skip opening brace
 
@@ -211,6 +221,7 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
  * client_max_body_size <size>
 */
 void	Parser::_parseClientSize(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
+	// std::cout << "Parsing client_max_body_size directive\n"; // ? debug
 	const std::string rawValue = tokens.at(*i)._getWord();
 	if (rawValue == "0")
 		server->setClientMaxBodySize(rawValue);
@@ -227,24 +238,26 @@ void	Parser::_parseClientSize(ServerConfig *server, std::vector<Token> tokens, s
 */
 /**
  * TODO valid error code ? (400 to 599?)
- * ? wip
+ * 		? wip
+ * TODO valid file path ?
+ * 		? wip
 */
 void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// std::cout << "Parsing error_page directive\n";
+	// std::cout << "Parsing error_page directive\n"; // ? debug
 	size_t						j = *i;
 	std::vector<std::string>	errorCodes;
 	while (tokens.at(j)._getType() == Token::WORD && isNumber(tokens.at(j)._getWord())) {
 		const std::string	errorCode = tokens.at(j)._getWord();
-		// TODO check if valid (// error code validity?)
 		if (isValidErrorCode(errorCode)) {
 			errorCodes.push_back(tokens.at(j)._getWord());
 		} else {
-			// throw InvalidErrorCodeException();
+			throw InvalidErrorCodeException();
 		}
 		j++;
 	}
 	const std::string		filePath = tokens.at(j)._getWord();
-	// TODO check if filePath is valid
+	if (!isValidPath(filePath))
+		throw InvalidPathException();
 	ErrorPageConfig	errorPage(errorCodes, filePath);
 	server->setErrorPagesConfig(errorPage);
 	(*i) = j;
@@ -257,10 +270,10 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 */
 /**
  * TODO valid server name ? localhost, example.com, www.example.com, 192.168.1.100
- * ? wip
+ * 		? wip
 */
 void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// std::cout << "Parsing server_name directive\n";
+	// std::cout << "Parsing server_name directive\n"; // ? debug
 	const std::string	serverName = tokens.at(*i)._getWord();
 	if (!isValidServerName(serverName)) {
 		// std::cout << "Invalid server name: " << serverName << std::endl; // ? debug
@@ -274,10 +287,10 @@ void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, s
  * listen <port_number>
 */
 void	Parser::_parseListen(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// std::cout << "Parsing listen directive\n";
+	// std::cout << "Parsing listen directive\n"; // ? debug
 	const std::string	portNumber = tokens.at(*i)._getWord();
 	if (!isValidPortNumber(portNumber))
-		throw InvalidPortNumberException();
+		throw InvalidPortNumberException(portNumber);
 	server->setPortNb(portNumber);
 }
 
@@ -321,8 +334,9 @@ void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens
 */
 void	Parser::_identifyDirectives(ServerConfig *server, std::vector<Token> tokens) {
 	for (size_t i = 0; i < tokens.size(); i++) {
-		// printCurrentToken(tokens, i); // ? testing
+		// printCurrentToken(tokens, i); // ? debug
 		_parseServerContext(server, tokens, &i);
+		
 		// try {
 		// 	_parseServerContext(server, tokens, &i);
 		// } catch (const std::exception &e) {
@@ -336,14 +350,15 @@ ServerConfig Parser::parseTokens(ServerConfig server) {
 	Parser parser;
 
 	// Identify directives
-	// parser._identifyDirectives(&server, server.getTokens());
+	parser._identifyDirectives(&server, server.getTokens());
 
-	try {
-		parser._identifyDirectives(&server, server.getTokens());
-	} catch (const std::exception &e) {
-		std::cerr << e.what() << std::endl;
-		// TODO set default value or throw error ?
-	}
+	// try {
+	// 	parser._identifyDirectives(&server, server.getTokens());
+	// } catch (const std::exception &e) {
+	// 	// TODO set default value or throw error ?
+	// 	std::cerr << e.what() << std::endl;
+	// 	// return (ServerConfig());
+	// }
 
 	// TODO check for N/A directives and set to default values or error ?
 

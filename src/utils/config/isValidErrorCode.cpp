@@ -1,6 +1,9 @@
 
 #include "UtilsConfig.hpp"
 
+/**
+ * TODO valid error codes? reserved values?
+*/
 bool	isValidErrorCode(const std::string &errorCode) {
 	if (errorCode.size() != 3)
 		return false;

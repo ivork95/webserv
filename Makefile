@@ -24,6 +24,9 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isLetter.o \
 				obj/utils/config/isAlphaNum.o \
 				obj/utils/config/isValidIpv4.o \
+				obj/utils/config/isValidCgiExtension.o \
+				obj/utils/config/isValidPath.o \
+				obj/utils/config/isValidUri.o \
 				obj/logger/Logger.o \
 
 # HEADERS		:=	TcpServer.hpp \

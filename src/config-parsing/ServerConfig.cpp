@@ -33,7 +33,7 @@ ServerConfig::~ServerConfig(void) {
 }
 
 /**
- * Getters / setters
+ * GETTERS / SETTERS
 */
 const unsigned int &ServerConfig::getIndex(void) const {
 	return (_index);
@@ -109,13 +109,13 @@ std::ostream &operator << (std::ostream &out, const ServerConfig &server) {
 	out << "\tserverName: " << server.getServerName() << std::endl;
 	out << "\tclientBodySizeLimit: " << server.getClientMaxBodySize() << std::endl;
 	if (server.getErrorPagesConfig().size() == 0) {
-		out << "\terrorPages: empty\n";
+		out << "\nErrorPageConfig: empty\n";
 	}
 	for (size_t i = 0; i < server.getErrorPagesConfig().size(); ++i) {
 		out << server.getErrorPagesConfig()[i];
 	}
 	if (server.getLocationsConfig().size() == 0) {
-		out << "\tlocationConfig: empty\n";
+		out << "\nLocationConfig: empty\n";
 	}
 	for (size_t i = 0; i < server.getLocationsConfig().size(); ++i) {
 		out << server.getLocationsConfig()[i];

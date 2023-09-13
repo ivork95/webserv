@@ -5,9 +5,11 @@
 
 static int	parseTokens(Configuration *config) {
 	for (size_t i = 0; i < config->serversConfig.size(); ++i) {
-		config->serversConfig[i] = Parser::parseTokens(config->serversConfig[i]);
-		if (config->serversConfig[i].getPortNb().empty()) {
+		try {
+			config->serversConfig[i] = Parser::parseTokens(config->serversConfig[i]);
+		} catch (const std::exception &e) {
 			std::cerr << "Error: could not parse server " << i << std::endl;
+			std::cerr << e.what() << std::endl;
 			return (1);
 		}
 	}
@@ -40,10 +42,10 @@ static int	createServers(Configuration *config) {
 }
 
 static int	readFile(std::ifstream &configFile, Configuration *config) {
-    config->serverSections = Lexer::splitServers(configFile);
-	// std::cout << "Number of servers: " << config->serverSections.size() << std::endl; // ? testing
-	if (config->serverSections.empty()) {
-		std::cerr << "Error: could not split sections" << std::endl;
+	try {
+		config->serverSections = Lexer::splitServers(configFile);
+	} catch (const std::exception &e) {
+		std::cerr << "Error: " << e.what() << std::endl;
 		return (1);
 	}
 	return (0);
@@ -86,10 +88,10 @@ int initConfig(const std::string &filePath) {
 		return (1);
 
 	// ? debug
-	// std::cout << "\n\n\t\t[SERVERS CONFIG ]\n\n";
-	// for (size_t i = 0; i < config.serversConfig.size(); ++i) {
-	// 	std::cout << config.serversConfig[i];
-	// }
+	std::cout << "\n\n\t\t[SERVERS CONFIG ]\n\n";
+	for (size_t i = 0; i < config.serversConfig.size(); ++i) {
+		std::cout << config.serversConfig[i];
+	}
 
 	return (0);
 }

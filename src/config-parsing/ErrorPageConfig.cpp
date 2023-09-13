@@ -18,7 +18,7 @@ ErrorPageConfig::~ErrorPageConfig(void) {
 }
 
 /**
- * Getters / setters
+ * GETTERS / SETTERS
 */
 const std::vector<std::string>	&ErrorPageConfig::getErrorCode(void) const {
 	return (_errorCode);

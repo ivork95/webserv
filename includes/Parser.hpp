@@ -126,13 +126,28 @@ class Parser {
 				}
 		};
 
+		// class InvalidPortNumberException : public InvalidTokenException {
+		// 	public:
+		// 		char const* what(const std::string &str) const throw() {
+		// 			static std::string message = std::string(InvalidTokenException::what()) + \
+		// 										str + "Invalid port number (range from 0 to 65535)";
+		// 			return (message.c_str());
+		// 		}
+		// };
+
+		// TODO is this a good practice?
 		class InvalidPortNumberException : public InvalidTokenException {
 			public:
-				char const* what() const throw() {
+				InvalidPortNumberException(const std::string &portNumber) : _portNumber(portNumber) {}
+
+				char const* what() const throw() override {
 					static std::string message = std::string(InvalidTokenException::what()) + \
-												"Invalid port number (range from 0 to 65535)";
-					return (message.c_str());
+						"Invalid port number: " + _portNumber;
+					return message.c_str();
 				}
+
+			private:
+				std::string _portNumber;
 		};
 
 		class InvalidServerNameException : public InvalidTokenException {
@@ -140,6 +155,31 @@ class Parser {
 				char const* what() const throw() {
 					static std::string message = std::string(InvalidTokenException::what()) + \
 												"Invalid server name (only alphanumeric characters, 'localhost' or '_', or valid IPv4 address)";
+					return (message.c_str());
+				}
+		};
+
+		class InvalidCgiExtensionException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string(InvalidTokenException::what()) + \
+												"Invalid cgi extension (only '.php', '.py' or '.c')";
+					return (message.c_str());
+				}
+		};
+
+		class InvalidPathException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string("Invalid path (only alphanumeric characters, '/', '_', '-', '.' or '~')");
+					return (message.c_str());
+				}
+		};
+
+		class InvalidUriException : public InvalidTokenException {
+			public:
+				char const* what() const throw() {
+					static std::string message = std::string("Invalid uri (only alphanumeric characters, '/', '_', '-', '.' or '~')");
 					return (message.c_str());
 				}
 		};

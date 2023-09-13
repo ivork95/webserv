@@ -25,4 +25,10 @@ bool	isAlphaNum(const std::string &str);
 
 bool	isValidIpv4(const std::string &str);
 
+bool	isValidCgiExtension(const std::string &cgiExtension);
+
+bool	isValidPath(const std::string &filePath);
+
+bool	isValidUri(const std::string &requestUri);
+
 #endif
