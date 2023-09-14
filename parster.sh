@@ -10,7 +10,7 @@ WEBSERV_EXEC="./webserv"
 # Function to run webserv with a given config file
 run_webserv() {
     config_file="$1"
-    echo -e "\e[34m\n\t\t\tRunning webserv with config file: $config_file\e[0m"
+    echo -e "\e[34m\n\tRunning webserv with config file: $config_file\e[0m"
     $WEBSERV_EXEC "$config_file"
 }
 

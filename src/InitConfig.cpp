@@ -87,7 +87,9 @@ int initConfig(const std::string &filePath) {
 		return (1);
 
 	// ? debug
-	std::cout << "\n\n\t\t[SERVERS CONFIG ]\n\n";
+	std::cout << "\n\t\t -----------------\n";
+	std::cout << "\t\t[  SERVER CONFIG  ]\n";
+	std::cout << "\t\t -----------------\n";
 	for (size_t i = 0; i < config.serversConfig.size(); ++i) {
 		std::cout << config.serversConfig[i];
 	}

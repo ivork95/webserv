@@ -95,7 +95,7 @@ docker-build:
 docker-exec:
 	docker exec -it $(CONTAINER) sh -c "cd /pwd; bash"
 
-basic:
+basic: all
 	./webserv config-files/valid/basic.conf
 
 test: all
