@@ -26,7 +26,7 @@ public:
 
     // methods
     std::pair<std::string, std::string> parseFieldLine(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const;
-    std::map<std::string, std::string> fieldLinesToHeaders(std::string &fieldLines) const;
+    std::map<std::string, std::string> fieldLinesToHeaders(std::string &fieldLines);
     void requestHeadersPrint(const std::map<std::string, std::string> &headers) const;
 
     // getters/setters

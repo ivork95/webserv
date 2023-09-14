@@ -21,8 +21,10 @@ std::pair<std::string, std::string> HttpMessage::parseFieldLine(const std::strin
     return std::pair<std::string, std::string>(key, value);
 }
 
-std::map<std::string, std::string> HttpMessage::fieldLinesToHeaders(std::string &fieldLines) const
+std::map<std::string, std::string> HttpMessage::fieldLinesToHeaders(std::string &fieldLines)
 {
+    spdlog::critical("fieldlines = |{}|", fieldLines);
+
     std::map<std::string, std::string> headers{};
     std::string fieldLine{};
     std::string fieldLineDelim{"\r\n"};
@@ -57,7 +59,7 @@ void HttpMessage::setRequestHeaders(void)
 {
     size_t requestLineEndPos = m_rawMessage.find("\r\n");
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
-    std::string fieldLines = m_rawMessage.substr(requestLineEndPos + 2, fieldLinesEndPos + 4);
+    std::string fieldLines = m_rawMessage.substr(requestLineEndPos + 2, (fieldLinesEndPos + 4) - (requestLineEndPos + 2));
 
     m_requestHeaders = fieldLinesToHeaders(fieldLines);
 }

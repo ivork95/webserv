@@ -19,6 +19,7 @@ public:
     std::vector<std::string> m_methodPathVersion{3};
     std::string m_body{};
     int m_client_max_body_size{999999};
+    std::map<std::string, std::string> m_generalHeaders{};
     std::string m_boundaryCode{};
     std::string m_fileName{};
 
@@ -33,13 +34,16 @@ public:
     ~HttpRequest(void);
 
     // getters/setters
+    void setMethodPathVersion(void);
+    void setGeneralHeaders(void);
+
     void setFileName(void);
     void setBoundaryCode(void);
     void setBody(void);
 
     // methods
     std::vector<std::string> split(const std::string &str) const;
-    std::string parseBoundaryCode(void);
+    std::string parseBoundaryCode(const std::map<std::string, std::string> &requestHeaders);
     std::string parseBody(const std::string &boundaryCode);
     std::string parseGeneralHeaders(const std::string &boundaryCode);
     std::string parseFileName(const std::string &boundaryCode);

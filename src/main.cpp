@@ -60,22 +60,24 @@ void handleConnectedClient(Client *client)
         }
 
         spdlog::info("message complete!");
+        client->httpRequest.setMethodPathVersion();
+        spdlog::info("httprequest = {}", client->httpRequest);
 
         /*
         A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value.
         */
 
-        /*
-        if (!httprequest.m_methodPathVersion[0].compare("GET"))
+        HttpResponse httpresponse{};
+        if (!client->httpRequest.m_methodPathVersion[0].compare("GET"))
         {
             spdlog::debug("GET method");
 
-            std::string path{httprequest.m_methodPathVersion[1]};
+            std::string path{client->httpRequest.m_methodPathVersion[1]};
             if (!path.compare("/"))
                 path = "./www/index.html";
             else
             {
-                path = "./www" + httprequest.m_methodPathVersion[1] + ".html";
+                path = "./www" + client->httpRequest.m_methodPathVersion[1] + ".html";
             }
 
             std::ifstream inf(path);
@@ -102,13 +104,11 @@ void handleConnectedClient(Client *client)
             delete client;
             return;
         }
-        else if (!httprequest.m_methodPathVersion[0].compare("POST"))
+        else if (!client->httpRequest.m_methodPathVersion[0].compare("POST"))
         {
-            spdlog::debug("POST method");
+            spdlog::info("POST method");
 
-            httprequest.requestHeadersPrint(httprequest.m_requestHeaders);
-
-            if (!httprequest.m_requestHeaders.contains("Content-Length"))
+            if (!client->httpRequest.m_requestHeaders.contains("Content-Length"))
             {
                 httpresponse.m_statusLine = "HTTP/1.1 411 Length Required";
                 std::string s{httpresponse.responseBuild()};
@@ -117,7 +117,7 @@ void handleConnectedClient(Client *client)
                 return;
             }
 
-            if (httprequest.m_contentLength > httprequest.m_client_max_body_size)
+            if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
             {
                 httpresponse.m_statusLine = "HTTP/1.1 413 Payload Too Large";
                 std::string s{httpresponse.responseBuild()};
@@ -126,51 +126,27 @@ void handleConnectedClient(Client *client)
                 return;
             }
 
-            httprequest.setBoundaryCode();
-            httprequest.setBody();
-            httprequest.setFileName();
+            spdlog::info("m_rawMessage = {}", client->httpRequest.m_rawMessage);
+
+            client->httpRequest.setBoundaryCode();
+            client->httpRequest.setGeneralHeaders();
+            client->httpRequest.setFileName();
+            client->httpRequest.setBody();
+            spdlog::info(client->httpRequest);
 
             std::string s{httpresponse.responseBuild()};
             send(client->m_socketFd, s.data(), s.length(), 0);
             delete client;
             return;
         }
-        */
-
-        // HttpResponse httpresponse{};
-        // int n{};
-
-        // if (!client->httpRequest.m_method.compare("POST"))
-        // {
-        //     httpresponse.m_statusLine = client->httpRequest.postRequestHandle();
-        //     if (httpresponse.m_statusLine.empty())
-        //         return;
-
-        //     // spdlog::debug("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
-
-        //     std::string boundaryCode = client->httpRequest.parseBoundaryCode();
-        //     spdlog::warn("body = \n|{}|", client->httpRequest.parseBody(boundaryCode));
-        //     spdlog::warn("generalHeaders = \n|{}|", client->httpRequest.parseGeneralHeaders(boundaryCode));
-        // }
-        // else if (!client->httpRequest.m_method.compare("GET"))
-        // {
-        //     spdlog::debug("GET method");
-
-        //     std::string targetPath = httpresponse.targetPathCreate(client->httpRequest.m_target);
-        //     try
-        //     {
-        //         n = httpresponse.targetRead(targetPath);
-        //     }
-        //     catch (...)
-        //     {
-        //         httpresponse.m_statusLine = "HTTP/1.1 404 NOT FOUND";
-        //         n = httpresponse.targetRead(httpresponse.targetPathCreate("/404"));
-        //     }
-        // }
-        // else
-        // {
-        //     spdlog::debug("OPTIONS method");
-        // }
+        else if (!client->httpRequest.m_methodPathVersion[0].compare("DELETE"))
+        {
+            spdlog::debug("DELETE method");
+        }
+        else
+        {
+            spdlog::debug("Method not allowed");
+        }
         // spdlog::debug("{}", httpresponse);
         // httpresponse.m_headers.insert(std::make_pair("Content-Length", std::to_string(n)));
         // httpresponse.m_headers.insert(std::make_pair("Content-Type", "text/html"));

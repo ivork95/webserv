@@ -45,3 +45,12 @@ Vary: Accept-Encoding
 Content-Type: text/plain
 
 Hello World! My content includes a trailing CRLF.
+
+Client request:
+
+POST /test HTTP/1.1
+Host: foo.example
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 9999999
+
+field1=value1&field2=value2
