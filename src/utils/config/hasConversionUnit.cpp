@@ -8,5 +8,5 @@ bool	hasConversionUnit(const std::string &str) {
 			lastChar == 'm' || lastChar == 'M' || \
 			lastChar == 'g' || lastChar == 'G');
 	}
-	return (false);
+	return false;
 }

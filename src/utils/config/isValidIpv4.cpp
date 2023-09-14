@@ -1,12 +1,11 @@
 
 #include "UtilsConfig.hpp"
 
-#include <iostream>
 #include <string>
 #include <sstream>
 #include <vector>
 
-int	countDots(const std::string &str) {
+static int	countDots(const std::string &str) {
 	int	dotCount = 0;
 	for (char c : str) {
 		if (c == '.') {
@@ -25,9 +24,8 @@ int	countDots(const std::string &str) {
 bool	isValidIpv4(const std::string &str) {
 	if (str.empty())
 		return false;
-	if (!isdigit(str[0])) {
+	if (!isdigit(str[0]))
 		return false;
-	}
     std::vector<int>	octets;
     std::istringstream	iss(str);
     std::string			octet;
@@ -35,10 +33,9 @@ bool	isValidIpv4(const std::string &str) {
     while (std::getline(iss, octet, '.')) {
 		// std::cout << "octet: " << octet << std::endl; // ? debug
         try {
-            int value = std::stoi(octet);
-            if (value < 0 || value > 255) {
+            const int value = std::stoi(octet);
+            if (value < 0 || value > 255)
                 return false;
-            }
             octets.push_back(value);
         } catch (const std::invalid_argument &e) {
             return false;

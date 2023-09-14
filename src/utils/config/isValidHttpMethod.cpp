@@ -1,8 +1,8 @@
 
 #include "UtilsConfig.hpp"
 
-bool	isHttpMethod(const std::string &str) {
+bool	isValidHttpMethod(const std::string &str) {
 	if (str == "GET" || str == "POST" || str == "DELETE")
-		return (true);
-	return (false);
+		return true;
+	return false;
 }

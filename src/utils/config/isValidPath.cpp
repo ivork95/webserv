@@ -1,13 +1,25 @@
 
 #include "UtilsConfig.hpp"
 
+#include <filesystem>
+
 /**
- * TODO check path access?
+ * TODO check path access? 
 */
-bool	isValidPath(const std::string &filePath) {
-	if (filePath.empty())
+bool	isValidPath(const std::string &str) {
+	// std::cout << "isValidPath: " << str << std::endl; // ? debug
+	if (str.empty())
 		return false;
-	// if (filePath[0] != '/')
-	// 	return false;
+	// if (!std::filesystem::exists(str)) {
+	// 	std::cout << "does not exist\n";
+	// 	// return false;
+	// }
+	// if (std::filesystem::is_empty(str)) {
+	// 	std::cout << "is empty\n";
+	// 	// return false;
+	// }
+	if (!std::filesystem::is_regular_file(str) && !std::filesystem::is_directory(str)) {
+		return false;
+	}
 	return true;
 }

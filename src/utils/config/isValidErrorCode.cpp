@@ -4,10 +4,10 @@
 /**
  * TODO valid error codes? reserved values?
 */
-bool	isValidErrorCode(const std::string &errorCode) {
-	if (errorCode.size() != 3)
+bool	isValidErrorCode(const std::string &str) {
+	if (str.size() != 3)
 		return false;
-	if (!isdigit(errorCode[0]) || !isdigit(errorCode[1]) || !isdigit(errorCode[2]))
+	if (!isNumber(str))
 		return false;
 	return true;
 }

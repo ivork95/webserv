@@ -6,6 +6,9 @@
 # include <vector>
 # include <map>
 
+/**
+ * TODO make derived class from server class?
+*/
 class LocationConfig {
 	private:
 		std::string 						_requestURI;		// location / 

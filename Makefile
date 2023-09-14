@@ -14,18 +14,17 @@ OBJECTS		:=	obj/main.o \
 				obj/config-parsing/ServerConfig.o \
 				obj/config-parsing/LocationConfig.o \
 				obj/config-parsing/ErrorPageConfig.o \
-				obj/utils/config/isNumber.o \
-				obj/utils/config/isSpecificExtension.o \
-				obj/utils/config/isHttpMethod.o \
 				obj/utils/config/hasConversionUnit.o \
+				obj/utils/config/isAlphaNum.o \
+				obj/utils/config/isNumber.o \
+				obj/utils/config/isValidCgiExtension.o \
 				obj/utils/config/isValidErrorCode.o \
+				obj/utils/config/isValidHttpMethod.o \
+				obj/utils/config/isValidIndexExtension.o \
+				obj/utils/config/isValidIpv4.o \
+				obj/utils/config/isValidPath.o \
 				obj/utils/config/isValidPortNumber.o \
 				obj/utils/config/isValidServerName.o \
-				obj/utils/config/isLetter.o \
-				obj/utils/config/isAlphaNum.o \
-				obj/utils/config/isValidIpv4.o \
-				obj/utils/config/isValidCgiExtension.o \
-				obj/utils/config/isValidPath.o \
 				obj/utils/config/isValidUri.o \
 				obj/logger/Logger.o \
 
@@ -95,6 +94,9 @@ docker-build:
 
 docker-exec:
 	docker exec -it $(CONTAINER) sh -c "cd /pwd; bash"
+
+basic:
+	./webserv config-files/valid/basic.conf
 
 test: all
 	./webserv config-files/valid/multiple-servers.conf

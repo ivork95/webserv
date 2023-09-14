@@ -4,10 +4,10 @@
 /**
  * TODO same as isValidPath?
 */
-bool	isValidUri(const std::string &requestUri) {
-	if (requestUri.empty())
+bool	isValidUri(const std::string &str) {
+	if (str.empty())
 		return (false);
-	if (requestUri[0] != '/')
+	if (str[0] != '/')
 		return (false);
 	return (true);
 }

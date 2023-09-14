@@ -125,7 +125,7 @@ std::vector<ServerConfig>	Lexer::createServers(Configuration *config) {
 	}
 	if (servers.empty()) {
 		std::cerr << "Error: could not create servers" << std::endl;
-		return std::vector<ServerConfig>();
+		return std::vector<ServerConfig>();	// ! necessary?
 	}
 	return (servers);
 }

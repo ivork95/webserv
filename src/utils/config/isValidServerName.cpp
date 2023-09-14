@@ -28,32 +28,32 @@ bool	endsWithCom(const std::string &str) {
  *  - www.example.com
  *  - 192.168.1.100
 */
-bool isValidServerName(const std::string &serverName) {
-	// std::cout << serverName << std::endl; // ? debug
-	if (serverName.empty())
+bool isValidServerName(const std::string &str) {
+	// std::cout << str << std::endl; // ? debug
+	if (str.empty())
 		return false;
-	else if (serverName == "localhost" || serverName == "_")
+	else if (str == "localhost" || str == "_")
 		return true;
-	else if (startsWithWww(serverName)) {
+	else if (startsWithWww(str)) {
 		// std::cout << "Check www." << std::endl; // ? debug
-		if (endsWithCom(serverName)) {
+		if (endsWithCom(str)) {
 			// std::cout << "Check .com" << std::endl; // ? debug
-			std::string serverNameWithoutWwwCom = serverName.substr(4, serverName.size() - 8);
+			std::string serverNameWithoutWwwCom = str.substr(4, str.size() - 8);
 			if (!isAlphaNum(serverNameWithoutWwwCom))
 				return false;
 			return true;
 		}
-		std::string serverNameWithoutWww = serverName.substr(4);
+		std::string serverNameWithoutWww = str.substr(4);
 		if (!isAlphaNum(serverNameWithoutWww))
 			return false;
 		return true;
-	} else if (endsWithCom(serverName)) {
+	} else if (endsWithCom(str)) {
 		// std::cout << "Check .com" << std::endl; // ? debug
-		std::string serverNameWithoutCom = serverName.substr(0, serverName.size() - 4);
+		std::string serverNameWithoutCom = str.substr(0, str.size() - 4);
 		if (!isAlphaNum(serverNameWithoutCom))
 			return false;
 		return true;
-	} else if (isValidIpv4(serverName)) {
+	} else if (isValidIpv4(str)) {
 		return true;
 	} else {
 		return false;

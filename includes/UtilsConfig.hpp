@@ -9,26 +9,26 @@ bool	isHtmlExtension(const std::string &str);
 
 bool	isPhpExtension(const std::string &str);
 
-bool	isHttpMethod(const std::string &str);
-
 bool	hasConversionUnit(const std::string &str);
 
-bool	isValidErrorCode(const std::string &errorCode);
+bool	isValidHttpMethod(const std::string &str);
 
-bool	isValidPortNumber(const std::string &portNumber);
+bool	isValidErrorCode(const std::string &str);
 
-bool	isValidServerName(const std::string &serverName);
+bool	isValidPortNumber(const std::string &str);
 
-bool	isLetter(const std::string &str);
+bool	isValidServerName(const std::string &str);
 
 bool	isAlphaNum(const std::string &str);
 
 bool	isValidIpv4(const std::string &str);
 
-bool	isValidCgiExtension(const std::string &cgiExtension);
+bool	isValidCgiExtension(const std::string &str);
 
-bool	isValidPath(const std::string &filePath);
+bool	isValidIndexExtension(const std::string &str);
 
-bool	isValidUri(const std::string &requestUri);
+bool	isValidPath(const std::string &str);
+
+bool	isValidUri(const std::string &str);
 
 #endif

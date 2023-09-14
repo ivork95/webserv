@@ -22,7 +22,6 @@ static int	parseTokens(Configuration *config) {
 
 static int	tokenizeServers(Configuration *config) {
 	for (size_t i = 0; i < config->serversConfig.size(); ++i) {
-		// config->serversConfig[i].tokens = Lexer::tokenizeServer(config->serversConfig[i].rawData);
 		config->serversConfig[i].setTokens(Lexer::tokenizeServer(config->serversConfig[i].getRawData()));
 		if (config->serversConfig[i].getTokens().empty()) {
 			std::cerr << "Error: could not tokenize server " << i << std::endl;

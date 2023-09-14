@@ -3,6 +3,7 @@
 
 #include "Lexer.hpp"
 #include "Configuration.hpp"
+#include "Exceptions.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -22,11 +23,11 @@ class Parser {
 		void _parseListen(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i);
-		void _parseClientSize(ServerConfig *server, std::vector<Token> tokens, size_t *i);
+		void _parseServerClientMaxBodySize(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 
 		void _parseLocationContext(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &route);
-		void _parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, LocationConfig &route);
+		void _parseLocationClientMaxBodySize(std::vector<Token> tokens, size_t *i, LocationConfig &route);
 		void _parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route);
 		void _parseAutoIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route);
 		void _parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &route);
@@ -38,151 +39,6 @@ class Parser {
 
 		static ServerConfig	parseTokens(ServerConfig server);
 
-		class InvalidTokenException : public std::exception {
-			public:
-				char const* what() const throw() {
-					return ("Invalid token: ");
-				}
-		};
-
-		class ExpectedWordTokenException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Expected word token";
-					return (message.c_str());
-				}
-		};
-
-		class ExpectedHttpMethodTokenException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Expected HTTP method token (only GET, POST or DELETE)";
-					return (message.c_str());
-				}
-		};
-
-		class MissingConversionUnitException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Missing conversion unit (only 'k/K' or 'm/M' or 'g/G')";
-					return (message.c_str());
-				}
-		};
-
-		class InvalidConversionUnitException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Invalid conversion unit (only 'k/K', 'm/M' or 'g/G')";
-					return (message.c_str());
-				}
-		};
-
-		class InvalidClientMaxBodySizeValueException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Invalid client_max_body_size value (only positive integers)";
-					return (message.c_str());
-				}
-		};
-
-		class InvalidAutoIndexValueException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Invalid autoindex value (only 'on' or 'off')";
-					return (message.c_str());
-				}
-		};
-
-		class InvalidFileExtensionException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Invalid file extension (only '.html' or '.php')";
-					return (message.c_str());
-				}
-		};
-
-		class ExpectedFileExtensionException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Expected file extension (only '.py', '.php' or '.c')";
-					return (message.c_str());
-				}
-		};
-
-		class MissingFilePathException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + "Missing file path";
-					return (message.c_str());
-				}
-		};
-
-		class InvalidErrorCodeException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + \
-												"Invalid error code (only 400, 401, 403, 404, 405, 413, 500, 501, 505)";
-					return (message.c_str());
-				}
-		};
-
-		// class InvalidPortNumberException : public InvalidTokenException {
-		// 	public:
-		// 		char const* what(const std::string &str) const throw() {
-		// 			static std::string message = std::string(InvalidTokenException::what()) + \
-		// 										str + "Invalid port number (range from 0 to 65535)";
-		// 			return (message.c_str());
-		// 		}
-		// };
-
-		// TODO is this a good practice?
-		class InvalidPortNumberException : public InvalidTokenException {
-			public:
-				InvalidPortNumberException(const std::string &portNumber) : _portNumber(portNumber) {}
-
-				char const* what() const throw() override {
-					static std::string message = std::string(InvalidTokenException::what()) + \
-						"Invalid port number: " + _portNumber;
-					return message.c_str();
-				}
-
-			private:
-				std::string _portNumber;
-		};
-
-		class InvalidServerNameException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + \
-												"Invalid server name (only alphanumeric characters, 'localhost' or '_', or valid IPv4 address)";
-					return (message.c_str());
-				}
-		};
-
-		class InvalidCgiExtensionException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string(InvalidTokenException::what()) + \
-												"Invalid cgi extension (only '.php', '.py' or '.c')";
-					return (message.c_str());
-				}
-		};
-
-		class InvalidPathException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string("Invalid path (only alphanumeric characters, '/', '_', '-', '.' or '~')");
-					return (message.c_str());
-				}
-		};
-
-		class InvalidUriException : public InvalidTokenException {
-			public:
-				char const* what() const throw() {
-					static std::string message = std::string("Invalid uri (only alphanumeric characters, '/', '_', '-', '.' or '~')");
-					return (message.c_str());
-				}
-		};
 };
 
 #endif

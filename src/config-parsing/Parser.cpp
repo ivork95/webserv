@@ -23,7 +23,7 @@ static std::string convertToBytes(const std::string &rawValue) {
 	std::string convertedValue;
 	for (size_t j = 0; j < rawValue.size() - 1; j++) {
 		if (!isdigit(rawValue[j]))
-			throw Parser::InvalidClientMaxBodySizeValueException();
+			throw ClientMaxBodySizeException(rawValue);
 		else
 			convertedValue += rawValue[j];
 	}
@@ -35,6 +35,15 @@ static std::string convertToBytes(const std::string &rawValue) {
 	else if (rawValue[lastCharIndex] == 'g' || rawValue[lastCharIndex] == 'G')
 		convertedValue += "000000000";
 	return (convertedValue);
+}
+
+static const std::string parseClientMaxBodySize(const std::string &rawValue) {
+	if (rawValue == "0")
+		return rawValue;
+	else if (!hasConversionUnit(rawValue))
+		throw ConversionUnitException(rawValue);
+	else
+		return (convertToBytes(rawValue));
 }
 
 /**
@@ -49,11 +58,11 @@ void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationCon
 	size_t						j = *i;
 	std::vector<std::string>	httpMethods;
 	while (tokens.at(j)._getType() == Token::WORD) {
-		if (isHttpMethod(tokens.at(j)._getWord())) {
+		if (isValidHttpMethod(tokens.at(j)._getWord())) {
 			httpMethods.push_back(tokens.at(j)._getWord());
 			j++;
 		} else {
-			throw ExpectedHttpMethodTokenException();
+			throw HttpMethodException(tokens.at(j)._getWord());
 		}
 	}
 	route.setHttpMethods(httpMethods);
@@ -73,20 +82,20 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 	if (tokens.at(*i)._getWord()[0] == '.') {
 		const std::string cgiExtension = tokens.at(*i)._getWord();
 		if (!isValidCgiExtension(cgiExtension))
-			throw InvalidCgiExtensionException();
+			throw CgiExtensionException(cgiExtension);
 		if (tokens.at(*i + 1)._getType() == Token::WORD) {
 			(*i)++;
 			const std::string					cgiPath = tokens.at(*i)._getWord();
 			if (!isValidPath(cgiPath))
-				throw InvalidPathException();
+				throw PathException(cgiPath);
 			std::map<std::string, std::string>	cgiHandler;
 			cgiHandler[cgiExtension] = cgiPath;
 			route.setCgiHandler(cgiExtension, cgiPath);
 		} else {
-			throw MissingFilePathException();
+			throw InvalidTokenException("Missing file path");
 		}
 	} else {
-		throw ExpectedFileExtensionException();
+		throw InvalidTokenException("Expected file extension");
 	}
 }
 
@@ -95,18 +104,19 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
  * index <file_name> (<file_name> ...)
 */
 /**
- * TODO what extension can the files have ?
+ * TODO what extension can the files have ? html, php, txt, ... ?
+ * 		? wip
 */
 void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing index directive\n"; // ? debug
 	size_t						j = *i;
 	std::vector<std::string>	indexFile;
 	while (tokens.at(j)._getType() == Token::WORD) {
-		if (isHtmlExtension(tokens.at(j)._getWord()) || isPhpExtension(tokens.at(j)._getWord())) {
+		if (isValidIndexExtension(tokens.at(j)._getWord())) {
 			indexFile.push_back(tokens.at(j)._getWord());
 			j++;
 		} else {
-			throw InvalidFileExtensionException();
+			throw IndexException(tokens.at(j)._getWord()); // TODO change?
 		}
 	}
 	route.setIndexFile(indexFile);
@@ -124,23 +134,17 @@ void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, LocationConfi
 	else if (tokens.at(*i)._getWord() == "on")
 		route.setAutoIndex(true);
 	else
-		throw InvalidAutoIndexValueException();
+		throw AutoIndexException(tokens.at(*i)._getWord());
 }
 
 /**
  * client_max_body_size 1m
  * client_max_body_size <size> (where size is a number followed by k, m, or g)
 */
-void	Parser::_parseClientMaxBodySize(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
+void	Parser::_parseLocationClientMaxBodySize(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing client_max_body_size directive\n"; // ? debug
 	const std::string rawValue = tokens.at(*i)._getWord();
-	if (rawValue == "0")
-		route.setClientMaxBodySize(rawValue);
-	else if (!hasConversionUnit(rawValue))
-		throw InvalidConversionUnitException();
-	else {
-		route.setClientMaxBodySize(convertToBytes(rawValue));
-	}
+	route.setClientMaxBodySize(parseClientMaxBodySize(rawValue));
 }
 
 /**
@@ -155,7 +159,7 @@ void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &ro
 	// std::cout << "\tParsing root directive\n"; // ? debug
 	const std::string	rootPath = tokens.at(*i)._getWord();
 	if (!isValidPath(rootPath))
-		throw InvalidPathException();
+		throw PathException(rootPath);
 	route.setRootPath(tokens.at(*i)._getWord());
 }
 
@@ -172,16 +176,23 @@ void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &ro
 void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing location block\n"; // ? debug
 	size_t			j = *i;
-	std::string		requestUri = tokens.at(j)._getWord();
-	if (!isValidUri(requestUri))
-		throw InvalidUriException();
+	const std::string		requestUri = tokens.at(j)._getWord();
+	if (requestUri[0] != '/')
+		throw UriException(requestUri);
+	if (requestUri != "/") {
+		if (!isValidPath(requestUri.substr(1)))
+			throw UriException(requestUri);
+	}
+	// if (!isValidUri(requestUri))
+	// 	throw InvalidUriException();
+
 	LocationConfig	route(requestUri);
 
 	j += 2; // skip opening brace
 
 	void (Parser::*pf_locationContextDirectives[6])(std::vector<Token> tokens, size_t *j, LocationConfig &route) = {
 		&Parser::_parseRoot, 
-		&Parser::_parseClientMaxBodySize, 
+		&Parser::_parseLocationClientMaxBodySize, 
 		&Parser::_parseAutoIndex, 
 		&Parser::_parseIndex, 
 		&Parser::_parseCgi,
@@ -205,7 +216,7 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
 					break;
 				} else {
 					// TODO if we find the directive but nothing after => throw error or set default value ?
-					throw ExpectedWordTokenException();
+					throw InvalidTokenException("Expected word");
 				}
 			}
 		}
@@ -220,16 +231,13 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
  * client_max_body_size 1m
  * client_max_body_size <size>
 */
-void	Parser::_parseClientSize(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
+/**
+ * TODO make virtual?
+*/
+void	Parser::_parseServerClientMaxBodySize(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing client_max_body_size directive\n"; // ? debug
 	const std::string rawValue = tokens.at(*i)._getWord();
-	if (rawValue == "0")
-		server->setClientMaxBodySize(rawValue);
-	else if (!hasConversionUnit(rawValue))
-		throw InvalidConversionUnitException();
-	else {
-		server->setClientMaxBodySize(convertToBytes(rawValue));
-	}
+	server->setClientMaxBodySize(parseClientMaxBodySize(rawValue));
 }
 
 /**
@@ -251,13 +259,13 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 		if (isValidErrorCode(errorCode)) {
 			errorCodes.push_back(tokens.at(j)._getWord());
 		} else {
-			throw InvalidErrorCodeException();
+			throw ErrorCodeException(errorCode);
 		}
 		j++;
 	}
 	const std::string		filePath = tokens.at(j)._getWord();
 	if (!isValidPath(filePath))
-		throw InvalidPathException();
+		throw PathException(filePath);
 	ErrorPageConfig	errorPage(errorCodes, filePath);
 	server->setErrorPagesConfig(errorPage);
 	(*i) = j;
@@ -276,8 +284,7 @@ void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, s
 	// std::cout << "Parsing server_name directive\n"; // ? debug
 	const std::string	serverName = tokens.at(*i)._getWord();
 	if (!isValidServerName(serverName)) {
-		// std::cout << "Invalid server name: " << serverName << std::endl; // ? debug
-		throw InvalidServerNameException();
+		throw ServerNameException(serverName);
 	}
 	server->setServerName(serverName);
 }
@@ -290,7 +297,7 @@ void	Parser::_parseListen(ServerConfig *server, std::vector<Token> tokens, size_
 	// std::cout << "Parsing listen directive\n"; // ? debug
 	const std::string	portNumber = tokens.at(*i)._getWord();
 	if (!isValidPortNumber(portNumber))
-		throw InvalidPortNumberException(portNumber);
+		throw PortNumberException(portNumber);
 	server->setPortNb(portNumber);
 }
 
@@ -302,7 +309,7 @@ void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens
 		&Parser::_parseListen, 
 		&Parser::_parseServerName, 
 		&Parser::_parseErrorPage, 
-		&Parser::_parseClientSize,
+		&Parser::_parseServerClientMaxBodySize,
 		&Parser::_parseLocationContext
 	};
 	std::string serverContextDirectives[5] = {
@@ -321,7 +328,7 @@ void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens
 				break;
 			} else {
 				// TODO if we find the directive but nothing after => throw error or set default value ?
-				throw ExpectedWordTokenException();
+				throw InvalidTokenException("Expected word");
 			}
 		}
 	}

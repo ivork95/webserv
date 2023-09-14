@@ -16,3 +16,16 @@ bool isPhpExtension(const std::string &str) {
 	}
 	return (false);
 }
+
+/**
+ * TODO valid cgi extension? py, php, c?
+ */
+bool	isValidIndexExtension(const std::string &str) {
+	const std::string fileExtension = str.substr(str.find_last_of(".") + 1);
+	// std::cout << fileExtension << std::endl; // ? debug
+	if (fileExtension == "html")
+		return true;
+	if (fileExtension == "php")
+		return true;
+	return false;
+}
