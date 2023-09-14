@@ -11,8 +11,8 @@ if __name__ == "__main__":
 
     # Get the input numbers from command-line arguments
     try:
-        num1 = float(sys.argv[1])
-        num2 = float(sys.argv[2])
+        num1 = int(sys.argv[1])
+        num2 = int(sys.argv[2])
     except ValueError:
         print("Invalid input. Please enter valid numbers.")
         sys.exit(1)

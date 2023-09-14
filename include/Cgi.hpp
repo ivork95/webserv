@@ -5,6 +5,8 @@
 # include <vector>
 # include <iostream>
 
+#define PATH_TO_EXEC_PY "/usr/bin/python3"
+
 class CGI
 {
 public:
