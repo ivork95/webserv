@@ -29,7 +29,7 @@ class WordException : public InvalidTokenException {
 class PortNumberException : public InvalidTokenException {
 	public:
 		PortNumberException(const std::string &input)
-			: InvalidTokenException("Port number: " + input) {}
+			: InvalidTokenException("Port number: " + input + " (only from 0 to 65535)") {}
 };
 
 class ServerNameException : public InvalidTokenException {
@@ -47,13 +47,13 @@ class ErrorCodeException : public InvalidTokenException {
 class ClientMaxBodySizeException : public InvalidTokenException {
 	public:
 		ClientMaxBodySizeException(const std::string &input)
-			: InvalidTokenException("Client max body size: " + input) {}
+			: InvalidTokenException("Client max body size: " + input + " (only positive numbers)") {}
 };
 
 class UriException : public InvalidTokenException {
 	public:
 		UriException(const std::string &input)
-			: InvalidTokenException("Uri: " + input) {}
+			: InvalidTokenException("URI: " + input) {}
 };
 
 class RootException : public InvalidTokenException {
@@ -65,7 +65,7 @@ class RootException : public InvalidTokenException {
 class AutoIndexException : public InvalidTokenException {
 	public:
 		AutoIndexException(const std::string &input)
-			: InvalidTokenException("Auto index: " + input) {}
+			: InvalidTokenException("Auto index: " + input + " (only on or off)") {}
 };
 
 class IndexException : public InvalidTokenException {
@@ -77,19 +77,19 @@ class IndexException : public InvalidTokenException {
 class CgiException : public InvalidTokenException {
 	public:
 		CgiException(const std::string &input)
-			: InvalidTokenException("Cgi: " + input) {}
+			: InvalidTokenException("CGI: " + input) {}
 };
 
 class CgiExtensionException : public InvalidTokenException {
 	public:
 		CgiExtensionException(const std::string &input)
-			: InvalidTokenException("Cgi extension: " + input) {}
+			: InvalidTokenException("CGI extension: " + input + " (only .py, .php or .c)") {}
 };
 
 class HttpMethodException : public InvalidTokenException {
 	public:
 		HttpMethodException(const std::string &input)
-			: InvalidTokenException("Http method: " + input) {}
+			: InvalidTokenException("HTTP method: " + input + " (only GET, POST or DELETE)") {}
 };
 
 class PathException : public InvalidTokenException {
@@ -101,7 +101,7 @@ class PathException : public InvalidTokenException {
 class ConversionUnitException : public InvalidTokenException {
 	public:
 		ConversionUnitException(const std::string &input)
-			: InvalidTokenException("Conversion unit: " + input) {}
+			: InvalidTokenException("Conversion unit: " + input + " (only k/K, m/M or g/G)") {}
 };
 
 #endif

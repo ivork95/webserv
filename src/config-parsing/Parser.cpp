@@ -216,7 +216,7 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
 					break;
 				} else {
 					// TODO if we find the directive but nothing after => throw error or set default value ?
-					throw InvalidTokenException("Expected word");
+					throw InvalidTokenException("Expected word after: " + tokens.at(j - 1)._getWord());
 				}
 			}
 		}
@@ -328,7 +328,7 @@ void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens
 				break;
 			} else {
 				// TODO if we find the directive but nothing after => throw error or set default value ?
-				throw InvalidTokenException("Expected word");
+				throw InvalidTokenException("Expected word after: " + tokens.at(*i - 1)._getWord());
 			}
 		}
 	}

@@ -28,6 +28,7 @@ class ServerConfig {
 		~ServerConfig(void);
 
 		const unsigned int					&getIndex(void) const;
+		
 		const std::string					&getPortNb(void) const;
 		const std::string					&getServerName(void) const;
 		const std::string					&getClientMaxBodySize(void) const;
@@ -37,6 +38,7 @@ class ServerConfig {
 		const std::vector<Token>			&getTokens(void) const;
 
 		void							setIndex(const unsigned int &index);
+
 		void							setPortNb(const std::string &portNb);
 		void							setServerName(const std::string &serverName);
 		void							setClientMaxBodySize(const std::string &clientMaxBodySize);
