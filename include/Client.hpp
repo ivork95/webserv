@@ -27,8 +27,7 @@ public:
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
 
-    // HttpRequest httpRequest{};
-    HttpMessage httpMessage{};
+    HttpRequest httpRequest{};
 
     Timer *timer{};
 

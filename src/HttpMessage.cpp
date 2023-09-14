@@ -1,5 +1,18 @@
 #include "HttpMessage.hpp"
 
+// constructor
+HttpMessage::HttpMessage(void)
+{
+    spdlog::debug("HttpMessage constructor called");
+}
+
+// destructor
+HttpMessage::~HttpMessage(void)
+{
+    spdlog::debug("HttpMessage destructor called");
+}
+
+// methods
 std::pair<std::string, std::string> HttpMessage::parseFieldLine(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const
 {
     std::string key = fieldLine.substr(0, keyDelimPos);
@@ -67,15 +80,17 @@ std::ostream &operator<<(std::ostream &out, const HttpMessage &httpmessage)
 {
     int i{};
 
-    out << "HttpMessage (\n"
-        << httpmessage.m_rawMessage;
-
+    out << "HttpMessage (\n";
+    out << "m_rawMessage = |" << httpmessage.m_rawMessage << "|\n";
+    out << "m_requestHeaders = {\n";
     for (const auto &elem : httpmessage.m_requestHeaders)
     {
         out << "[" << i << "] = (" << elem.first << ", " << elem.second << ")\n";
         i++;
     }
-
+    out << "}\n";
+    out << "m_contentLength = " << httpmessage.m_contentLength << '\n';
+    out << "isContentLengthConverted = " << httpmessage.isContentLengthConverted << '\n';
     out << ")";
 
     return out;

@@ -29,46 +29,43 @@ void handleConnectedClient(Client *client)
     }
     else // We got some good data from a client
     {
-        spdlog::debug("nbytes = {}", nbytes);
+        spdlog::info("nbytes = {}", nbytes);
 
-        client->httpMessage.m_rawMessage.append(buf, buf + nbytes);
+        client->httpRequest.m_rawMessage.append(buf, buf + nbytes);
 
-        size_t fieldLinesEndPos = client->httpMessage.m_rawMessage.find("\r\n\r\n");
+        size_t fieldLinesEndPos = client->httpRequest.m_rawMessage.find("\r\n\r\n");
         if (fieldLinesEndPos == std::string::npos)
         {
             spdlog::warn("message incomplete [...]");
             return;
         }
 
-        if (client->httpMessage.m_requestHeaders.empty())
-            client->httpMessage.setRequestHeaders();
+        if (client->httpRequest.m_requestHeaders.empty())
+            client->httpRequest.setRequestHeaders();
 
-        if (client->httpMessage.m_requestHeaders.contains("Content-Length"))
+        if (client->httpRequest.m_requestHeaders.contains("Content-Length"))
         {
-            if (!client->httpMessage.isContentLengthConverted)
+            if (!client->httpRequest.isContentLengthConverted)
             {
-                client->httpMessage.setContentLength();
+                client->httpRequest.setContentLength();
             }
-            if (client->httpMessage.m_contentLength > static_cast<int>((client->httpMessage.m_rawMessage.length() - (fieldLinesEndPos + 4))))
+            if (client->httpRequest.m_contentLength > static_cast<int>((client->httpRequest.m_rawMessage.length() - (fieldLinesEndPos + 4))))
             {
                 spdlog::warn("Content-Length not reached [...]");
                 return;
             }
-            spdlog::debug("Content-Length reached!");
-            spdlog::debug("Content-Length = {}", client->httpMessage.m_contentLength);
-            spdlog::debug("Body length = {}", client->httpMessage.m_rawMessage.length() - (fieldLinesEndPos + 4));
+            spdlog::info("Content-Length reached!");
+            spdlog::info("Content-Length = {}", client->httpRequest.m_contentLength);
+            spdlog::info("Body length = {}", client->httpRequest.m_rawMessage.length() - (fieldLinesEndPos + 4));
         }
 
-        spdlog::debug("message complete!");
-        spdlog::debug(client->httpMessage);
-
-        HttpRequest httprequest{client->httpMessage.m_rawMessage, client->httpMessage.m_requestHeaders, client->httpMessage.m_contentLength};
-        HttpResponse httpresponse{};
+        spdlog::info("message complete!");
 
         /*
         A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value.
         */
 
+        /*
         if (!httprequest.m_methodPathVersion[0].compare("GET"))
         {
             spdlog::debug("GET method");
@@ -138,6 +135,7 @@ void handleConnectedClient(Client *client)
             delete client;
             return;
         }
+        */
 
         // HttpResponse httpresponse{};
         // int n{};
@@ -150,9 +148,9 @@ void handleConnectedClient(Client *client)
 
         //     // spdlog::debug("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
 
-        //     std::string boundaryCode = client->httpRequest.getBoundaryCode();
-        //     spdlog::warn("body = \n|{}|", client->httpRequest.getBody(boundaryCode));
-        //     spdlog::warn("generalHeaders = \n|{}|", client->httpRequest.getGeneralHeaders(boundaryCode));
+        //     std::string boundaryCode = client->httpRequest.parseBoundaryCode();
+        //     spdlog::warn("body = \n|{}|", client->httpRequest.parseBody(boundaryCode));
+        //     spdlog::warn("generalHeaders = \n|{}|", client->httpRequest.parseGeneralHeaders(boundaryCode));
         // }
         // else if (!client->httpRequest.m_method.compare("GET"))
         // {

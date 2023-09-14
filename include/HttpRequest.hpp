@@ -13,20 +13,24 @@
 #include <sstream>
 #include "HttpMessage.hpp"
 
-class HttpRequest
+class HttpRequest : public HttpMessage
 {
 public:
-    std::string m_rawMessage{};
-    std::map<std::string, std::string> m_requestHeaders{};
-    int m_contentLength{};
-    std::vector<std::string> m_methodPathVersion{};
-    int m_client_max_body_size{999999};
+    std::vector<std::string> m_methodPathVersion{3};
     std::string m_body{};
+    int m_client_max_body_size{999999};
     std::string m_boundaryCode{};
     std::string m_fileName{};
 
     // constructor
-    HttpRequest(std::string rawMessage, std::map<std::string, std::string> requestHeaders, int m_contentLength);
+    HttpRequest(void);
+
+    // copy constructor
+
+    // copy assignment operator overload
+
+    // destructor
+    ~HttpRequest(void);
 
     // getters/setters
     void setFileName(void);
@@ -34,12 +38,11 @@ public:
     void setBody(void);
 
     // methods
-    std::vector<std::string> split(const std::string &str);
-    std::string getBoundaryCode(void);
-    std::string getBody(const std::string &boundaryCode);
-    std::string getGeneralHeaders(const std::string &boundaryCode);
-    std::string getFileName(const std::string &boundaryCode);
-    void requestHeadersPrint(const std::map<std::string, std::string> &headers) const;
+    std::vector<std::string> split(const std::string &str) const;
+    std::string parseBoundaryCode(void);
+    std::string parseBody(const std::string &boundaryCode);
+    std::string parseGeneralHeaders(const std::string &boundaryCode);
+    std::string parseFileName(const std::string &boundaryCode);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);
