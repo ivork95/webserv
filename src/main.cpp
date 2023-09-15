@@ -64,6 +64,10 @@ void handleConnectedClient(Client *client)
         spdlog::info("httprequest = {}", client->httpRequest);
 
         /*
+        The HTTP version used in the request is not supported by the server. 505 HTTP Version Not Supported
+        */
+
+        /*
         A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value.
         */
 
@@ -134,6 +138,17 @@ void handleConnectedClient(Client *client)
             client->httpRequest.setBody();
             spdlog::info(client->httpRequest);
 
+            std::ofstream outf{"./www/" + client->httpRequest.m_fileName};
+            if (!outf)
+            {
+                httpresponse.m_statusLine = "HTTP/1.1 400 Bad Request";
+                std::string s{httpresponse.responseBuild()};
+                send(client->m_socketFd, s.data(), s.length(), 0);
+                delete (client);
+                return;
+            }
+            outf << client->httpRequest.m_body;
+
             std::string s{httpresponse.responseBuild()};
             send(client->m_socketFd, s.data(), s.length(), 0);
             delete client;
@@ -145,7 +160,11 @@ void handleConnectedClient(Client *client)
         }
         else
         {
-            spdlog::debug("Method not allowed");
+            httpresponse.m_statusLine = "HTTP/1.1 501 Not Implemented";
+            std::string s{httpresponse.responseBuild()};
+            send(client->m_socketFd, s.data(), s.length(), 0);
+            delete (client);
+            return;
         }
         // spdlog::debug("{}", httpresponse);
         // httpresponse.m_headers.insert(std::make_pair("Content-Length", std::to_string(n)));

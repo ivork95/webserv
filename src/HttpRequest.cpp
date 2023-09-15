@@ -82,10 +82,15 @@ void HttpRequest::setBody(void)
 
 void HttpRequest::setFileName(void)
 {
-    m_fileName = parseFileName(m_boundaryCode);
+    m_fileName = parseFileName(m_generalHeaders);
+    strip(m_fileName);
 }
 
-// methods
+void HttpRequest::strip(std::string &str)
+{
+    str.erase(std::remove(str.begin(), str.end(), '\"'), str.end());
+}
+
 std::vector<std::string> HttpRequest::split(const std::string &str) const
 {
     std::vector<std::string> methodPathVersion;
@@ -114,10 +119,10 @@ std::string HttpRequest::parseBody(const std::string &boundaryCode)
     return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
 }
 
-std::string HttpRequest::parseFileName(const std::string &boundaryCode)
+std::string HttpRequest::parseFileName(const std::map<std::string, std::string> &generalHeaders)
 {
-    auto contentDispositionIt = m_generalHeaders.find("Content-Disposition");
-    if (contentDispositionIt == m_generalHeaders.end())
+    auto contentDispositionIt = generalHeaders.find("Content-Disposition");
+    if (contentDispositionIt == generalHeaders.end())
     {
         throw std::runtime_error("Error: Content-Disposition not found!\n");
     }

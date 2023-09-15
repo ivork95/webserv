@@ -23,8 +23,6 @@ std::pair<std::string, std::string> HttpMessage::parseFieldLine(const std::strin
 
 std::map<std::string, std::string> HttpMessage::fieldLinesToHeaders(std::string &fieldLines)
 {
-    spdlog::critical("fieldlines = |{}|", fieldLines);
-
     std::map<std::string, std::string> headers{};
     std::string fieldLine{};
     std::string fieldLineDelim{"\r\n"};

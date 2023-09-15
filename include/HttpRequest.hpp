@@ -46,7 +46,8 @@ public:
     std::string parseBoundaryCode(const std::map<std::string, std::string> &requestHeaders);
     std::string parseBody(const std::string &boundaryCode);
     std::string parseGeneralHeaders(const std::string &boundaryCode);
-    std::string parseFileName(const std::string &boundaryCode);
+    std::string parseFileName(const std::map<std::string, std::string> &generalHeaders);
+    void strip(std::string &str);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);
