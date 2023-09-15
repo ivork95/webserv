@@ -159,3 +159,12 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
 
     return out;
 }
+
+int HttpRequest::bodyToDisk(const std::string &path)
+{
+    std::ofstream outf{path};
+    if (!outf)
+        return 1;
+    outf << m_body;
+    return 0;
+}

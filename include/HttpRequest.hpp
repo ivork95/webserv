@@ -48,6 +48,7 @@ public:
     std::string parseGeneralHeaders(const std::string &boundaryCode);
     std::string parseFileName(const std::map<std::string, std::string> &generalHeaders);
     void strip(std::string &str);
+    int bodyToDisk(const std::string &path);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);

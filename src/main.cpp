@@ -130,16 +130,13 @@ void handleConnectedClient(Client *client)
                 return;
             }
 
-            spdlog::info("m_rawMessage = {}", client->httpRequest.m_rawMessage);
-
             client->httpRequest.setBoundaryCode();
             client->httpRequest.setGeneralHeaders();
             client->httpRequest.setFileName();
             client->httpRequest.setBody();
             spdlog::info(client->httpRequest);
 
-            std::ofstream outf{"./www/" + client->httpRequest.m_fileName};
-            if (!outf)
+            if (client->httpRequest.bodyToDisk("./www/" + client->httpRequest.m_fileName))
             {
                 httpresponse.m_statusLine = "HTTP/1.1 400 Bad Request";
                 std::string s{httpresponse.responseBuild()};
@@ -147,7 +144,6 @@ void handleConnectedClient(Client *client)
                 delete (client);
                 return;
             }
-            outf << client->httpRequest.m_body;
 
             std::string s{httpresponse.responseBuild()};
             send(client->m_socketFd, s.data(), s.length(), 0);
