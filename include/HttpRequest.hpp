@@ -36,19 +36,18 @@ public:
     // getters/setters
     void setMethodPathVersion(void);
     void setGeneralHeaders(void);
-
     void setFileName(void);
     void setBoundaryCode(void);
     void setBody(void);
 
     // methods
-    std::vector<std::string> split(const std::string &str) const;
     std::string parseBoundaryCode(const std::map<std::string, std::string> &requestHeaders);
     std::string parseBody(const std::string &boundaryCode);
     std::string parseGeneralHeaders(const std::string &boundaryCode);
     std::string parseFileName(const std::map<std::string, std::string> &generalHeaders);
+    std::vector<std::string> split(const std::string &str) const;
     void strip(std::string &str);
-    int bodyToDisk(const std::string &path);
+    void bodyToDisk(const std::string &path);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);

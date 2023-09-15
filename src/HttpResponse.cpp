@@ -55,3 +55,19 @@ std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
 
     return out;
 }
+
+// readResourceIntoBody
+std::string HttpResponse::resourceToStr(const std::string &path)
+{
+    std::ifstream inf(path);
+    if (!inf)
+        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+    std::ostringstream sstr;
+    sstr << inf.rdbuf();
+    return sstr.str();
+}
+
+void HttpResponse::setBody(const std::string &path)
+{
+    m_body = resourceToStr(path);
+}

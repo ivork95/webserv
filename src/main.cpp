@@ -1,9 +1,9 @@
 #include <csignal>
+#include <fstream>
 #include "TcpServer.hpp"
 #include "Client.hpp"
 #include "MultiplexerIO.hpp"
 #include "HttpRequest.hpp"
-#include <fstream>
 #include "Timer.hpp"
 #include "HttpResponse.hpp"
 
@@ -15,10 +15,7 @@ void handleConnectedClient(Client *client)
     int nbytes = recv(client->m_socketFd, buf, BUFSIZE, 0);
 
     if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
-    {
-        std::perror("timerfd_settime()");
         throw std::runtime_error("Error: timerfd_settime()\n");
-    }
 
     if (nbytes <= 0) // Got error or connection closed by client
     {
@@ -46,23 +43,21 @@ void handleConnectedClient(Client *client)
         if (client->httpRequest.m_requestHeaders.contains("Content-Length"))
         {
             if (!client->httpRequest.isContentLengthConverted)
-            {
                 client->httpRequest.setContentLength();
-            }
             if (client->httpRequest.m_contentLength > static_cast<int>((client->httpRequest.m_rawMessage.length() - (fieldLinesEndPos + 4))))
             {
                 spdlog::warn("Content-Length not reached [...]");
                 return;
             }
             spdlog::info("Content-Length reached!");
-            spdlog::info("Content-Length = {}", client->httpRequest.m_contentLength);
-            spdlog::info("Body length = {}", client->httpRequest.m_rawMessage.length() - (fieldLinesEndPos + 4));
         }
 
         spdlog::info("message complete!");
-        client->httpRequest.setMethodPathVersion();
-        spdlog::info("httprequest = {}", client->httpRequest);
+        spdlog::info("m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
 
+        client->httpRequest.setMethodPathVersion();
+
+        HttpResponse httpresponse{};
         /*
         The HTTP version used in the request is not supported by the server. 505 HTTP Version Not Supported
         */
@@ -70,8 +65,6 @@ void handleConnectedClient(Client *client)
         /*
         A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value.
         */
-
-        HttpResponse httpresponse{};
         if (!client->httpRequest.m_methodPathVersion[0].compare("GET"))
         {
             spdlog::debug("GET method");
@@ -84,93 +77,50 @@ void handleConnectedClient(Client *client)
                 path = "./www" + client->httpRequest.m_methodPathVersion[1] + ".html";
             }
 
-            std::ifstream inf(path);
-            if (!inf)
+            try
             {
-                httpresponse.m_statusLine = "HTTP/1.1 404 NOT FOUND";
-                std::string s{httpresponse.responseBuild()};
-                send(client->m_socketFd, s.data(), s.length(), 0);
-                delete (client);
-                return;
+                httpresponse.setBody(path);
             }
-
-            int n{};
-            while (inf)
+            catch (const std::exception &e)
             {
-                std::string strInput;
-                std::getline(inf, strInput);
-                httpresponse.m_body.append(strInput);
-                n = n + strInput.length();
+                httpresponse.m_statusLine = e.what();
             }
-
-            std::string s{httpresponse.responseBuild()};
-            send(client->m_socketFd, s.data(), s.length(), 0);
-            delete client;
-            return;
         }
         else if (!client->httpRequest.m_methodPathVersion[0].compare("POST"))
         {
             spdlog::info("POST method");
 
-            if (!client->httpRequest.m_requestHeaders.contains("Content-Length"))
-            {
-                httpresponse.m_statusLine = "HTTP/1.1 411 Length Required";
-                std::string s{httpresponse.responseBuild()};
-                send(client->m_socketFd, s.data(), s.length(), 0);
-                delete (client);
-                return;
-            }
-
             if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
-            {
                 httpresponse.m_statusLine = "HTTP/1.1 413 Payload Too Large";
-                std::string s{httpresponse.responseBuild()};
-                send(client->m_socketFd, s.data(), s.length(), 0);
-                delete (client);
-                return;
-            }
-
-            client->httpRequest.setBoundaryCode();
-            client->httpRequest.setGeneralHeaders();
-            client->httpRequest.setFileName();
-            client->httpRequest.setBody();
-            spdlog::info(client->httpRequest);
-
-            if (client->httpRequest.bodyToDisk("./www/" + client->httpRequest.m_fileName))
+            else
             {
-                httpresponse.m_statusLine = "HTTP/1.1 400 Bad Request";
-                std::string s{httpresponse.responseBuild()};
-                send(client->m_socketFd, s.data(), s.length(), 0);
-                delete (client);
-                return;
+                try
+                {
+                    client->httpRequest.setBoundaryCode();
+                    client->httpRequest.setGeneralHeaders();
+                    client->httpRequest.setFileName();
+                    client->httpRequest.setBody();
+                    client->httpRequest.bodyToDisk("./www/" + client->httpRequest.m_fileName);
+                }
+                catch (const std::exception &e)
+                {
+                    httpresponse.m_statusLine = e.what();
+                }
             }
-
-            std::string s{httpresponse.responseBuild()};
-            send(client->m_socketFd, s.data(), s.length(), 0);
-            delete client;
-            return;
         }
         else if (!client->httpRequest.m_methodPathVersion[0].compare("DELETE"))
         {
             spdlog::debug("DELETE method");
         }
         else
-        {
             httpresponse.m_statusLine = "HTTP/1.1 501 Not Implemented";
-            std::string s{httpresponse.responseBuild()};
-            send(client->m_socketFd, s.data(), s.length(), 0);
-            delete (client);
-            return;
-        }
-        // spdlog::debug("{}", httpresponse);
-        // httpresponse.m_headers.insert(std::make_pair("Content-Length", std::to_string(n)));
-        // httpresponse.m_headers.insert(std::make_pair("Content-Type", "text/html"));
-        // std::string httpResponse = httpresponse.responseBuild();
 
-        // std::cout << "Content-length value: " << client->httpRequest.m_contentLength << std::endl;
-        // std::cout << "body-lenght value: " << client->httpRequest.m_rawMessage.length() - (client->httpRequest.m_fieldLinesEndPos + 4) << std::endl;
+        spdlog::info(client->httpRequest);
 
-        // send(client->m_socketFd, httpResponse.data(), httpResponse.length(), 0);
+        std::string s{httpresponse.responseBuild()};
+        send(client->m_socketFd, s.data(), s.length(), 0);
+        delete (client);
+        return;
     }
     delete client;
 }

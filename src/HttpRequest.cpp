@@ -29,22 +29,14 @@ std::string HttpRequest::parseBoundaryCode(const std::map<std::string, std::stri
 {
     auto contentTypeIt = requestHeaders.find("Content-Type");
     if (contentTypeIt == requestHeaders.end())
-        throw std::runtime_error("Error: Content-Type not found!\n");
-    std::string contentType = contentTypeIt->second;
-    spdlog::info("contentType = |{}|", contentType);
+        throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
-    // if (!requestHeaders.contains("Content-Type"))
-    // {
-    //     throw std::runtime_error("Error: Content-Type not found!\n");
-    // }
-    // std::string contentType = requestHeaders["Content-Type"];
+    std::string contentType = contentTypeIt->second;
 
     std::string_view boundary{"boundary="};
     size_t boundaryStartPos = contentType.find(boundary);
     if (boundaryStartPos == std::string::npos)
-    {
-        throw std::runtime_error("Error: boundary= not found!\n");
-    }
+        throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     return contentType.substr(boundaryStartPos + boundary.length());
 }
@@ -63,13 +55,13 @@ std::string HttpRequest::parseGeneralHeaders(const std::string &boundaryCode)
     size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
     if (BoundaryStartPos == std::string::npos)
     {
-        throw std::runtime_error("Error: boundaryStart not found!\n");
+        throw std::runtime_error("HTTP/1.1 400 Bad Request");
     }
 
     size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
     if (generalHeadersEndPos == std::string::npos)
     {
-        throw std::runtime_error("Error: generalHeadersEnd not found!\n");
+        throw std::runtime_error("HTTP/1.1 400 Bad Request");
     }
 
     return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
@@ -112,9 +104,7 @@ std::string HttpRequest::parseBody(const std::string &boundaryCode)
     const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
     size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
     if (boundaryEndPos == std::string::npos)
-    {
-        throw std::runtime_error("Error: boundaryEnd not found!\n");
-    }
+        throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
 }
@@ -123,15 +113,12 @@ std::string HttpRequest::parseFileName(const std::map<std::string, std::string> 
 {
     auto contentDispositionIt = generalHeaders.find("Content-Disposition");
     if (contentDispositionIt == generalHeaders.end())
-    {
-        throw std::runtime_error("Error: Content-Disposition not found!\n");
-    }
+        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+
     std::string fileNameStart{"filename="};
     size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
     if (fileNameStartPos == std::string::npos)
-    {
-        throw std::runtime_error("Error: fileNameStartPos not found!\n");
-    }
+        throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
 }
@@ -160,11 +147,19 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
     return out;
 }
 
-int HttpRequest::bodyToDisk(const std::string &path)
+// int HttpRequest::bodyToDisk(const std::string &path)
+// {
+//     std::ofstream outf{path};
+//     if (!outf)
+//         return 1;
+//     outf << m_body;
+//     return 0;
+// }
+
+void HttpRequest::bodyToDisk(const std::string &path)
 {
     std::ofstream outf{path};
     if (!outf)
-        return 1;
+        throw std::runtime_error("HTTP/1.1 400 Bad Request");
     outf << m_body;
-    return 0;
 }

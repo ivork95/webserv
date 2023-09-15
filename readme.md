@@ -54,3 +54,8 @@ Content-Type: application/x-www-form-urlencoded
 Content-Length: 9999999
 
 field1=value1&field2=value2
+
+GET / HTTP/1.1
+User-Agent: curl/7.64.1
+Host: www.example.com
+Accept-Language: en, mi
