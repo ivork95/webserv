@@ -6,6 +6,7 @@
 #include "HttpRequest.hpp"
 #include "Timer.hpp"
 #include "HttpResponse.hpp"
+#include "Cgi.hpp"
 
 #define BUFSIZE 256
 
@@ -72,6 +73,70 @@ void handleConnectedClient(Client *client)
             std::string path{client->httpRequest.m_methodPathVersion[1]};
             if (!path.compare("/"))
                 path = "./www/index.html";
+            else if (path.find("/cgi-bin/") != std::string::npos)
+            {
+                CGI CGI(path);
+                int	pipe_fd[2];
+                if (pipe(pipe_fd) == -1)
+                {
+                    throw;
+                }
+                pid_t pid = fork();
+                if (pid == -1)
+                {
+                    throw;
+                }
+                if (pid == 0)
+                {
+                    if (close(pipe_fd[0]) == -1)
+                        throw;
+                    if (dup2(pipe_fd[1], STDOUT_FILENO) == -1)
+                        throw;
+                    if (close(pipe_fd[1]) == -1)
+                        throw;
+                    const char* scriptPath = "pwd/www/cgi-bin/multi.py";
+                    std::vector<const char*> args;
+                    args.push_back("pyon3");
+                    args.push_back(scriptPath);
+                    for (const std::string& param : CGI.m_params)
+                    {
+                        args.push_back(param.c_str()); // Convert string to const char* and insert
+                    }
+                    args.push_back(nullptr);
+                    if (execve (PATH_TO_EXEC_PY, const_cast<char* const*>(args.data()), nullptr)) {
+                        perror("execve");
+                        return ;
+                    }
+                }
+                else
+                {
+
+                    char buf[BUFSIZE + 1]{};
+                    if (close(pipe_fd[1]) == -1)
+                        throw;
+                    if (read(pipe_fd[0], buf, BUFSIZE) == -1)
+                        throw;
+                    std::cout << "HERE\n\n" << std::endl;
+                    std::cout << "$$$$$$" << buf << "$$$$$$" << std::endl;
+                    if (close(pipe_fd[0]) == -1)
+                        throw;
+                    httpresponse.m_statusLine = "HTTP/1.1 200 OK";
+                    httpresponse.m_body = buf;
+                    std::string s{httpresponse.responseBuild()};
+                    send(client->m_socketFd, s.data(), s.length(), 0);
+                    delete (client);
+                }
+                return ;
+                //parse path string into file
+                //create cgi-class met executable, parameters, en output value
+                //check of file bestaat
+                //fork met client als parameter
+                //execve executable
+                //create response
+                //send response
+
+
+            }
             else
             {
                 path = "./www" + client->httpRequest.m_methodPathVersion[1] + ".html";
