@@ -1,9 +1,40 @@
 #include "HttpResponse.hpp"
+#include "StatusCodes.hpp"
+
+HttpResponse::HttpResponse(int statusCode)
+{
+    m_statusCode = std::to_string(statusCode);
+    m_statusString = httpErrorCodes[statusCode];
+    m_version = "HTTP/1.1";
+    // m_version = get version from request??
+}
+
+HttpResponse::HttpResponse(void)
+{
+    m_statusCode = "200";
+    m_statusString = "OK";
+    m_version = "HTTP/1.1";
+    return ;
+}
+
+HttpResponse& HttpResponse::operator=(const HttpResponse &src)
+{
+    if (this == &src) 
+        return *this;
+
+    m_statusLine = src.m_statusLine;
+    m_statusCode = src.m_statusCode;
+    m_version = src.m_version;
+    m_statusString = src.m_statusString;
+    m_headers = src.m_headers;
+    m_body = src.m_body;
+
+    return *this;
+}
 
 std::string HttpResponse::responseBuild(void)
 {
-    std::string httpResponse = m_statusLine + "\r\n";
-
+    std::string httpResponse = m_version + " " + m_statusCode + " " + m_statusString + "\r\n";
     for (const auto &pair : m_headers)
     {
         httpResponse += pair.first + ": " + pair.second + "\r\n";
@@ -57,11 +88,21 @@ std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
 }
 
 // readResourceIntoBody
+// std::string HttpResponse::resourceToStr(const std::string &path)
+// {
+//     std::ifstream inf(path);
+//     if (!inf)
+//         throw std::runtime_error("HTTP/1.1 400 Bad Request");
+//     std::ostringstream sstr;
+//     sstr << inf.rdbuf();
+//     return sstr.str();
+// }
+
 std::string HttpResponse::resourceToStr(const std::string &path)
 {
     std::ifstream inf(path);
     if (!inf)
-        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+        throw HttpStatusCodeException(404);
     std::ostringstream sstr;
     sstr << inf.rdbuf();
     return sstr.str();

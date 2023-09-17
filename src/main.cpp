@@ -10,6 +10,67 @@
 
 #define BUFSIZE 256
 
+HttpResponse handleRequest (Client *client)
+{
+    HttpResponse httpresponse{};
+
+    if (!client->httpRequest.m_methodPathVersion[0].compare("GET"))
+    {
+        spdlog::debug("GET method");
+
+        std::string path{client->httpRequest.m_methodPathVersion[1]};
+        if (!path.compare("/"))
+        {
+            path = "./www/index.html";
+            httpresponse.setBody(path);
+        }
+        else if (path.find("/cgi-bin/") != std::string::npos)
+        {
+            CGI CGI(path);
+            // what does child process do when error thrown?
+            CGI.execute();
+            httpresponse.m_body = std::string(CGI.m_readBuf);
+        }
+        else
+        {
+            path = "./www" + client->httpRequest.m_methodPathVersion[1] + ".html";
+            httpresponse.setBody(path);
+        }
+    }
+    else if (!client->httpRequest.m_methodPathVersion[0].compare("POST"))
+    {
+        spdlog::info("POST method");
+
+        if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
+            throw HttpStatusCodeException(413);
+        // if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
+        //     httpresponse.m_statusLine = "HTTP/1.1 413 Payload Too Large";
+        else if (client->httpRequest.m_methodPathVersion[1].find("/cgi-bin/") != std::string::npos)
+        {
+            CGI CGI(client->httpRequest.m_methodPathVersion[1], "num1=5&num2=5");
+            // set correct body for cgi parameters
+            CGI.execute();
+            httpresponse.m_body = std::string(CGI.m_readBuf);
+        }
+        else
+        {
+            client->httpRequest.setBoundaryCode();
+            client->httpRequest.setGeneralHeaders();
+            client->httpRequest.setFileName();
+            client->httpRequest.setBody();
+            client->httpRequest.bodyToDisk("./www/" + client->httpRequest.m_fileName);
+        }
+    }
+    else if (!client->httpRequest.m_methodPathVersion[0].compare("DELETE"))
+    {
+        spdlog::debug("DELETE method");
+    }
+    else
+        throw HttpStatusCodeException(501);
+    spdlog::info(client->httpRequest);
+    return (httpresponse);
+}
+
 void handleConnectedClient(Client *client)
 {
     char buf[BUFSIZE + 1]{}; // Buffer for client data
@@ -58,7 +119,7 @@ void handleConnectedClient(Client *client)
 
         client->httpRequest.setMethodPathVersion();
 
-        HttpResponse httpresponse{};
+        // HttpResponse httpresponse{};
         /*
         The HTTP version used in the request is not supported by the server. 505 HTTP Version Not Supported
         */
@@ -66,126 +127,20 @@ void handleConnectedClient(Client *client)
         /*
         A server MUST respond with a 400 (Bad Request) status code to any HTTP/1.1 request message that lacks a Host header field and to any request message that contains more than one Host header field line or a Host header field with an invalid field value.
         */
-        if (!client->httpRequest.m_methodPathVersion[0].compare("GET"))
+        HttpResponse response{};
+        try
         {
-            spdlog::debug("GET method");
-
-            std::string path{client->httpRequest.m_methodPathVersion[1]};
-            if (!path.compare("/"))
-                path = "./www/index.html";
-            else if (path.find("/cgi-bin/") != std::string::npos)
-            {
-                CGI CGI(path);
-                int	pipe_fd[2];
-                if (pipe(pipe_fd) == -1)
-                {
-                    throw;
-                }
-                pid_t pid = fork();
-                if (pid == -1)
-                {
-                    throw;
-                }
-                if (pid == 0)
-                {
-                    if (close(pipe_fd[0]) == -1)
-                        throw;
-                    if (dup2(pipe_fd[1], STDOUT_FILENO) == -1)
-                        throw;
-                    if (close(pipe_fd[1]) == -1)
-                        throw;
-                    const char* scriptPath = "pwd/www/cgi-bin/multi.py";
-                    std::vector<const char*> args;
-                    args.push_back("pyon3");
-                    args.push_back(scriptPath);
-                    for (const std::string& param : CGI.m_params)
-                    {
-                        args.push_back(param.c_str()); // Convert string to const char* and insert
-                    }
-                    args.push_back(nullptr);
-                    if (execve (PATH_TO_EXEC_PY, const_cast<char* const*>(args.data()), nullptr)) {
-                        perror("execve");
-                        return ;
-                    }
-                }
-                else
-                {
-
-                    char buf[BUFSIZE + 1]{};
-                    if (close(pipe_fd[1]) == -1)
-                        throw;
-                    if (read(pipe_fd[0], buf, BUFSIZE) == -1)
-                        throw;
-                    std::cout << "HERE\n\n" << std::endl;
-                    std::cout << "$$$$$$" << buf << "$$$$$$" << std::endl;
-                    if (close(pipe_fd[0]) == -1)
-                        throw;
-                    httpresponse.m_statusLine = "HTTP/1.1 200 OK";
-                    httpresponse.m_body = buf;
-                    std::string s{httpresponse.responseBuild()};
-                    send(client->m_socketFd, s.data(), s.length(), 0);
-                    delete (client);
-                }
-                return ;
-                //parse path string into file
-                //create cgi-class met executable, parameters, en output value
-                //check of file bestaat
-                //fork met client als parameter
-                //execve executable
-                //create response
-                //send response
-
-
-            }
-            else
-            {
-                path = "./www" + client->httpRequest.m_methodPathVersion[1] + ".html";
-            }
-
-            try
-            {
-                httpresponse.setBody(path);
-            }
-            catch (const std::exception &e)
-            {
-                httpresponse.m_statusLine = e.what();
-            }
+            response = handleRequest(client);
         }
-        else if (!client->httpRequest.m_methodPathVersion[0].compare("POST"))
+        catch (const HttpStatusCodeException &e)
         {
-            spdlog::info("POST method");
-
-            if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
-                httpresponse.m_statusLine = "HTTP/1.1 413 Payload Too Large";
-            else
-            {
-                try
-                {
-                    client->httpRequest.setBoundaryCode();
-                    client->httpRequest.setGeneralHeaders();
-                    client->httpRequest.setFileName();
-                    client->httpRequest.setBody();
-                    client->httpRequest.bodyToDisk("./www/" + client->httpRequest.m_fileName);
-                }
-                catch (const std::exception &e)
-                {
-                    httpresponse.m_statusLine = e.what();
-                }
-            }
+            spdlog::debug(e.what());
+            response = HttpResponse(e.getErrorCode());
         }
-        else if (!client->httpRequest.m_methodPathVersion[0].compare("DELETE"))
-        {
-            spdlog::debug("DELETE method");
-        }
-        else
-            httpresponse.m_statusLine = "HTTP/1.1 501 Not Implemented";
-
-        spdlog::info(client->httpRequest);
-
-        std::string s{httpresponse.responseBuild()};
+        std::string s{response.responseBuild()};
         send(client->m_socketFd, s.data(), s.length(), 0);
         delete (client);
-        return;
+        return ;
     }
     delete client;
 }

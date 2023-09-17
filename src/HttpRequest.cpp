@@ -1,4 +1,5 @@
 #include "HttpRequest.hpp"
+#include "StatusCodes.hpp"
 
 // constructor
 HttpRequest::HttpRequest(void)
@@ -28,15 +29,19 @@ void HttpRequest::setBoundaryCode(void)
 std::string HttpRequest::parseBoundaryCode(const std::map<std::string, std::string> &requestHeaders)
 {
     auto contentTypeIt = requestHeaders.find("Content-Type");
+    // if (contentTypeIt == requestHeaders.end())
+    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
     if (contentTypeIt == requestHeaders.end())
-        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+        throw HttpStatusCodeException(400);
 
     std::string contentType = contentTypeIt->second;
 
     std::string_view boundary{"boundary="};
     size_t boundaryStartPos = contentType.find(boundary);
     if (boundaryStartPos == std::string::npos)
-        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+        throw HttpStatusCodeException(400);
+    // if (boundaryStartPos == std::string::npos)
+    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     return contentType.substr(boundaryStartPos + boundary.length());
 }
@@ -55,14 +60,20 @@ std::string HttpRequest::parseGeneralHeaders(const std::string &boundaryCode)
     size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
     if (BoundaryStartPos == std::string::npos)
     {
-        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+        throw HttpStatusCodeException(400);
     }
+    // if (BoundaryStartPos == std::string::npos)
+    // {
+    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
+    // }
 
     size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
     if (generalHeadersEndPos == std::string::npos)
-    {
-        throw std::runtime_error("HTTP/1.1 400 Bad Request");
-    }
+            throw HttpStatusCodeException(400);
+    // if (generalHeadersEndPos == std::string::npos)
+    // {
+    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
+    // }
 
     return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
 }
@@ -104,7 +115,9 @@ std::string HttpRequest::parseBody(const std::string &boundaryCode)
     const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
     size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
     if (boundaryEndPos == std::string::npos)
-        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+        throw HttpStatusCodeException(400);
+    // if (boundaryEndPos == std::string::npos)
+    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
 }
@@ -113,12 +126,16 @@ std::string HttpRequest::parseFileName(const std::map<std::string, std::string> 
 {
     auto contentDispositionIt = generalHeaders.find("Content-Disposition");
     if (contentDispositionIt == generalHeaders.end())
-        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+        throw HttpStatusCodeException(400);
+    // if (contentDispositionIt == generalHeaders.end())
+    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     std::string fileNameStart{"filename="};
     size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
     if (fileNameStartPos == std::string::npos)
-        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+        throw HttpStatusCodeException(400);
+    // if (fileNameStartPos == std::string::npos)
+    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
 }
@@ -160,6 +177,8 @@ void HttpRequest::bodyToDisk(const std::string &path)
 {
     std::ofstream outf{path};
     if (!outf)
-        throw std::runtime_error("HTTP/1.1 400 Bad Request");
+        throw HttpStatusCodeException(400);
+    // if (!outf)
+    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
     outf << m_body;
 }
