@@ -1,5 +1,7 @@
 #include <csignal>
 #include <fstream>
+#include <filesystem>
+#include <sys/stat.h>
 #include "TcpServer.hpp"
 #include "Client.hpp"
 #include "MultiplexerIO.hpp"
@@ -9,6 +11,53 @@
 #include "Cgi.hpp"
 
 #define BUFSIZE 256
+
+std::string generateHtmlString(const std::string& path)
+{
+    std::stringstream htmlStream;
+    std::string folderPath = "." + path;
+    
+    htmlStream << "<html><head><title>File and Directory List</title></head><body>\n";
+    htmlStream << "<h1>Files and Directories in " << folderPath << "</h1>\n";
+    htmlStream << "<ul>\n";
+
+    for (const auto& entry : std::filesystem::directory_iterator(folderPath)) {
+        const std::string entryName = entry.path().filename().string();
+        if (std::filesystem::is_directory(entry)) {
+            htmlStream << "<li><strong>Directory:</strong> <a href=\"" << path + "/" + entryName << "\">" << entryName << "</a></li>\n";
+        } else if (std::filesystem::is_regular_file(entry)) {
+            htmlStream << "<li><strong>File:</strong> " << entryName << " ";
+            htmlStream << "<button onclick=\"deleteFile('" << path + "/" + entryName << "')\">Delete</button></li>\n";
+        }
+    }
+
+    htmlStream << "</ul>\n";
+    htmlStream << "<script>\n";
+    htmlStream << "function deleteFile(fileName) {\n";
+    htmlStream << "    if (confirm('Are you sure you want to delete ' + fileName + '?')) {\n";
+    htmlStream << "        var xhr = new XMLHttpRequest();\n";
+    htmlStream << "        xhr.open('DELETE', fileName, true);\n";
+    htmlStream << "        xhr.onreadystatechange = function() {\n";
+    htmlStream << "            if (xhr.readyState === 4 && xhr.status === 200) {\n";
+    htmlStream << "                alert('File ' + fileName + ' deleted.');\n";
+    htmlStream << "                // Refresh the page or update the file list as needed\n";
+    htmlStream << "            }\n";
+    htmlStream << "        };\n";
+    htmlStream << "        xhr.send();\n";
+    htmlStream << "    }\n";
+    htmlStream << "}\n";
+    htmlStream << "</script>\n";
+    htmlStream << "</body></html>\n";
+
+    return htmlStream.str();
+}
+
+bool isDirectory(std::string path)
+{
+    if (std::filesystem::is_directory(path))
+        return  true;
+    return false;
+}
 
 HttpResponse handleRequest (Client *client)
 {
@@ -30,6 +79,11 @@ HttpResponse handleRequest (Client *client)
             // what does child process do when error thrown?
             CGI.execute();
             httpresponse.m_body = std::string(CGI.m_readBuf);
+        }
+        else if (isDirectory("." + path))
+        {   
+            spdlog::debug("PATH IS DIR");
+            httpresponse.m_body = generateHtmlString(path);
         }
         else
         {
@@ -64,6 +118,19 @@ HttpResponse handleRequest (Client *client)
     else if (!client->httpRequest.m_methodPathVersion[0].compare("DELETE"))
     {
         spdlog::debug("DELETE method");
+        std::string path{client->httpRequest.m_methodPathVersion[1]};
+        std::string allowedPath = "/www/files";
+
+        if (path.compare(0, allowedPath.length(), allowedPath) != 0)
+            throw HttpStatusCodeException(410);
+        else if (std::remove("./www/hello.txt") == 0)
+        {
+            httpresponse.m_body = "Succes";
+        }
+        else
+        {
+            throw HttpStatusCodeException(411);
+        }
     }
     else
         throw HttpStatusCodeException(501);
