@@ -17,8 +17,6 @@
 
 class Parser {
 	private:
-		void _identifyDirectives(ServerConfig *server, std::vector<Token> tokens);
-
 		void _parseServerContext(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseListen(ServerConfig *server, std::vector<Token> tokens, size_t *i);
 		void _parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i);
