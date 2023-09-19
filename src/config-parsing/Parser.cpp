@@ -335,39 +335,17 @@ void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens
 }
 
 /**
- * Loop over tokens and identify directives (listen, server_name, error_page, client_max_body_size, location)
+ * Loop over tokens and parse server context (listen, server_name, error_page, client_max_body_size, location)
  * ? should I init every directive to default values 
  * ? in case they are not found in the config file ?
 */
-void	Parser::_identifyDirectives(ServerConfig *server, std::vector<Token> tokens) {
-	for (size_t i = 0; i < tokens.size(); i++) {
-		// printCurrentToken(tokens, i); // ? debug
-		_parseServerContext(server, tokens, &i);
-		
-		// try {
-		// 	_parseServerContext(server, tokens, &i);
-		// } catch (const std::exception &e) {
-		// 	std::cerr << e.what() << std::endl;
-		// 	// TODO set default value or throw error ?
-		// }
-	}
-}
-
+// TODO check for N/A directives and set to default values or error ?
 ServerConfig Parser::parseTokens(ServerConfig server) {
 	Parser parser;
 
-	// Identify directives
-	parser._identifyDirectives(&server, server.getTokens());
-
-	// try {
-	// 	parser._identifyDirectives(&server, server.getTokens());
-	// } catch (const std::exception &e) {
-	// 	// TODO set default value or throw error ?
-	// 	std::cerr << e.what() << std::endl;
-	// 	// return (ServerConfig());
-	// }
-
-	// TODO check for N/A directives and set to default values or error ?
+	for (size_t i = 0; i < server.getTokens().size(); i++) {
+		parser._parseServerContext(&server, server.getTokens(), &i);
+	}
 
 	return (server);
 }

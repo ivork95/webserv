@@ -3,13 +3,28 @@
 #include "Parser.hpp"
 #include "Configuration.hpp"
 
+static int	checkDuplicatePorNumbers(std::vector<std::string> &usedPorts, const std::string &portNb) {
+	if (std::find(usedPorts.begin(), usedPorts.end(), portNb) != usedPorts.end()) {
+		return 1;
+	}
+	usedPorts.push_back(portNb);
+	return 0;
+}
+
 static int	parseTokens(Configuration *config) {
+    std::vector<std::string> usedPorts; // Use a set to store seen port numbers
+
 	for (size_t i = 0; i < config->serversConfig.size(); ++i) {
 		try {
 			config->serversConfig[i] = Parser::parseTokens(config->serversConfig[i]);
 		} catch (const std::exception &e) {
 			std::cerr << "Error: could not parse server " << i << std::endl;
 			std::cerr << e.what() << std::endl;
+			return (1);
+		}
+		const std::string portNb = config->serversConfig[i].getPortNb();
+		if (checkDuplicatePorNumbers(usedPorts, portNb)) {
+			std::cerr << "Error: Duplicate port number " << portNb << std::endl;
 			return (1);
 		}
 	}
