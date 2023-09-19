@@ -95,7 +95,7 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 			throw InvalidTokenException("Missing file path");
 		}
 	} else {
-		throw InvalidTokenException("Expected file extension");
+		throw InvalidTokenException("Expected file extension: " + tokens.at(*i)._getWord());
 	}
 }
 
