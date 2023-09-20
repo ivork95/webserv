@@ -19,9 +19,10 @@ public:
     std::vector<std::string> m_methodPathVersion{3};
     std::string m_body{};
     int m_client_max_body_size{999999};
-    std::map<std::string, std::string> m_generalHeaders{};
     std::string m_boundaryCode{};
     std::string m_fileName{};
+    std::map<std::string, std::string> m_generalHeaders{};
+    int m_statusCode{};
 
     // constructor
     HttpRequest(void);
@@ -48,6 +49,7 @@ public:
     std::vector<std::string> split(const std::string &str) const;
     void strip(std::string &str);
     void bodyToDisk(const std::string &path);
+    int tokenize(const char *buf, int nbytes);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);

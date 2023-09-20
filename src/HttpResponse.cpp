@@ -1,25 +1,17 @@
 #include "HttpResponse.hpp"
 #include "StatusCodes.hpp"
 
-HttpResponse::HttpResponse(int statusCode)
+HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request)
 {
-    m_statusCode = std::to_string(statusCode);
-    m_statusString = httpErrorCodes[statusCode];
-    m_version = "HTTP/1.1";
-    // m_version = get version from request??
+    spdlog::critical("HttpResponse() constructor with request called");
+
+    m_statusCode = std::to_string(m_request.m_statusCode);
+    m_statusString = httpErrorCodes[m_request.m_statusCode];
 }
 
-HttpResponse::HttpResponse(void)
+HttpResponse &HttpResponse::operator=(const HttpResponse &src)
 {
-    m_statusCode = "200";
-    m_statusString = "OK";
-    m_version = "HTTP/1.1";
-    return ;
-}
-
-HttpResponse& HttpResponse::operator=(const HttpResponse &src)
-{
-    if (this == &src) 
+    if (this == &src)
         return *this;
 
     m_statusLine = src.m_statusLine;
@@ -82,21 +74,14 @@ std::string HttpResponse::targetPathCreate(const std::string &target)
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
 {
-    out << "HttpResponse(" << httpresponse.m_statusLine << ")";
+    out << "HttpResponse(\n";
+    out << httpresponse.m_statusLine << '\n';
+    out << httpresponse.m_statusCode << '\n';
+    out << httpresponse.m_statusString << '\n';
+    out << ")";
 
     return out;
 }
-
-// readResourceIntoBody
-// std::string HttpResponse::resourceToStr(const std::string &path)
-// {
-//     std::ifstream inf(path);
-//     if (!inf)
-//         throw std::runtime_error("HTTP/1.1 400 Bad Request");
-//     std::ostringstream sstr;
-//     sstr << inf.rdbuf();
-//     return sstr.str();
-// }
 
 std::string HttpResponse::resourceToStr(const std::string &path)
 {
@@ -111,4 +96,134 @@ std::string HttpResponse::resourceToStr(const std::string &path)
 void HttpResponse::setBody(const std::string &path)
 {
     m_body = resourceToStr(path);
+}
+
+std::string generateHtmlString(const std::string &path)
+{
+    std::stringstream htmlStream;
+    std::string folderPath = "." + path;
+
+    htmlStream << "<html><head><title>File and Directory List</title></head><body>\n";
+    htmlStream << "<h1>Files and Directories in " << folderPath << "</h1>\n";
+    htmlStream << "<ul>\n";
+
+    for (const auto &entry : std::filesystem::directory_iterator(folderPath))
+    {
+        const std::string entryName = entry.path().filename().string();
+        if (std::filesystem::is_directory(entry))
+        {
+            htmlStream << "<li><strong>Directory:</strong> <a href=\"" << path + "/" + entryName << "\">" << entryName << "</a></li>\n";
+        }
+        else if (std::filesystem::is_regular_file(entry))
+        {
+            htmlStream << "<li><strong>File:</strong> " << entryName << " ";
+            htmlStream << "<button onclick=\"deleteFile('" << path + "/" + entryName << "')\">Delete</button></li>\n";
+        }
+    }
+
+    htmlStream << "</ul>\n";
+    htmlStream << "<script>\n";
+    htmlStream << "function deleteFile(fileName) {\n";
+    htmlStream << "    if (confirm('Are you sure you want to delete ' + fileName + '?')) {\n";
+    htmlStream << "        var xhr = new XMLHttpRequest();\n";
+    htmlStream << "        xhr.open('DELETE', fileName, true);\n";
+    htmlStream << "        xhr.onreadystatechange = function() {\n";
+    htmlStream << "            if (xhr.readyState === 4 && xhr.status === 200) {\n";
+    htmlStream << "                alert('File ' + fileName + ' deleted.');\n";
+    htmlStream << "                // Refresh the page or update the file list as needed\n";
+    htmlStream << "            }\n";
+    htmlStream << "        };\n";
+    htmlStream << "        xhr.send();\n";
+    htmlStream << "    }\n";
+    htmlStream << "}\n";
+    htmlStream << "</script>\n";
+    htmlStream << "</body></html>\n";
+
+    return htmlStream.str();
+}
+
+bool isDirectory(std::string path)
+{
+    if (std::filesystem::is_directory(path))
+        return true;
+    return false;
+}
+
+void HttpResponse::getHandle(void)
+{
+    std::string path{m_request.m_methodPathVersion[1]};
+    if (!path.compare("/"))
+    {
+        path = "./www/index.html";
+        setBody(path);
+    }
+    else if (path.find("/cgi-bin/") != std::string::npos)
+    {
+        CGI CGI(path);
+        // what does child process do when error thrown?
+        CGI.execute();
+        m_body = std::string(CGI.m_readBuf);
+    }
+    else if (isDirectory("." + path))
+    {
+        spdlog::debug("PATH IS DIR");
+        m_body = generateHtmlString(path);
+    }
+    else
+    {
+        path = "./www" + m_request.m_methodPathVersion[1] + ".html";
+        setBody(path);
+    }
+}
+
+void HttpResponse::postHandle(void)
+{
+    if (m_request.m_contentLength > m_request.m_client_max_body_size)
+        throw HttpStatusCodeException(413);
+    else if (m_request.m_methodPathVersion[1].find("/cgi-bin/") != std::string::npos)
+    {
+        CGI CGI(m_request.m_methodPathVersion[1], "num1=5&num2=5");
+        // set correct body for cgi parameters
+        CGI.execute();
+        m_body = std::string(CGI.m_readBuf);
+    }
+}
+
+void HttpResponse::deleteHandle(void)
+{
+    std::string path{m_request.m_methodPathVersion[1]};
+    std::string allowedPath = "/www/files";
+
+    if (path.compare(0, allowedPath.length(), allowedPath) != 0)
+        throw HttpStatusCodeException(410);
+    else if (std::remove("./www/hello.txt") == 0)
+        m_body = "Succes";
+    else
+        throw HttpStatusCodeException(411);
+}
+
+void HttpResponse::responseHandle(void)
+{
+    try
+    {
+        if (!m_request.m_methodPathVersion[0].compare("GET"))
+        {
+            spdlog::debug("GET method");
+            getHandle();
+        }
+        else if (!m_request.m_methodPathVersion[0].compare("POST"))
+        {
+            spdlog::info("POST method");
+            postHandle();
+        }
+        else if (!m_request.m_methodPathVersion[0].compare("DELETE"))
+        {
+            spdlog::debug("DELETE method");
+            deleteHandle();
+        }
+    }
+    catch (const HttpStatusCodeException &e)
+    {
+        m_statusCode = e.getErrorCode();
+    }
 }

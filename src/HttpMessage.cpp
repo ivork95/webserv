@@ -67,7 +67,7 @@ void HttpMessage::setContentLength(void)
     try
     {
         m_contentLength = std::stoi(m_requestHeaders["Content-Length"]);
-        isContentLengthConverted = true;
+        m_isContentLengthConverted = true;
     }
     catch (...)
     {
@@ -90,7 +90,7 @@ std::ostream &operator<<(std::ostream &out, const HttpMessage &httpmessage)
     }
     out << "}\n";
     out << "m_contentLength = " << httpmessage.m_contentLength << '\n';
-    out << "isContentLengthConverted = " << httpmessage.isContentLengthConverted << '\n';
+    out << "m_isContentLengthConverted = " << httpmessage.m_isContentLengthConverted << '\n';
     out << ")";
 
     return out;

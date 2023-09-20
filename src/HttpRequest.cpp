@@ -29,8 +29,6 @@ void HttpRequest::setBoundaryCode(void)
 std::string HttpRequest::parseBoundaryCode(const std::map<std::string, std::string> &requestHeaders)
 {
     auto contentTypeIt = requestHeaders.find("Content-Type");
-    // if (contentTypeIt == requestHeaders.end())
-    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
     if (contentTypeIt == requestHeaders.end())
         throw HttpStatusCodeException(400);
 
@@ -40,8 +38,6 @@ std::string HttpRequest::parseBoundaryCode(const std::map<std::string, std::stri
     size_t boundaryStartPos = contentType.find(boundary);
     if (boundaryStartPos == std::string::npos)
         throw HttpStatusCodeException(400);
-    // if (boundaryStartPos == std::string::npos)
-    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     return contentType.substr(boundaryStartPos + boundary.length());
 }
@@ -62,18 +58,10 @@ std::string HttpRequest::parseGeneralHeaders(const std::string &boundaryCode)
     {
         throw HttpStatusCodeException(400);
     }
-    // if (BoundaryStartPos == std::string::npos)
-    // {
-    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
-    // }
 
     size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
     if (generalHeadersEndPos == std::string::npos)
-            throw HttpStatusCodeException(400);
-    // if (generalHeadersEndPos == std::string::npos)
-    // {
-    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
-    // }
+        throw HttpStatusCodeException(400);
 
     return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
 }
@@ -116,8 +104,6 @@ std::string HttpRequest::parseBody(const std::string &boundaryCode)
     size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
     if (boundaryEndPos == std::string::npos)
         throw HttpStatusCodeException(400);
-    // if (boundaryEndPos == std::string::npos)
-    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
 }
@@ -127,15 +113,11 @@ std::string HttpRequest::parseFileName(const std::map<std::string, std::string> 
     auto contentDispositionIt = generalHeaders.find("Content-Disposition");
     if (contentDispositionIt == generalHeaders.end())
         throw HttpStatusCodeException(400);
-    // if (contentDispositionIt == generalHeaders.end())
-    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     std::string fileNameStart{"filename="};
     size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
     if (fileNameStartPos == std::string::npos)
         throw HttpStatusCodeException(400);
-    // if (fileNameStartPos == std::string::npos)
-    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
 
     return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
 }
@@ -152,6 +134,7 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
     out << "m_body = |" << httprequest.m_body << "|\n";
     out << "m_boundaryCode = |" << httprequest.m_boundaryCode << "|\n";
     out << "m_fileName = |" << httprequest.m_fileName << "|\n";
+    out << "m_statusCode = |" << httprequest.m_statusCode << "|\n";
     out << "m_generalHeaders = {\n";
     for (const auto &elem : httprequest.m_generalHeaders)
     {
@@ -181,4 +164,48 @@ void HttpRequest::bodyToDisk(const std::string &path)
     // if (!outf)
     //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
     outf << m_body;
+}
+
+int HttpRequest::tokenize(const char *buf, int nbytes)
+{
+    spdlog::info("nbytes = {}", nbytes);
+
+    m_rawMessage.append(buf, buf + nbytes);
+
+    size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
+    if (fieldLinesEndPos == std::string::npos)
+    {
+        spdlog::warn("message incomplete [...]");
+        return 1;
+    }
+
+    if (m_requestHeaders.empty())
+        setRequestHeaders();
+
+    if (m_requestHeaders.contains("Content-Length"))
+    {
+        if (!m_isContentLengthConverted)
+            setContentLength();
+        if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
+        {
+            spdlog::warn("Content-Length not reached [...]");
+            return 2;
+        }
+        spdlog::info("Content-Length reached!");
+    }
+
+    spdlog::info("message complete!");
+    spdlog::info("m_rawMessage = \n|{}|", m_rawMessage);
+
+    setMethodPathVersion();
+
+    if (!m_methodPathVersion[0].compare("POST"))
+    {
+        setBoundaryCode();
+        setGeneralHeaders();
+        setFileName();
+        setBody();
+        bodyToDisk("./www/" + m_fileName);
+    }
+    return 0;
 }

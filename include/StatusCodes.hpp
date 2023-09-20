@@ -1,7 +1,7 @@
 #ifndef STATUS_CODES_HPP
-# define STATUS_CODES_HPP
-# include <exception>
-# include <map>
+#define STATUS_CODES_HPP
+#include <exception>
+#include <map>
 
 inline std::map<int, std::string> httpErrorCodes = {
     {100, "Continue"},
@@ -43,31 +43,26 @@ inline std::map<int, std::string> httpErrorCodes = {
     {502, "Bad Gateway"},
     {503, "Service Unavailable"},
     {504, "Gateway Timeout"},
-    {505, "HTTP Version Not Supported"}
-};
+    {505, "HTTP Version Not Supported"}};
 
 class HttpStatusCodeException : public std::exception
 {
 
 public:
-
     HttpStatusCodeException(int errorCode) : errorCode(errorCode) {}
 
-    const char* what() const noexcept override
+    const char *what() const noexcept override
     {
         return "HTTP Status Code Exception";
     }
 
-    int getErrorCode() const 
+    int getErrorCode() const
     {
         return errorCode;
     }
 
-
 private:
-
     int errorCode;
-
 };
 
 #endif

@@ -12,7 +12,7 @@ public:
     std::string m_rawMessage{};
     std::map<std::string, std::string> m_requestHeaders{};
     int m_contentLength{};
-    bool isContentLengthConverted{false};
+    bool m_isContentLengthConverted{false};
 
     // constructor
     HttpMessage(void);
