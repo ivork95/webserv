@@ -4,6 +4,9 @@
 # include <exception>
 # include <string>
 
+/**
+ * TOKEN EXCEPTIONS
+*/
 class InvalidTokenException : public std::exception {
 	public:
 		InvalidTokenException(const std::string &derivedMsg)
@@ -102,6 +105,25 @@ class ConversionUnitException : public InvalidTokenException {
 	public:
 		ConversionUnitException(const std::string &input)
 			: InvalidTokenException("Conversion unit: " + input + " (only k/K, m/M or g/G)") {}
+};
+
+/**
+ * DIRECTIVE EXCEPTIONS
+*/
+class DirectiveAlreadySetException : public std::exception {
+	public:
+		DirectiveAlreadySetException(const std::string &derivedMsg)
+			: derivedErrorMessage(derivedMsg) {
+			fullErrorMessage = "Directive already set: " + derivedErrorMessage;
+		}
+
+		const char* what() const noexcept override {
+			return fullErrorMessage.c_str();
+		}
+
+	private:
+		std::string			derivedErrorMessage;
+		std::string			fullErrorMessage;
 };
 
 #endif

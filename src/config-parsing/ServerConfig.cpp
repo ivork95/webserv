@@ -72,23 +72,38 @@ void ServerConfig::setIndex(const unsigned int &index) {
 }
 
 void ServerConfig::setPortNb(const std::string &portNb) {
+	if (_hasPortNb) 
+		throw DirectiveAlreadySetException("port number");
 	_portNb = portNb;
+	_hasPortNb = true;
 }
 
 void ServerConfig::setServerName(const std::string &serverName) {
+	if (_hasServerName)
+		throw DirectiveAlreadySetException("server name");
 	_serverName = serverName;
+	_hasServerName = true;
 }
 
 void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize) {
+	if (_hasClientMaxBodySize)
+		throw DirectiveAlreadySetException("client max body size");
 	_clientMaxBodySize = clientMaxBodySize;
+	_hasClientMaxBodySize = true;
 }
 
 void ServerConfig::setErrorPagesConfig(const ErrorPageConfig &errorPages) {
+	// if (_hasErrorPagesConfig)
+	// 	throw DirectiveAlreadySetException("error pages"); // ! there can be multiple error pages
 	_errorPagesConfig.push_back(errorPages);
+	_hasErrorPagesConfig = true;
 }
 
 void ServerConfig::setLocationsConfig(const LocationConfig &routeConfig) {
+	// if (_hasLocationsConfig)
+	// 	throw DirectiveAlreadySetException("location"); // ! there can be multiple locations
 	_locationsConfig.push_back(routeConfig);
+	_hasLocationsConfig = true;
 }
 
 void ServerConfig::setRawData(const std::string &rawData) {
@@ -97,6 +112,26 @@ void ServerConfig::setRawData(const std::string &rawData) {
 
 void ServerConfig::setTokens(const std::vector<Token> &tokens) {
 	_tokens = tokens;
+}
+
+bool ServerConfig::hasPortNb(void) const {
+	return (_hasPortNb);
+}
+
+bool ServerConfig::hasServerName(void) const {
+	return (_hasServerName);
+}
+
+bool ServerConfig::hasClientMaxBodySize(void) const {
+	return (_hasClientMaxBodySize);
+}
+
+bool ServerConfig::hasErrorPagesConfig(void) const {
+	return (_hasErrorPagesConfig);
+}
+
+bool ServerConfig::hasLocationsConfig(void) const {
+	return (_hasLocationsConfig);
 }
 
 /**

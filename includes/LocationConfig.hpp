@@ -2,6 +2,8 @@
 #ifndef LOCATION_CONFIG_HPP
 # define LOCATION_CONFIG_HPP
 
+# include "Exceptions.hpp"
+
 # include <iostream>
 # include <vector>
 # include <map>
@@ -12,12 +14,25 @@
 class LocationConfig {
 	private:
 		std::string 						_requestURI;		// location / 
+		bool								_hasRequestURI{false};
+
 		std::string 						_rootPath;			// root    files/html/Website
+		bool								_hasRootPath{false};
+
 		std::string							_clientMaxBodySize;	// client_max_body_size 42k
+		bool								_hasClientMaxBodySize{false};
+
 		bool								_autoIndex;			// autoindex on/off
+		bool								_hasAutoIndex{false};
+
 		std::vector<std::string>			_indexFile;			// index   index.html Start.html
+		bool								_hasIndexFile{false};
+
 		std::map<std::string, std::string>	_cgiHandler;		// cgi .php /usr/local/bin/php-cgi
+		bool								_hasCgiHandler{false};
+
 		std::vector<std::string> 			_httpMethods;		// methods GET POST DELETE
+		bool								_hasHttpMethods{false};
 
 	public:
 		LocationConfig(void);
@@ -40,7 +55,17 @@ class LocationConfig {
 		void 										setCgiHandler(const std::string &key, const std::string &value);
 		void 										setHttpMethods(const std::vector<std::string> &httpMethods);
 
-		friend std::ostream			&operator << (std::ostream &out, const LocationConfig &route);
+		bool										hasRequestURI(void) const;
+		bool										hasRootPath(void) const;
+		bool										hasClientMaxBodySize(void) const;
+		bool										hasAutoIndex(void) const;
+		bool										hasIndexFile(void) const;
+		bool										hasCgiHandler(void) const;
+		bool										hasHttpMethods(void) const;
+
+		void										checkMissingDirective(LocationConfig &route);
+
+		friend std::ostream							&operator << (std::ostream &out, const LocationConfig &route);
 };
 
 

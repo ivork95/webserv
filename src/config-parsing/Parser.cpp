@@ -215,14 +215,16 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
 					(this->*pf_locationContextDirectives[n])(tokens, &j, route);
 					break;
 				} else {
-					// TODO if we find the directive but nothing after => throw error or set default value ?
 					throw InvalidTokenException("Expected word after: " + tokens.at(j - 1)._getWord());
 				}
 			}
 		}
 		j++;
 	}
-
+	
+	// TODO check for missing directives and set defaults
+	route.checkMissingDirective(route);
+	
 	server->setLocationsConfig(route);
 	(*i) = j;
 }
@@ -327,10 +329,32 @@ void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens
 				(this->*pf_serverContextDirectives[n])(server, tokens, i);
 				break;
 			} else {
-				// TODO if we find the directive but nothing after => throw error or set default value ?
 				throw InvalidTokenException("Expected word after: " + tokens.at(*i - 1)._getWord());
 			}
 		}
+	}
+}
+
+void	Parser::_checkMissingServerDirective(ServerConfig &server) {
+	if (!server.hasPortNb()) {
+		std::cout << "No port number\n"; // ? debug
+		server.setPortNb("80");
+	}
+	if (!server.hasServerName()) {
+		std::cout << "No server name\n"; // ? debug
+		server.setServerName("");
+	}
+	if (!server.hasClientMaxBodySize()) {
+		std::cout << "No client max body size\n"; // ? debug
+		server.setClientMaxBodySize("1000000");
+	}
+	if (!server.hasErrorPagesConfig()) {
+		// default value: -
+		// std::cout << "No error pages config\n"; // ? debug
+	}
+	if (!server.hasLocationsConfig()) {
+		// default value: -
+		// std::cout << "No locations config\n"; // ? debug
 	}
 }
 
@@ -339,13 +363,20 @@ void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens
  * ? should I init every directive to default values 
  * ? in case they are not found in the config file ?
 */
-// TODO check for N/A directives and set to default values or error ?
 ServerConfig Parser::parseTokens(ServerConfig server) {
 	Parser parser;
 
 	for (size_t i = 0; i < server.getTokens().size(); i++) {
 		parser._parseServerContext(&server, server.getTokens(), &i);
 	}
+
+	// std::cout << server; // ? debug
+
+	// TODO check for missing directives and set defaults
+	parser._checkMissingServerDirective(server);
+
+	// std::cout << server.hasPortNb() << std::endl;
+	// std::cout << server.hasLocationsConfig() << std::endl;
 
 	return (server);
 }

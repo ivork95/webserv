@@ -64,6 +64,7 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 	}
 }
 
+// TODO fix 2 consecutive new lines
 std::vector<Token> Lexer::tokenizeServer(const std::string &rawData) {
     std::vector<Token> tokens;
 
@@ -75,8 +76,10 @@ std::vector<Token> Lexer::tokenizeServer(const std::string &rawData) {
 		// std::cout << line.back() << std::endl; // ? debug
 		if (line.empty())
 			continue ;
-		else if (line.back() != ';' && line.back() != '{' && line.back() != '}')
+		else if (line.back() != ';' && line.back() != '{' && line.back() != '}') {
+			std::cout << "here\n"; // ? debug
 			return std::vector<Token>();
+		}
         // Split line into tokens
         _splitLine(&tokens, line);
     }
