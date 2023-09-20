@@ -6,10 +6,35 @@ HttpMessage::HttpMessage(void)
     spdlog::debug("HttpMessage constructor called");
 }
 
+// copy constructor
+
 // destructor
 HttpMessage::~HttpMessage(void)
 {
     spdlog::debug("HttpMessage destructor called");
+}
+
+// getters/setters
+void HttpMessage::setRequestHeaders(void)
+{
+    size_t requestLineEndPos = m_rawMessage.find("\r\n");
+    size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
+    std::string fieldLines = m_rawMessage.substr(requestLineEndPos + 2, (fieldLinesEndPos + 4) - (requestLineEndPos + 2));
+
+    m_requestHeaders = fieldLinesToHeaders(fieldLines);
+}
+
+void HttpMessage::setContentLength(void)
+{
+    try
+    {
+        m_contentLength = std::stoi(m_requestHeaders["Content-Length"]);
+        m_isContentLengthConverted = true;
+    }
+    catch (...)
+    {
+        m_contentLength = -1;
+    }
 }
 
 // methods
@@ -49,29 +74,6 @@ void HttpMessage::requestHeadersPrint(const std::map<std::string, std::string> &
     {
         spdlog::debug("[{0}] = ({1}, {2})", i, elem.first, elem.second);
         i++;
-    }
-}
-
-// getters/setters
-void HttpMessage::setRequestHeaders(void)
-{
-    size_t requestLineEndPos = m_rawMessage.find("\r\n");
-    size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
-    std::string fieldLines = m_rawMessage.substr(requestLineEndPos + 2, (fieldLinesEndPos + 4) - (requestLineEndPos + 2));
-
-    m_requestHeaders = fieldLinesToHeaders(fieldLines);
-}
-
-void HttpMessage::setContentLength(void)
-{
-    try
-    {
-        m_contentLength = std::stoi(m_requestHeaders["Content-Length"]);
-        m_isContentLengthConverted = true;
-    }
-    catch (...)
-    {
-        m_contentLength = -1;
     }
 }
 

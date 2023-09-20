@@ -1,17 +1,18 @@
 #include "Socket.hpp"
 
+// destructor
 Socket::~Socket(void)
 {
-    std::cout << "Socket destructor called\n";
+    spdlog::debug("Socket destructor called");
 }
 
+// member functions
 int Socket::setNonBlocking(void)
 {
     int result{};
     int flags{};
 
     flags = ::fcntl(m_socketFd, F_GETFL, 0);
-
     if (flags == -1)
     {
         std::perror("fcntl() failed");

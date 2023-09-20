@@ -1,5 +1,6 @@
 #include "Timer.hpp"
 
+// client constructor
 Timer::Timer(Client *client) : m_client(client)
 {
     m_spec.it_value.tv_sec = 180;
@@ -23,6 +24,7 @@ Timer::Timer(Client *client) : m_client(client)
     spdlog::debug("{} constructor called", *this);
 }
 
+// destructor
 Timer::~Timer(void)
 {
     spdlog::debug("{} destructor called", *this);

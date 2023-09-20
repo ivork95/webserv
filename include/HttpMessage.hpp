@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h> // must be included
+#include <spdlog/fmt/ostr.h>
 
 class HttpMessage
 {
@@ -24,14 +24,14 @@ public:
     // destructor
     ~HttpMessage(void);
 
+    // getters/setters
+    void setRequestHeaders(void);
+    void setContentLength(void);
+
     // methods
     std::pair<std::string, std::string> parseFieldLine(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const;
     std::map<std::string, std::string> fieldLinesToHeaders(std::string &fieldLines);
     void requestHeadersPrint(const std::map<std::string, std::string> &headers) const;
-
-    // getters/setters
-    void setRequestHeaders(void);
-    void setContentLength(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const HttpMessage &httpmessage);

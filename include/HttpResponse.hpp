@@ -5,12 +5,13 @@
 #include <map>
 #include <fstream>
 #include <sstream>
-#include "StatusCodes.hpp"
 #include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h> // must be included
+#include <spdlog/fmt/ostr.h>
+#include <filesystem>
+
+#include "StatusCodes.hpp"
 #include "HttpRequest.hpp"
 #include "Cgi.hpp"
-#include <filesystem>
 
 extern std::map<int, std::string> httpErrorCodes;
 
@@ -25,15 +26,18 @@ public:
     std::map<std::string, std::string> m_headers{};
     std::string m_body{};
 
-    // constructor
+    // default constructor
     HttpResponse(void) = delete;
+
+    // request constrcuctor
     HttpResponse(const HttpRequest &request);
-    // HttpResponse(int statusCode);
+
     // copy constructor
 
     // copy assignment operator overload
-    HttpResponse &operator=(const HttpResponse &src);
+
     // destructor
+    ~HttpResponse(void);
 
     // getters/setters
     void setBody(const std::string &path);
@@ -44,13 +48,12 @@ public:
     std::string targetPathCreate(const std::string &target);
     std::string resourceToStr(const std::string &path);
     void getHandle(void);
-    void responseHandle(void);
     void postHandle(void);
     void deleteHandle(void);
+    void responseHandle(void);
 
     // outstream operator overload
-    friend std::ostream &
-    operator<<(std::ostream &out, const HttpResponse &HttpResponse);
+    friend std::ostream &operator<<(std::ostream &out, const HttpResponse &HttpResponse);
 };
 
 #endif

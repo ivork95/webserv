@@ -1,6 +1,6 @@
 #include "HttpResponse.hpp"
-#include "StatusCodes.hpp"
 
+// request constructor
 HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request)
 {
     spdlog::critical("HttpResponse() constructor with request called");
@@ -9,21 +9,23 @@ HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request)
     m_statusString = httpErrorCodes[m_request.m_statusCode];
 }
 
-HttpResponse &HttpResponse::operator=(const HttpResponse &src)
+// copy constructor
+
+// copy assignment operator overload
+
+// destructor
+HttpResponse::~HttpResponse(void)
 {
-    if (this == &src)
-        return *this;
-
-    m_statusLine = src.m_statusLine;
-    m_statusCode = src.m_statusCode;
-    m_version = src.m_version;
-    m_statusString = src.m_statusString;
-    m_headers = src.m_headers;
-    m_body = src.m_body;
-
-    return *this;
+    spdlog::critical("HttpResponse() destructor called");
 }
 
+// getters/setters
+void HttpResponse::setBody(const std::string &path)
+{
+    m_body = resourceToStr(path);
+}
+
+// methods
 std::string HttpResponse::responseBuild(void)
 {
     std::string httpResponse = m_version + " " + m_statusCode + " " + m_statusString + "\r\n";
@@ -71,18 +73,6 @@ std::string HttpResponse::targetPathCreate(const std::string &target)
     return "./www" + target + ".html";
 }
 
-// outstream operator overload
-std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
-{
-    out << "HttpResponse(\n";
-    out << httpresponse.m_statusLine << '\n';
-    out << httpresponse.m_statusCode << '\n';
-    out << httpresponse.m_statusString << '\n';
-    out << ")";
-
-    return out;
-}
-
 std::string HttpResponse::resourceToStr(const std::string &path)
 {
     std::ifstream inf(path);
@@ -91,11 +81,6 @@ std::string HttpResponse::resourceToStr(const std::string &path)
     std::ostringstream sstr;
     sstr << inf.rdbuf();
     return sstr.str();
-}
-
-void HttpResponse::setBody(const std::string &path)
-{
-    m_body = resourceToStr(path);
 }
 
 std::string generateHtmlString(const std::string &path)
@@ -226,4 +211,16 @@ void HttpResponse::responseHandle(void)
     {
         m_statusCode = e.getErrorCode();
     }
+}
+
+// outstream operator overload
+std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
+{
+    out << "HttpResponse(\n";
+    out << httpresponse.m_statusLine << '\n';
+    out << httpresponse.m_statusCode << '\n';
+    out << httpresponse.m_statusString << '\n';
+    out << ")";
+
+    return out;
 }

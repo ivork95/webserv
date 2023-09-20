@@ -9,10 +9,11 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h> // must be included
 #include <map>
-#include "Socket.hpp"
+
 #include "TcpServer.hpp"
-#include "HttpRequest.hpp"
 #include "Timer.hpp"
+#include "Socket.hpp"
+#include "HttpRequest.hpp"
 #include "HttpMessage.hpp"
 
 class TcpServer;
@@ -21,20 +22,18 @@ class Timer;
 class Client : public Socket
 {
 public:
+    Timer *timer{};
     const TcpServer &m_server;
+    HttpRequest httpRequest{};
     struct sockaddr_storage m_remoteaddr
     {
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
 
-    HttpRequest httpRequest{};
-
-    Timer *timer{};
-
     // default constructor
     Client(void) = delete;
 
-    // serverSocket constructor
+    // server constructor
     Client(const TcpServer &server);
 
     // destructor

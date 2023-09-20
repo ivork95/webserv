@@ -1,5 +1,6 @@
 #ifndef STATUS_CODES_HPP
 #define STATUS_CODES_HPP
+
 #include <exception>
 #include <map>
 
@@ -47,6 +48,8 @@ inline std::map<int, std::string> httpErrorCodes = {
 
 class HttpStatusCodeException : public std::exception
 {
+private:
+    int errorCode;
 
 public:
     HttpStatusCodeException(int errorCode) : errorCode(errorCode) {}
@@ -60,9 +63,6 @@ public:
     {
         return errorCode;
     }
-
-private:
-    int errorCode;
 };
 
 #endif

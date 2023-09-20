@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-// serverSocket constructor
+// server constructor
 Client::Client(const TcpServer &server) : m_server(server)
 {
     m_socketFd = accept(m_server.m_socketFd, (struct sockaddr *)&m_remoteaddr, &m_addrlen);

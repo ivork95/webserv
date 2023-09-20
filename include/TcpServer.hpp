@@ -7,15 +7,16 @@
 #include <unistd.h>
 #include <vector>
 #include <memory>
-#include "Client.hpp"
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include "Socket.hpp"
-#include "cstring"
 #include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h> // must be included
+#include <spdlog/fmt/ostr.h>
+#include <cstring>
+
+#include "Client.hpp"
+#include "Socket.hpp"
 
 class TcpServer : public Socket
 {

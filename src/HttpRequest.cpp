@@ -1,11 +1,14 @@
 #include "HttpRequest.hpp"
-#include "StatusCodes.hpp"
 
 // constructor
 HttpRequest::HttpRequest(void)
 {
     spdlog::debug("HttpRequest constructor called");
 }
+
+// copy constructor
+
+// copy assignment operator overload
 
 // destructor
 HttpRequest::~HttpRequest(void)
@@ -26,6 +29,24 @@ void HttpRequest::setBoundaryCode(void)
     m_boundaryCode = parseBoundaryCode(m_requestHeaders);
 }
 
+void HttpRequest::setGeneralHeaders(void)
+{
+    std::string generalFieldLines = parseGeneralHeaders(m_boundaryCode);
+    m_generalHeaders = fieldLinesToHeaders(generalFieldLines);
+}
+
+void HttpRequest::setBody(void)
+{
+    m_body = parseBody(m_boundaryCode);
+}
+
+void HttpRequest::setFileName(void)
+{
+    m_fileName = parseFileName(m_generalHeaders);
+    strip(m_fileName);
+}
+
+// methods
 std::string HttpRequest::parseBoundaryCode(const std::map<std::string, std::string> &requestHeaders)
 {
     auto contentTypeIt = requestHeaders.find("Content-Type");
@@ -40,12 +61,6 @@ std::string HttpRequest::parseBoundaryCode(const std::map<std::string, std::stri
         throw HttpStatusCodeException(400);
 
     return contentType.substr(boundaryStartPos + boundary.length());
-}
-
-void HttpRequest::setGeneralHeaders(void)
-{
-    std::string generalFieldLines = parseGeneralHeaders(m_boundaryCode);
-    m_generalHeaders = fieldLinesToHeaders(generalFieldLines);
 }
 
 std::string HttpRequest::parseGeneralHeaders(const std::string &boundaryCode)
@@ -64,17 +79,6 @@ std::string HttpRequest::parseGeneralHeaders(const std::string &boundaryCode)
         throw HttpStatusCodeException(400);
 
     return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
-}
-
-void HttpRequest::setBody(void)
-{
-    m_body = parseBody(m_boundaryCode);
-}
-
-void HttpRequest::setFileName(void)
-{
-    m_fileName = parseFileName(m_generalHeaders);
-    strip(m_fileName);
 }
 
 void HttpRequest::strip(std::string &str)
@@ -122,6 +126,14 @@ std::string HttpRequest::parseFileName(const std::map<std::string, std::string> 
     return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
 }
 
+void HttpRequest::bodyToDisk(const std::string &path)
+{
+    std::ofstream outf{path};
+    if (!outf)
+        throw HttpStatusCodeException(400);
+    outf << m_body;
+}
+
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
 {
@@ -145,67 +157,4 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
     out << ")";
 
     return out;
-}
-
-// int HttpRequest::bodyToDisk(const std::string &path)
-// {
-//     std::ofstream outf{path};
-//     if (!outf)
-//         return 1;
-//     outf << m_body;
-//     return 0;
-// }
-
-void HttpRequest::bodyToDisk(const std::string &path)
-{
-    std::ofstream outf{path};
-    if (!outf)
-        throw HttpStatusCodeException(400);
-    // if (!outf)
-    //     throw std::runtime_error("HTTP/1.1 400 Bad Request");
-    outf << m_body;
-}
-
-int HttpRequest::tokenize(const char *buf, int nbytes)
-{
-    spdlog::info("nbytes = {}", nbytes);
-
-    m_rawMessage.append(buf, buf + nbytes);
-
-    size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
-    if (fieldLinesEndPos == std::string::npos)
-    {
-        spdlog::warn("message incomplete [...]");
-        return 1;
-    }
-
-    if (m_requestHeaders.empty())
-        setRequestHeaders();
-
-    if (m_requestHeaders.contains("Content-Length"))
-    {
-        if (!m_isContentLengthConverted)
-            setContentLength();
-        if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
-        {
-            spdlog::warn("Content-Length not reached [...]");
-            return 2;
-        }
-        spdlog::info("Content-Length reached!");
-    }
-
-    spdlog::info("message complete!");
-    spdlog::info("m_rawMessage = \n|{}|", m_rawMessage);
-
-    setMethodPathVersion();
-
-    if (!m_methodPathVersion[0].compare("POST"))
-    {
-        setBoundaryCode();
-        setGeneralHeaders();
-        setFileName();
-        setBody();
-        bodyToDisk("./www/" + m_fileName);
-    }
-    return 0;
 }

@@ -7,11 +7,13 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h> // must be included
+#include <spdlog/fmt/ostr.h>
 #include <map>
 #include <string>
 #include <sstream>
+
 #include "HttpMessage.hpp"
+#include "StatusCodes.hpp"
 
 class HttpRequest : public HttpMessage
 {

@@ -1,8 +1,9 @@
 #ifndef MULTIPLEXERIO_HPP
 #define MULTIPLEXERIO_HPP
 
-#include <array>
 #include <sys/epoll.h>
+#include <array>
+
 #include "TcpServer.hpp"
 #include "StatusCodes.hpp"
 
