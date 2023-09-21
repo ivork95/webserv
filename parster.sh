@@ -17,6 +17,12 @@ RESET=$(tput sgr0)
 # Path to webserv executable
 WEBSERV_EXEC="./webserv"
 
+# Check for the existence of the webserv executable
+if [ ! -x "$WEBSERV_EXEC" ]; then
+    echo "The webserv executable ('$WEBSERV_EXEC') was not found or is not executable."
+    exit 1
+fi
+
 # Function to run webserv with a given config file
 run_webserv() {
     config_file="$1"
@@ -33,7 +39,7 @@ run_webserv() {
 print_header() {
 	input_file="$1"
 	printf "%-54s %-15s %-10s\n" "${BLUE}$input_file config files" "Result" "Output file${RESET}"
-	printf "%-54s %-15s %-10s\n" "${BLUE}------------------------" "------" "-----------${RESET}"
+	printf "%-54s %-15s %-10s\n" "${BLUE}--------------------" "------" "-----------${RESET}"
 }
 
 # Check for command-line argument
