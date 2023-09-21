@@ -29,7 +29,6 @@ public:
     {
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
-
     // default constructor
     Client(void) = delete;
 

@@ -28,9 +28,6 @@ void handleConnectedClient(Client *client)
 
     try
     {
-        if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
-            throw StatusCodeException(500, "Error: timerfd_settime()");
-
         // We got some good data from a client
         spdlog::info("nbytes = {}", nbytes);
 
@@ -57,24 +54,31 @@ void handleConnectedClient(Client *client)
             }
             spdlog::info("Content-Length reached!");
         }
-
-        if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
-            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
-
         spdlog::info("message complete!");
         spdlog::info("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
 
-        client->httpRequest.setMethodPathVersion();
+        if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
+            throw StatusCodeException(500, "Error: timerfd_settime()");
 
-        if (!client->httpRequest.m_methodPathVersion[0].compare("POST"))
+        client->httpRequest.setMethodPathVersion();
+        if (client->httpRequest.m_methodPathVersion.size() != 3)
+            throw StatusCodeException(400, "Error: not 3 elements in request-line");
+        if (client->httpRequest.m_methodPathVersion[2] != "HTTP/1.1")
+            throw StatusCodeException(505, "Warning: http version not allowed");
+        if ((client->httpRequest.m_methodPathVersion[0] != "GET") && (client->httpRequest.m_methodPathVersion[0] != "POST") && (client->httpRequest.m_methodPathVersion[0] != "DELETE"))
+            throw StatusCodeException(405, "Warning: method not allowed");
+
+        if (client->httpRequest.m_methodPathVersion[0] == "POST")
         {
+            if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
+                throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+
             client->httpRequest.setBoundaryCode();
             client->httpRequest.setGeneralHeaders();
             client->httpRequest.setFileName();
             client->httpRequest.setBody();
             client->httpRequest.bodyToDisk("./www/" + client->httpRequest.m_fileName);
         }
-        client->httpRequest.m_statusCode = 200;
     }
     catch (const StatusCodeException &e)
     {
@@ -82,9 +86,7 @@ void handleConnectedClient(Client *client)
         spdlog::warn(e.what());
     }
     spdlog::critical(client->httpRequest);
-
-    MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
-    multiplexerio.modifyEpollEvents(client, EPOLLOUT);
+    client->isWriteReady = true;
 }
 
 void run(int argc, char *argv[])
@@ -111,12 +113,12 @@ void run(int argc, char *argv[])
         {
             Socket *ePollDataPtr{static_cast<Socket *>(multiplexerio.m_events.at(i).data.ptr)};
 
-            if (multiplexerio.m_events.at(i).events & EPOLLIN) // If someone's ready to read
+            if ((multiplexerio.m_events.at(i).events & EPOLLIN) && ePollDataPtr->isReadReady) // If someone's ready to read
             {
                 if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr)) // If listener is ready to read, handle new connection
                 {
                     Client *client = new Client{*server};
-                    multiplexerio.addSocketToEpollFd(client, EPOLLIN);
+                    multiplexerio.addSocketToEpollFd(client, EPOLLIN | EPOLLOUT | EPOLLRDHUP);
                     multiplexerio.addSocketToEpollFd(client->timer, EPOLLIN);
                 }
                 else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
@@ -129,7 +131,7 @@ void run(int argc, char *argv[])
                     handleConnectedClient(client);
                 }
             }
-            else if (multiplexerio.m_events.at(i).events & EPOLLOUT) // If someone's ready to write
+            else if ((multiplexerio.m_events.at(i).events & EPOLLOUT) && ePollDataPtr->isWriteReady) // If someone's ready to write
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {

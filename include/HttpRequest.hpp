@@ -20,11 +20,11 @@ class HttpRequest : public HttpMessage
 public:
     std::vector<std::string> m_methodPathVersion{3};
     std::string m_body{};
-    int m_client_max_body_size{10};
+    int m_client_max_body_size{999999};
     std::string m_boundaryCode{};
     std::string m_fileName{};
     std::map<std::string, std::string> m_generalHeaders{};
-    int m_statusCode{500};
+    int m_statusCode{};
 
     // constructor
     HttpRequest(void);
