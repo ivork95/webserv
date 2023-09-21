@@ -18,13 +18,13 @@ static int	parseTokens(Configuration *config) {
 		try {
 			config->serversConfig[i] = Parser::parseTokens(config->serversConfig[i]);
 		} catch (const std::exception &e) {
-			std::cerr << "Error: Parsing server " << i << std::endl;
-			std::cerr << e.what() << std::endl;
+			std::cout << "Error: Parsing server " << i << std::endl;
+			std::cout << e.what() << std::endl;
 			return (1);
 		}
 		const std::string portNb = config->serversConfig[i].getPortNb();
 		if (checkDuplicatePorNumbers(usedPorts, portNb)) {
-			std::cerr << "Error: Duplicate port number: " << portNb << std::endl;
+			std::cout << "Error: Duplicate port number: " << portNb << std::endl;
 			return (1);
 		}
 	}
@@ -36,8 +36,8 @@ static int	tokenizeServers(Configuration *config) {
 		try {
 			config->serversConfig[i].setTokens(Lexer::tokenizeServer(config->serversConfig[i].getRawData()));
 		} catch (const std::exception &e) {
-			std::cerr << "Error: Tokenizing server " << i << std::endl;
-			std::cerr << e.what() << std::endl;
+			std::cout << "Error: Tokenizing server " << i << std::endl;
+			std::cout << e.what() << std::endl;
 			return (1);
 		}
 	}
@@ -47,7 +47,7 @@ static int	tokenizeServers(Configuration *config) {
 static int	createServers(Configuration *config) {
 	config->serversConfig = Lexer::createServers(config);
 	if (config->serversConfig.empty()) {
-		std::cerr << "Error: Creating server config" << std::endl;
+		std::cout << "Error: Creating server config" << std::endl;
 		return (1);
 	}
 	return (0);
@@ -57,8 +57,8 @@ static int	readFile(std::ifstream &configFile, Configuration *config) {
 	try {
 		config->serverSections = Lexer::splitServers(configFile);
 	} catch (const std::exception &e) {
-		std::cerr << "Error: Splitting server blocks" << std::endl;
-		std::cerr << e.what() << std::endl;
+		std::cout << "Error: Splitting server blocks" << std::endl;
+		std::cout << e.what() << std::endl;
 		return (1);
 	}
 	return (0);
@@ -67,7 +67,7 @@ static int	readFile(std::ifstream &configFile, Configuration *config) {
 static int	openFile(std::ifstream &configFile, const std::string &filePath) {
 	configFile.open(filePath);
 	if (!configFile.is_open()) {
-		std::cerr << "Error: Opening file " << filePath << std::endl;
+		std::cout << "Error: Opening file " << filePath << std::endl;
 		return (1);
 	}
 	return (0);
@@ -101,12 +101,12 @@ int initConfig(const std::string &filePath) {
 		return (1);
 
 	// ? debug
-	std::cout << "\n\t\t -----------------\n";
-	std::cout << "\t\t[  SERVER CONFIG  ]\n";
-	std::cout << "\t\t -----------------\n";
-	for (size_t i = 0; i < config.serversConfig.size(); ++i) {
-		std::cout << config.serversConfig[i];
-	}
+	// std::cout << "\n\t\t -----------------\n";
+	// std::cout << "\t\t[  SERVER CONFIG  ]\n";
+	// std::cout << "\t\t -----------------\n";
+	// for (size_t i = 0; i < config.serversConfig.size(); ++i) {
+	// 	std::cout << config.serversConfig[i];
+	// }
 
 	return (0);
 }
