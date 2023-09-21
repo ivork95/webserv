@@ -31,8 +31,6 @@ class Parser {
 		void	_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &route);
 		void	_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationConfig &route);
 
-		void	_checkMissingServerDirective(ServerConfig &server);
-
 	public:
 		Parser(void);
 		~Parser(void);

@@ -110,11 +110,11 @@ class ConversionUnitException : public InvalidTokenException {
 /**
  * DIRECTIVE EXCEPTIONS
 */
-class DirectiveAlreadySetException : public std::exception {
+class InvalidDirectiveException : public std::exception {
 	public:
-		DirectiveAlreadySetException(const std::string &derivedMsg)
+		InvalidDirectiveException(const std::string &derivedMsg)
 			: derivedErrorMessage(derivedMsg) {
-			fullErrorMessage = "Directive already set: " + derivedErrorMessage;
+			fullErrorMessage = "Invalid directive: " + derivedErrorMessage;
 		}
 
 		const char* what() const noexcept override {
@@ -124,6 +124,18 @@ class DirectiveAlreadySetException : public std::exception {
 	private:
 		std::string			derivedErrorMessage;
 		std::string			fullErrorMessage;
+};
+
+class AlreadySetException : public InvalidDirectiveException {
+	public:
+		AlreadySetException(const std::string &input)
+			: InvalidDirectiveException("Already set: " + input) {}
+};
+
+class DuplicateRequestUriException : public InvalidDirectiveException {
+	public:
+		DuplicateRequestUriException(const std::string &input)
+			: InvalidDirectiveException("Duplicate request URI: " + input) {}
 };
 
 #endif

@@ -26,13 +26,13 @@ bool	endsWithCom(const std::string &str) {
  * 	- localhost
  *  - example.com
  *  - www.example.com
- *  - 192.168.1.100
+ *  - 192.168.1.100 (only localhost is accessible => 127.0.0.1.)
 */
 bool isValidServerName(const std::string &str) {
 	// std::cout << str << std::endl; // ? debug
 	if (str.empty())
 		return false;
-	else if (str == "localhost" || str == "_")
+	else if (str == "localhost" || str == "_" || str == "127.0.0.1.")
 		return true;
 	else if (startsWithWww(str)) {
 		// std::cout << "Check www." << std::endl; // ? debug

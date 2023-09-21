@@ -18,7 +18,7 @@ bool isPhpExtension(const std::string &str) {
 }
 
 /**
- * TODO valid cgi extension? py, php, c?
+ * TODO valid index extension? html, php, txt, ... ?
  */
 bool	isValidIndexExtension(const std::string &str) {
 	const std::string fileExtension = str.substr(str.find_last_of(".") + 1);

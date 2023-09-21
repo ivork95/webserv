@@ -12,7 +12,7 @@ static int	checkDuplicatePorNumbers(std::vector<std::string> &usedPorts, const s
 }
 
 static int	parseTokens(Configuration *config) {
-    std::vector<std::string> usedPorts; // Use a set to store seen port numbers
+    std::vector<std::string> usedPorts;
 
 	for (size_t i = 0; i < config->serversConfig.size(); ++i) {
 		try {

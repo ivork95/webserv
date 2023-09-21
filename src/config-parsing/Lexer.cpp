@@ -77,7 +77,7 @@ std::vector<Token> Lexer::tokenizeServer(const std::string &rawData) {
 		if (line.empty())
 			continue ;
 		else if (line.back() != ';' && line.back() != '{' && line.back() != '}') {
-			std::cout << "here\n"; // ? debug
+			// std::cout << "here\n"; // ? debug
 			return std::vector<Token>();
 		}
         // Split line into tokens

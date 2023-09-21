@@ -8,9 +8,6 @@
 # include <vector>
 # include <map>
 
-/**
- * TODO make derived class from server class?
-*/
 class LocationConfig {
 	private:
 		std::string 						_requestURI;		// location / 
@@ -63,7 +60,7 @@ class LocationConfig {
 		bool										hasCgiHandler(void) const;
 		bool										hasHttpMethods(void) const;
 
-		void										checkMissingDirective(LocationConfig &route);
+		void										checkMissingDirective(void);	// TODO make virtual?
 
 		friend std::ostream							&operator << (std::ostream &out, const LocationConfig &route);
 };

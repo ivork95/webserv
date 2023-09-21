@@ -73,35 +73,40 @@ void ServerConfig::setIndex(const unsigned int &index) {
 
 void ServerConfig::setPortNb(const std::string &portNb) {
 	if (_hasPortNb) 
-		throw DirectiveAlreadySetException("port number");
+		throw AlreadySetException("port number");
 	_portNb = portNb;
 	_hasPortNb = true;
 }
 
 void ServerConfig::setServerName(const std::string &serverName) {
 	if (_hasServerName)
-		throw DirectiveAlreadySetException("server name");
+		throw AlreadySetException("server name");
 	_serverName = serverName;
 	_hasServerName = true;
 }
 
 void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize) {
 	if (_hasClientMaxBodySize)
-		throw DirectiveAlreadySetException("client max body size");
+		throw AlreadySetException("client max body size");
 	_clientMaxBodySize = clientMaxBodySize;
 	_hasClientMaxBodySize = true;
 }
 
+/**
+ * TODO what if multiple directive with same error codes ?
+ * TODO what if multiple directive with same error page ?
+ * TODO what if multiple directive with same error page and error codes?
+*/
 void ServerConfig::setErrorPagesConfig(const ErrorPageConfig &errorPages) {
 	// if (_hasErrorPagesConfig)
-	// 	throw DirectiveAlreadySetException("error pages"); // ! there can be multiple error pages
+	// 	throw AlreadySetException("error pages"); // ! there can be multiple error pages
 	_errorPagesConfig.push_back(errorPages);
 	_hasErrorPagesConfig = true;
 }
 
 void ServerConfig::setLocationsConfig(const LocationConfig &routeConfig) {
 	// if (_hasLocationsConfig)
-	// 	throw DirectiveAlreadySetException("location"); // ! there can be multiple locations
+	// 	throw AlreadySetException("location"); // ! there can be multiple locations
 	_locationsConfig.push_back(routeConfig);
 	_hasLocationsConfig = true;
 }
@@ -167,3 +172,25 @@ std::ostream &operator << (std::ostream &out, const ServerConfig &server) {
 /**
  * MEMBER FUNCTIONS
 */
+void	ServerConfig::checkMissingDirective(void) {
+	if (!hasPortNb()) {
+		// std::cout << "No port number (setting to default)\n"; // ? debug
+		setPortNb("80");
+	}
+	if (!hasServerName()) {
+		// std::cout << "No server name (setting to default)\n"; // ? debug
+		setServerName("");
+	}
+	if (!hasClientMaxBodySize()) {
+		// std::cout << "No client max body size (setting to default)\n"; // ? debug
+		setClientMaxBodySize("1000000");
+	}
+	if (!hasErrorPagesConfig()) {
+		// default value: -
+		// std::cout << "No error pages config\n"; // ? debug
+	}
+	if (!hasLocationsConfig()) {
+		// default value: -
+		// std::cout << "No locations config\n"; // ? debug
+	}
+}

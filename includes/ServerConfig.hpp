@@ -62,6 +62,8 @@ class ServerConfig {
 		bool								hasErrorPagesConfig(void) const;
 		bool								hasLocationsConfig(void) const;
 
+		void								checkMissingDirective(void);	// TODO make virtual?
+
 		friend std::ostream					&operator << (std::ostream &out, const ServerConfig &server);
 };
 

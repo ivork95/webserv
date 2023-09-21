@@ -63,35 +63,35 @@ const std::vector<std::string> &LocationConfig::getHttpMethods(void) const {
 
 void LocationConfig::setRequestURI(const std::string &requestURI) {
 	if (_hasRequestURI)
-		throw DirectiveAlreadySetException("request URI");
+		throw AlreadySetException("request URI");
 	_requestURI = requestURI;
 	_hasRequestURI = true;
 }
 
 void LocationConfig::setRootPath(const std::string &rootPath) {
 	if (_hasRootPath)
-		throw DirectiveAlreadySetException("root path");
+		throw AlreadySetException("root path");
 	_rootPath = rootPath;
 	_hasRootPath = true;
 }
 
 void LocationConfig::setClientMaxBodySize(const std::string &clientMaxBodySize) {
 	if (_hasClientMaxBodySize)
-		throw DirectiveAlreadySetException("client max body size");
+		throw AlreadySetException("client max body size");
 	_clientMaxBodySize = clientMaxBodySize;
 	_hasClientMaxBodySize = true;
 }
 
 void LocationConfig::setAutoIndex(const bool &autoIndex) {
 	if (_hasAutoIndex)
-		throw DirectiveAlreadySetException("auto index");
+		throw AlreadySetException("auto index");
 	_autoIndex = autoIndex;
 	_hasAutoIndex = true;
 }
 
 void LocationConfig::setIndexFile(const std::vector<std::string> &indexFile) {
 	if (_hasIndexFile)
-		throw DirectiveAlreadySetException("index file");
+		throw AlreadySetException("index file");
 	_indexFile = indexFile;
 	_hasIndexFile = true;
 }
@@ -105,7 +105,7 @@ void LocationConfig::setCgiHandler(const std::string &cgiExtension, const std::s
 
 void LocationConfig::setHttpMethods(const std::vector<std::string> &httpMethods) {
 	if (_hasHttpMethods)
-		throw DirectiveAlreadySetException("HTTP methods");
+		throw AlreadySetException("HTTP methods");
 	_httpMethods = httpMethods;
 	_hasHttpMethods = true; // ! needed ?
 }
@@ -167,33 +167,32 @@ std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
 /**
  * MEMBER FUNCTIONS
  */
-
-void	LocationConfig::checkMissingDirective(LocationConfig &route) {
-	if (!route.hasRequestURI()) {
+void	LocationConfig::checkMissingDirective(void) {
+	if (!hasRequestURI()) {
 		// default value: -
 		// std::cout << "No request URI\n"; // ? debug
 	}
-	if (!route.hasRootPath()) {
-		std::cout << "No root path\n"; // ? debug
-		route.setRootPath("html");
+	if (!hasRootPath()) {
+		// std::cout << "No root path (setting to default)\n"; // ? debug
+		setRootPath("html");
 	}
-	if (!route.hasClientMaxBodySize()) {
-		std::cout << "No client max body size\n"; // ? debug
-		route.setClientMaxBodySize("1000000");
+	if (!hasClientMaxBodySize()) {
+		// std::cout << "No client max body size (setting to default)\n"; // ? debug
+		setClientMaxBodySize("1000000");
 	}
-	if (!route.hasAutoIndex()) {
-		std::cout << "No auto index\n"; // ? debug
-		route.setAutoIndex(false);
+	if (!hasAutoIndex()) {
+		// std::cout << "No auto index (setting to default)\n"; // ? debug
+		setAutoIndex(false);
 	}
-	if (!route.hasIndexFile()) {
-		std::cout << "No index file\n"; // ? debug
-		route.setIndexFile({"index.html"});
+	if (!hasIndexFile()) {
+		// std::cout << "No index file (setting to default)\n"; // ? debug
+		setIndexFile({"index.html"});
 	}
-	if (!route.hasCgiHandler()) {
+	if (!hasCgiHandler()) {
 		// default value: -
 		// std::cout << "No CGI handler\n"; // ? debug
 	}
-	if (!route.hasHttpMethods()) {
+	if (!hasHttpMethods()) {
 		// default value: -
 		// std::cout << "No HTTP methods\n"; // ? debug
 	}
