@@ -1,7 +1,10 @@
 
 #include "UtilsConfig.hpp"
 
-// range from 0 to 65535
+/**
+ * valid port numbers:
+ * 	- range from 0 to 65535
+*/
 bool	isValidPortNumber(const std::string &str) {
 	// std::cout << str.size() << std::endl; // ? debug
 	if (str.size() > 5)

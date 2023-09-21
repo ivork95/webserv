@@ -14,5 +14,8 @@ bool	isValidErrorCode(const std::string &str) {
 		return false;
 	if (!isNumber(str))
 		return false;
+	const int	intErrorCode = std::atoi(str.c_str());
+	if (intErrorCode < 400 || intErrorCode > 599)
+		return false;
 	return true;
 }

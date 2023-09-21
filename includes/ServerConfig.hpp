@@ -13,19 +13,19 @@ class ServerConfig {
 	private:
 		unsigned int					_index;
 
-		std::string						_portNb;				// listen  8080
+		std::string						_portNb;
 		bool							_hasPortNb{false};
 
-		std::string						_serverName;			// server_name localhost
+		std::string						_serverName;
 		bool							_hasServerName{false};
 
-		std::string						_clientMaxBodySize;		// client_max_body_size 10M
+		std::string						_clientMaxBodySize;
 		bool							_hasClientMaxBodySize{false};
 		
-		std::vector<ErrorPageConfig>	_errorPagesConfig;			// error_page 404 405 406 files/html/Website/Error/404.html
+		std::vector<ErrorPageConfig>	_errorPagesConfig;
 		bool							_hasErrorPagesConfig{false};
 
-		std::vector<LocationConfig>		_locationsConfig;			// location / { ... }, location /upload { ... }, location /test { ... }
+		std::vector<LocationConfig>		_locationsConfig;
 		bool							_hasLocationsConfig{false};
 
 		std::string						_rawData;

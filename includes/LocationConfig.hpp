@@ -10,25 +10,25 @@
 
 class LocationConfig {
 	private:
-		std::string 						_requestURI;		// location / 
+		std::string 						_requestURI;
 		bool								_hasRequestURI{false};
 
-		std::string 						_rootPath;			// root    files/html/Website
+		std::string 						_rootPath;
 		bool								_hasRootPath{false};
 
-		std::string							_clientMaxBodySize;	// client_max_body_size 42k
+		std::string							_clientMaxBodySize;
 		bool								_hasClientMaxBodySize{false};
 
-		bool								_autoIndex;			// autoindex on/off
+		bool								_autoIndex;
 		bool								_hasAutoIndex{false};
 
-		std::vector<std::string>			_indexFile;			// index   index.html Start.html
+		std::vector<std::string>			_indexFile;
 		bool								_hasIndexFile{false};
 
-		std::map<std::string, std::string>	_cgiHandler;		// cgi .php /usr/local/bin/php-cgi
+		std::map<std::string, std::string>	_cgiHandler;
 		bool								_hasCgiHandler{false};
 
-		std::vector<std::string> 			_httpMethods;		// methods GET POST DELETE
+		std::vector<std::string> 			_httpMethods;
 		bool								_hasHttpMethods{false};
 
 	public:

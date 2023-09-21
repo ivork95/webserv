@@ -12,6 +12,9 @@ Lexer::~Lexer(void) {
 	// std::cout << "Lexer destructor called\n";
 }
 
+/**
+ * STATIC FUNCTIONS
+*/
 static bool	isSpecialChar(const char &c) {
 	return (c == '{' || c == '}' || c == ';' || c == '\n');
 }
@@ -32,7 +35,6 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 			it++;
 
 		// Get type of current char (word, {, } or ;)
-			// If special char
 		if (isSpecialChar(*it)) {
 			Token::ETokenType type = Token::NA;
 			if (*it == ';')
@@ -64,23 +66,18 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 	}
 }
 
-// TODO fix 2 consecutive new lines
 std::vector<Token> Lexer::tokenizeServer(const std::string &rawData) {
-    std::vector<Token> tokens;
-
-    // Split rawData into lines
-    std::istringstream linesStream(rawData);
-    std::string line;
+    std::vector<Token>	tokens;
+    std::istringstream	linesStream(rawData);
+    std::string 		line;
 
     while (std::getline(linesStream, line)) {
-		// std::cout << line.back() << std::endl; // ? debug
-		if (line.empty())
+		// std::cout << "[" << line << "]" << std::endl; // ? debug
+		if (line.empty()) {
 			continue ;
-		else if (line.back() != ';' && line.back() != '{' && line.back() != '}') {
-			// std::cout << "here\n"; // ? debug
-			return std::vector<Token>();
+		} else if (line.back() != ';' && line.back() != '{' && line.back() != '}') {
+			throw InvalidTokenException("Line does not end with ;, { or } [" + line + "]");
 		}
-        // Split line into tokens
         _splitLine(&tokens, line);
     }
 
@@ -108,13 +105,11 @@ std::vector<std::string> Lexer::splitServers(std::ifstream &configFile) {
                 }
             } else {
 				throw UnmatchedBracesException();
-				return std::vector<std::string>();
 			}
         }
     }
 	if (!braceStack.empty()) {
 		throw UnmatchedBracesException();
-		return std::vector<std::string>();
 	}
     return (sections);
 }
@@ -127,8 +122,7 @@ std::vector<ServerConfig>	Lexer::createServers(Configuration *config) {
 		servers.push_back(server);
 	}
 	if (servers.empty()) {
-		std::cerr << "Error: could not create servers" << std::endl;
-		return std::vector<ServerConfig>();	// ! necessary?
+		return std::vector<ServerConfig>();
 	}
 	return (servers);
 }

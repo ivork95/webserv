@@ -21,10 +21,8 @@ class Token {
 		Token(std::string &word);
 		~Token(void);
 
-		static void			printTokens(std::vector<Token> *tokens);
-
-		const Token::ETokenType	&_getType(void) const;
-		const std::string		&_getWord(void) const;
+		const Token::ETokenType	&getType(void) const;
+		const std::string		&getWord(void) const;
 
 		void					setType(const Token::ETokenType &type);
 		void					setWord(const std::string &word);
@@ -34,7 +32,7 @@ class Token {
 	private:
 		ETokenType	_type;
 		std::string	_word;
-	
+
 };
 
 #endif

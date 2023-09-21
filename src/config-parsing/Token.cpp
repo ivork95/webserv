@@ -19,11 +19,11 @@ Token::~Token(void) {
 /**
  * GETTERS / SETTERS
 */
-const Token::ETokenType &Token::_getType(void) const {
+const Token::ETokenType &Token::getType(void) const {
 	return (_type);
 }
 
-const std::string &Token::_getWord(void) const {
+const std::string &Token::getWord(void) const {
 	return (_word);
 }
 
@@ -39,20 +39,13 @@ void	Token::setWord(const std::string &word) {
  * OPERATOR OVERLOADS
 */
 std::ostream &operator << (std::ostream &out, const Token &token) {
-	// out << token._getWord() << " | " << token._getType() << std::endl;
-	if (token._getType() != Token::WORD)
-		out << token._getType();
+	if (token.getType() != Token::WORD)
+		out << token.getType();
 	else
-		out << token._getWord();
+		out << token.getWord();
 	return (out);
 }
 
 /**
  * MEMBER FUNCTIONS
 */
-void	Token::printTokens(std::vector<Token> *tokens) {
-	std::cout << "Tokens:\n";
-	for (std::vector<Token>::iterator it = tokens->begin(); it != tokens->end(); it++) {
-		std::cout << *it << std::endl;
-	}
-}

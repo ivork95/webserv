@@ -163,7 +163,7 @@ std::ostream &operator << (std::ostream &out, const ServerConfig &server) {
 	// out << "\trawData: " << server.getRawData() << std::endl;
 	// out << "\ttokens:\n";
 	// for (size_t i = 0; i < server.getTokens().size(); ++i) {
-	// 	out << "\t\t" << server.getTokens()[i]._getWord() << " | " << server.getTokens()[i]._getType() << std::endl;
+	// 	out << "\t\t" << server.getTokens()[i].getWord() << " | " << server.getTokens()[i].getType() << std::endl;
 	// }
 	out << "=============================================================\n\n";
 	return out;

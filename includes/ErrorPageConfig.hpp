@@ -7,8 +7,8 @@
 
 class ErrorPageConfig {
 	private:
-		std::vector<std::string>	_errorCode;			// 404, 401, 403, 500
-		std::string 				_filePath;			// files/html/Website/Error/404.html
+		std::vector<std::string>	_errorCode;
+		std::string 				_filePath;
 
 	public:
 		ErrorPageConfig(void);
