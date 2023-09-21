@@ -33,7 +33,7 @@ void HttpMessage::setContentLength(void)
     }
     catch (...)
     {
-        m_contentLength = -1;
+        throw StatusCodeException(400, "Error: invalid Content-Length header");
     }
 }
 

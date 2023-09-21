@@ -1,12 +1,9 @@
 #include "HttpResponse.hpp"
 
 // request constructor
-HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request)
+HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request), m_statusCode(request.m_statusCode)
 {
-    spdlog::critical("HttpResponse() constructor with request called");
-
-    m_statusCode = std::to_string(m_request.m_statusCode);
-    m_statusString = httpErrorCodes[m_request.m_statusCode];
+    spdlog::debug("HttpResponse() constructor with request called");
 }
 
 // copy constructor
@@ -16,7 +13,7 @@ HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request)
 // destructor
 HttpResponse::~HttpResponse(void)
 {
-    spdlog::critical("HttpResponse() destructor called");
+    spdlog::debug("HttpResponse() destructor called");
 }
 
 // getters/setters
@@ -25,17 +22,26 @@ void HttpResponse::setBody(const std::string &path)
     m_body = resourceToStr(path);
 }
 
+void HttpResponse::setStatusLine(void)
+{
+    auto it = m_statusCodes.find(m_statusCode);
+    if (it == m_statusCodes.end())
+        m_statusLine = "HTTP/1.1 500 Internal Server Error";
+    else
+        m_statusLine = it->second;
+}
+
 // methods
 std::string HttpResponse::responseBuild(void)
 {
-    std::string httpResponse = m_version + " " + m_statusCode + " " + m_statusString + "\r\n";
+    setStatusLine();
+    std::string httpResponse = m_statusLine + "\r\n";
     for (const auto &pair : m_headers)
     {
         httpResponse += pair.first + ": " + pair.second + "\r\n";
     }
-    httpResponse += "\r\n"; // End of header section
-    httpResponse += m_body;
     httpResponse += "\r\n";
+    httpResponse += m_body;
 
     return httpResponse;
 }
@@ -163,9 +169,7 @@ void HttpResponse::getHandle(void)
 
 void HttpResponse::postHandle(void)
 {
-    if (m_request.m_contentLength > m_request.m_client_max_body_size)
-        throw HttpStatusCodeException(413);
-    else if (m_request.m_methodPathVersion[1].find("/cgi-bin/") != std::string::npos)
+    if (m_request.m_methodPathVersion[1].find("/cgi-bin/") != std::string::npos)
     {
         CGI CGI(m_request.m_methodPathVersion[1], "num1=5&num2=5");
         // set correct body for cgi parameters
@@ -217,9 +221,8 @@ void HttpResponse::responseHandle(void)
 std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
 {
     out << "HttpResponse(\n";
-    out << httpresponse.m_statusLine << '\n';
     out << httpresponse.m_statusCode << '\n';
-    out << httpresponse.m_statusString << '\n';
+    out << httpresponse.m_statusLine << '\n';
     out << ")";
 
     return out;

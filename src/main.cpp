@@ -16,21 +16,18 @@ void handleConnectedClient(Client *client)
 {
     char buf[BUFSIZE + 1]{}; // Buffer for client data
     int nbytes = recv(client->m_socketFd, buf, BUFSIZE, 0);
-    if (nbytes == 0) // Connection closed
+    if (nbytes <= 0)
     {
-        spdlog::info("socket {} hung up", *client);
+        if (nbytes == 0) // Connection closed
+            spdlog::info("socket {} hung up", *client);
+        else if (nbytes < 0) // Got error or connection closed by client
+            spdlog::critical("Error: recv() failed");
         delete client;
         return;
     }
 
     try
     {
-        if (nbytes < 0) // Got error or connection closed by client
-        {
-            spdlog::critical("Error: recv() failed");
-            throw HttpStatusCodeException(500);
-        }
-
         if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
         {
             spdlog::critical("Error: timerfd_settime()");
@@ -64,6 +61,9 @@ void handleConnectedClient(Client *client)
             spdlog::info("Content-Length reached!");
         }
 
+        if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
+            throw HttpStatusCodeException(413);
+
         spdlog::info("message complete!");
         spdlog::info("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
 
@@ -86,7 +86,7 @@ void handleConnectedClient(Client *client)
     spdlog::critical(client->httpRequest);
 
     MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
-    multiplexerio.modifyEpollEvents(client, EPOLLIN | EPOLLOUT);
+    multiplexerio.modifyEpollEvents(client, EPOLLOUT);
 }
 
 void run(int argc, char *argv[])
@@ -136,10 +136,11 @@ void run(int argc, char *argv[])
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
                     HttpResponse response{client->httpRequest};
-                    spdlog::critical(response);
                     response.responseHandle();
+                    spdlog::critical(response);
 
                     std::string s{response.responseBuild()};
+                    spdlog::critical("s = |{}|", s);
                     send(client->m_socketFd, s.data(), s.length(), 0);
                     delete (client);
                 }
