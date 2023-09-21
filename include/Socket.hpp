@@ -12,6 +12,8 @@ class Socket
 {
 public:
     int m_socketFd{};
+    bool isReadReady{true};
+    bool isWriteReady{false};
 
     // data only used to print info about socket
     char m_ipstr[INET6_ADDRSTRLEN]{};

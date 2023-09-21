@@ -39,6 +39,13 @@ TcpServer::TcpServer(const char *port)
         break;
     }
 
+    // If we got here, it means we didn't get bound
+    if (p == NULL)
+    {
+        std::perror("bind() failed");
+        throw std::runtime_error("bind() failed");
+    }
+
     // get the pointer to the address itself,
     // different fields in IPv4 and IPv6:
     if (p->ai_family == AF_INET)
@@ -59,13 +66,6 @@ TcpServer::TcpServer(const char *port)
     inet_ntop(p->ai_family, m_addr, m_ipstr, sizeof m_ipstr);
 
     freeaddrinfo(ai); // All done with this
-
-    // If we got here, it means we didn't get bound
-    if (p == NULL)
-    {
-        std::perror("bind() failed");
-        throw std::runtime_error("bind() failed");
-    }
 
     // Listen
     if (listen(m_socketFd, 10) == -1)

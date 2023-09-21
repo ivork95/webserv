@@ -104,6 +104,13 @@ std::string HttpRequest::parseBody(const std::string &boundaryCode)
     size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
     size_t generalHeadersEndPos = m_rawMessage.find(headersEnd, requestHeadersEndPos + 1);
 
+    if (boundaryCode.empty())
+    {
+        requestHeadersEndPos += 4;
+        spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+        return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+    }
+
     const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
     size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
     if (boundaryEndPos == std::string::npos)
@@ -140,9 +147,12 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
     int i{};
 
     out << "HttpRequest (\n";
-    out << "m_method = |" << httprequest.m_methodPathVersion[0] << "|\n";
-    out << "m_path = |" << httprequest.m_methodPathVersion[1] << "|\n";
-    out << "m_version = |" << httprequest.m_methodPathVersion[2] << "|\n";
+
+    for (auto item : httprequest.m_methodPathVersion)
+    {
+        out << "m_methodPathVersion[" << i << "] = |" << item << "|\n";
+        i++;
+    }
     out << "m_body = |" << httprequest.m_body << "|\n";
     out << "m_boundaryCode = |" << httprequest.m_boundaryCode << "|\n";
     out << "m_fileName = |" << httprequest.m_fileName << "|\n";

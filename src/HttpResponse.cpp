@@ -3,7 +3,7 @@
 // request constructor
 HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request), m_statusCode(request.m_statusCode)
 {
-    spdlog::debug("HttpResponse() constructor with request called");
+    spdlog::debug("HttpResponseconstructor called");
 }
 
 // copy constructor
@@ -13,7 +13,7 @@ HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request), m_s
 // destructor
 HttpResponse::~HttpResponse(void)
 {
-    spdlog::debug("HttpResponse() destructor called");
+    spdlog::debug("HttpResponse destructor called");
 }
 
 // getters/setters
@@ -193,19 +193,24 @@ void HttpResponse::deleteHandle(void)
 
 void HttpResponse::responseHandle(void)
 {
+    if (m_statusCode)
+        return;
+
     try
     {
-        if (!m_request.m_methodPathVersion[0].compare("GET"))
+        if (m_request.m_methodPathVersion[0] == "GET")
         {
             spdlog::debug("GET method");
             getHandle();
+            m_statusCode = 200;
         }
-        else if (!m_request.m_methodPathVersion[0].compare("POST"))
+        else if (m_request.m_methodPathVersion[0] == "POST")
         {
             spdlog::info("POST method");
             postHandle();
+            m_statusCode = 201;
         }
-        else if (!m_request.m_methodPathVersion[0].compare("DELETE"))
+        else if (m_request.m_methodPathVersion[0] == "DELETE")
         {
             spdlog::debug("DELETE method");
             deleteHandle();
@@ -222,8 +227,8 @@ void HttpResponse::responseHandle(void)
 std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
 {
     out << "HttpResponse(\n";
-    out << httpresponse.m_statusCode << '\n';
-    out << httpresponse.m_statusLine << '\n';
+    out << "m_statusCode = |" << httpresponse.m_statusCode << "|\n";
+    out << "m_statusLine = |" << httpresponse.m_statusLine << "|\n";
     out << ")";
 
     return out;
