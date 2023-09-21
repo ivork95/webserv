@@ -29,10 +29,7 @@ void handleConnectedClient(Client *client)
     try
     {
         if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
-        {
-            spdlog::critical("Error: timerfd_settime()");
-            throw HttpStatusCodeException(500);
-        }
+            throw StatusCodeException(500, "Error: timerfd_settime()");
 
         // We got some good data from a client
         spdlog::info("nbytes = {}", nbytes);
@@ -62,7 +59,7 @@ void handleConnectedClient(Client *client)
         }
 
         if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
-            throw HttpStatusCodeException(413);
+            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
         spdlog::info("message complete!");
         spdlog::info("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
@@ -79,9 +76,10 @@ void handleConnectedClient(Client *client)
         }
         client->httpRequest.m_statusCode = 200;
     }
-    catch (const HttpStatusCodeException &e)
+    catch (const StatusCodeException &e)
     {
-        client->httpRequest.m_statusCode = e.getErrorCode();
+        client->httpRequest.m_statusCode = e.getStatusCode();
+        spdlog::warn(e.what());
     }
     spdlog::critical(client->httpRequest);
 

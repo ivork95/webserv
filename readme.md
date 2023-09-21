@@ -59,3 +59,26 @@ GET / HTTP/1.1
 User-Agent: curl/7.64.1
 Host: www.example.com
 Accept-Language: en, mi
+
+static ngx_int_t
+ngx_epoll_add_connection(ngx_connection_t *c)
+{
+    struct epoll_event  ee;
+
+    ee.events = EPOLLIN|EPOLLOUT|EPOLLET|EPOLLRDHUP;
+    ee.data.ptr = (void *) ((uintptr_t) c | c->read->instance);
+
+    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, c->log, 0,
+                   "epoll add connection: fd:%d ev:%08XD", c->fd, ee.events);
+
+    if (epoll_ctl(ep, EPOLL_CTL_ADD, c->fd, &ee) == -1) {
+        ngx_log_error(NGX_LOG_ALERT, c->log, ngx_errno,
+                      "epoll_ctl(EPOLL_CTL_ADD, %d) failed", c->fd);
+        return NGX_ERROR;
+    }
+
+    c->read->active = 1;
+    c->write->active = 1;
+
+    return NGX_OK;
+}

@@ -83,7 +83,7 @@ std::string HttpResponse::resourceToStr(const std::string &path)
 {
     std::ifstream inf(path);
     if (!inf)
-        throw HttpStatusCodeException(404);
+        throw StatusCodeException(404, "Error: ifstream");
     std::ostringstream sstr;
     sstr << inf.rdbuf();
     return sstr.str();
@@ -184,11 +184,11 @@ void HttpResponse::deleteHandle(void)
     std::string allowedPath = "/www/files";
 
     if (path.compare(0, allowedPath.length(), allowedPath) != 0)
-        throw HttpStatusCodeException(410);
+        throw StatusCodeException(410, "Error: compare()");
     else if (std::remove("./www/hello.txt") == 0)
         m_body = "Succes";
     else
-        throw HttpStatusCodeException(411);
+        throw StatusCodeException(411, "Error: remove()");
 }
 
 void HttpResponse::responseHandle(void)
@@ -211,9 +211,10 @@ void HttpResponse::responseHandle(void)
             deleteHandle();
         }
     }
-    catch (const HttpStatusCodeException &e)
+    catch (const StatusCodeException &e)
     {
-        m_statusCode = e.getErrorCode();
+        m_statusCode = e.getStatusCode();
+        spdlog::warn(e.what());
     }
 }
 

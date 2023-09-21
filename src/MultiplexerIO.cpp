@@ -45,7 +45,7 @@ void MultiplexerIO::modifyEpollEvents(Socket *ptr, int events)
     ev.events = events;
 
     if (epoll_ctl(m_epollfd, EPOLL_CTL_MOD, ptr->m_socketFd, &ev) == -1)
-        throw HttpStatusCodeException(500);
+        throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
 }
 
 // outstream operator overload

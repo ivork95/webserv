@@ -107,7 +107,7 @@ std::string HttpRequest::parseBody(const std::string &boundaryCode)
     const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
     size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
     if (boundaryEndPos == std::string::npos)
-        throw HttpStatusCodeException(400);
+        throw StatusCodeException(400, "Error: couldn't find boundaryEnd");
 
     return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
 }
@@ -116,12 +116,12 @@ std::string HttpRequest::parseFileName(const std::map<std::string, std::string> 
 {
     auto contentDispositionIt = generalHeaders.find("Content-Disposition");
     if (contentDispositionIt == generalHeaders.end())
-        throw HttpStatusCodeException(400);
+        throw StatusCodeException(400, "Error: couldn't find Content-Disposition");
 
     std::string fileNameStart{"filename="};
     size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
     if (fileNameStartPos == std::string::npos)
-        throw HttpStatusCodeException(400);
+        throw StatusCodeException(400, "Error: couldn't find filename=");
 
     return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
 }
@@ -130,7 +130,7 @@ void HttpRequest::bodyToDisk(const std::string &path)
 {
     std::ofstream outf{path};
     if (!outf)
-        throw HttpStatusCodeException(400);
+        throw StatusCodeException(400, "Error: ofstream");
     outf << m_body;
 }
 
