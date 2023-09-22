@@ -1,4 +1,5 @@
 #include "HttpResponse.hpp"
+#include <filesystem>
 
 // request constructor
 HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request), m_statusCode(request.m_statusCode)
@@ -140,27 +141,35 @@ bool isDirectory(std::string path)
     return false;
 }
 
+/*
+else if (path.find("/cgi-bin/") != std::string::npos)
+{
+    CGI CGI(path);
+    // what does child process do when error thrown?
+    CGI.execute();
+    m_body = std::string(CGI.m_readBuf);
+}
+else if (isDirectory("." + path))
+{
+    spdlog::debug("PATH IS DIR");
+    m_body = generateHtmlString(path);
+}
+*/
 void HttpResponse::getHandle(void)
 {
     std::string path{m_request.m_methodPathVersion[1]};
-    if (!path.compare("/"))
+
+    if (path == "/")
     {
         path = "./www/index.html";
         setBody(path);
     }
-    else if (path.find("/cgi-bin/") != std::string::npos)
+    else if (std::filesystem::exists("./www" + path)) // i.e. /image.jpeg
     {
-        CGI CGI(path);
-        // what does child process do when error thrown?
-        CGI.execute();
-        m_body = std::string(CGI.m_readBuf);
+        path = "./www" + path;
+        setBody(path);
     }
-    else if (isDirectory("." + path))
-    {
-        spdlog::debug("PATH IS DIR");
-        m_body = generateHtmlString(path);
-    }
-    else
+    else if (path.find('.' != std::string::npos)) // i.e. /upload
     {
         path = "./www" + m_request.m_methodPathVersion[1] + ".html";
         setBody(path);

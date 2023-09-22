@@ -52,6 +52,7 @@ public:
     void strip(std::string &str);
     void bodyToDisk(const std::string &path);
     int tokenize(const char *buf, int nbytes);
+    void parse(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);

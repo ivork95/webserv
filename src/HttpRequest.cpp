@@ -168,3 +168,59 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
 
     return out;
 }
+
+int HttpRequest::tokenize(const char *buf, int nbytes)
+{
+    // We got some good data from a client
+    spdlog::info("nbytes = {}", nbytes);
+
+    m_rawMessage.append(buf, buf + nbytes);
+
+    size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
+    if (fieldLinesEndPos == std::string::npos)
+    {
+        spdlog::warn("message incomplete [...]");
+        return 1;
+    }
+
+    if (m_requestHeaders.empty())
+        setRequestHeaders();
+
+    if (m_requestHeaders.contains("Content-Length"))
+    {
+        if (!m_isContentLengthConverted)
+            setContentLength();
+        if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
+        {
+            spdlog::warn("Content-Length not reached [...]");
+            return 2;
+        }
+        spdlog::info("Content-Length reached!");
+    }
+    spdlog::info("message complete!");
+    spdlog::info("m_rawMessage = \n|{}|", m_rawMessage);
+    return 0;
+}
+
+void HttpRequest::parse(void)
+{
+    setMethodPathVersion();
+    if (m_methodPathVersion.size() != 3)
+        throw StatusCodeException(400, "Error: not 3 elements in request-line");
+    if (m_methodPathVersion[2] != "HTTP/1.1")
+        throw StatusCodeException(505, "Warning: http version not allowed");
+    if ((m_methodPathVersion[0] != "GET") && (m_methodPathVersion[0] != "POST") && (m_methodPathVersion[0] != "DELETE"))
+        throw StatusCodeException(405, "Warning: method not allowed");
+
+    if (m_methodPathVersion[0] == "POST")
+    {
+        if (m_contentLength > m_client_max_body_size)
+            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+
+        setBoundaryCode();
+        setGeneralHeaders();
+        setFileName();
+        setBody();
+        bodyToDisk("./www/" + m_fileName);
+    }
+}

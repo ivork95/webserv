@@ -28,57 +28,13 @@ void handleConnectedClient(Client *client)
 
     try
     {
-        // We got some good data from a client
-        spdlog::info("nbytes = {}", nbytes);
-
-        client->httpRequest.m_rawMessage.append(buf, buf + nbytes);
-
-        size_t fieldLinesEndPos = client->httpRequest.m_rawMessage.find("\r\n\r\n");
-        if (fieldLinesEndPos == std::string::npos)
-        {
-            spdlog::warn("message incomplete [...]");
+        if (client->httpRequest.tokenize(buf, nbytes))
             return;
-        }
-
-        if (client->httpRequest.m_requestHeaders.empty())
-            client->httpRequest.setRequestHeaders();
-
-        if (client->httpRequest.m_requestHeaders.contains("Content-Length"))
-        {
-            if (!client->httpRequest.m_isContentLengthConverted)
-                client->httpRequest.setContentLength();
-            if (client->httpRequest.m_contentLength > static_cast<int>((client->httpRequest.m_rawMessage.length() - (fieldLinesEndPos + 4))))
-            {
-                spdlog::warn("Content-Length not reached [...]");
-                return;
-            }
-            spdlog::info("Content-Length reached!");
-        }
-        spdlog::info("message complete!");
-        spdlog::info("client->httpRequest.m_rawMessage = \n|{}|", client->httpRequest.m_rawMessage);
 
         if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
             throw StatusCodeException(500, "Error: timerfd_settime()");
 
-        client->httpRequest.setMethodPathVersion();
-        if (client->httpRequest.m_methodPathVersion.size() != 3)
-            throw StatusCodeException(400, "Error: not 3 elements in request-line");
-        if (client->httpRequest.m_methodPathVersion[2] != "HTTP/1.1")
-            throw StatusCodeException(505, "Warning: http version not allowed");
-        if ((client->httpRequest.m_methodPathVersion[0] != "GET") && (client->httpRequest.m_methodPathVersion[0] != "POST") && (client->httpRequest.m_methodPathVersion[0] != "DELETE"))
-            throw StatusCodeException(405, "Warning: method not allowed");
-
-        if (client->httpRequest.m_methodPathVersion[0] == "POST")
-        {
-            if (client->httpRequest.m_contentLength > client->httpRequest.m_client_max_body_size)
-                throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
-
-            client->httpRequest.setBoundaryCode();
-            client->httpRequest.setGeneralHeaders();
-            client->httpRequest.setFileName();
-            client->httpRequest.setBody();
-            client->httpRequest.bodyToDisk("./www/" + client->httpRequest.m_fileName);
-        }
+        client->httpRequest.parse();
     }
     catch (const StatusCodeException &e)
     {
