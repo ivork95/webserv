@@ -29,7 +29,8 @@ run_webserv() {
 	else
 		actual_output="${RED}KO${RESET}"
 	fi
-	printf "%-45s %-30s %-10s\n" "$(basename "$config_file")" "$actual_output" "$result_file"
+	# printf "%-45s %-30s %-10s\n" "$(basename "$config_file")" "$actual_output" "$result_file"
+	printf "%-45s %-30s %-10s\n" "$(basename "$config_file")" "$actual_output" "$(basename "$result_file")"
 }
 
 # Print header
