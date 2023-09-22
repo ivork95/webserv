@@ -16,4 +16,6 @@ class Configuration {
 		std::vector<std::string>	serverSections;
 };
 
+int initConfig(const std::string &filePath, Configuration &config);
+
 #endif

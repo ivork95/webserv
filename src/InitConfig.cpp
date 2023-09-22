@@ -74,9 +74,9 @@ static int	openFile(std::ifstream &configFile, const std::string &filePath) {
 	return (0);
 }
 
-int initConfig(const std::string &filePath) {
+int initConfig(const std::string &filePath, Configuration &config) {
 	std::ifstream 		configFile;
-	Configuration 		config;
+	// Configuration 		config;
 
 	// open file for read
 	if (openFile(configFile, filePath))

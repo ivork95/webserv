@@ -3,7 +3,10 @@
 
 #include <sys/epoll.h>
 #include <array>
-
+#include <csignal>
+#include <fstream>
+#include <filesystem>
+#include <sys/stat.h>
 #include "TcpServer.hpp"
 #include "StatusCodes.hpp"
 
@@ -34,6 +37,7 @@ public:
         static MultiplexerIO instance;
         return instance;
     }
+    void run(std::vector<TcpServer *> servers);
     void addSocketToEpollFd(Socket *ptr, int events);
     void modifyEpollEvents(Socket *ptr, int events);
 
