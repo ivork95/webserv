@@ -56,6 +56,7 @@ clean :
 
 fclean : clean
 	$(RM) $(NAME)
+	$(RM) -r ./parster-results
 
 re : fclean all
 

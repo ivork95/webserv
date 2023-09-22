@@ -26,11 +26,44 @@ class Lexer {
 		static std::vector<ServerConfig>	createServers(Configuration *config);
 		static std::vector<Token>			tokenizeServer(const std::string &rawData);
 
-		class UnmatchedBracesException : public std::exception {
+		class InvalidConfigFileException : public std::exception {
 			public:
-				char const* what() const throw() {
-					return "Unmatched braces";
+				InvalidConfigFileException(const std::string &derivedMsg)
+					: derivedErrorMessage(derivedMsg) {
+					fullErrorMessage = "Invalid config file: " + derivedErrorMessage;
 				}
+
+				const char* what() const noexcept override {
+					return fullErrorMessage.c_str();
+				}
+
+			private:
+				std::string			derivedErrorMessage;
+				std::string			fullErrorMessage;
+		};
+
+		class UnmatchedBracesException : public InvalidConfigFileException {
+			public:
+				UnmatchedBracesException(void)
+					: InvalidConfigFileException("Unmatched braces") {}
+		};
+
+		class EmptyFileException : public InvalidConfigFileException {
+			public:
+				EmptyFileException(void)
+					: InvalidConfigFileException("Empty file") {}
+		};
+
+		class NoServerSectionException : public InvalidConfigFileException {
+			public:
+				NoServerSectionException(void)
+					: InvalidConfigFileException("No server section found") {}
+		};
+
+		class NoServerBlockException : public InvalidConfigFileException {
+			public:
+				NoServerBlockException(void)
+					: InvalidConfigFileException("No server block found") {}
 		};
 
 };

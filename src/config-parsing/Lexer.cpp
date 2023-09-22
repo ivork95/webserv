@@ -27,7 +27,7 @@ static bool	isNotSpecialChar(const char &c) {
  * MEMBER FUNCTIONS
 */
 void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
-	std::string::iterator it = line.begin();
+	std::string::iterator	it = line.begin();
 
 	// Loop until line end, skipping whitespaces
 	while (it != line.end()) {
@@ -47,11 +47,11 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 				type = Token::NEW_LINE;
 			
 			// Add special char to tokens
-			Token token(type);
+			Token	token(type);
 			tokens->push_back(token);
 			it++;
 		} else {
-			std::string word;
+			std::string	word;
 
 			// Loop until reaching another space, special char or end to have a full word
 			while (!isspace(*it) && isNotSpecialChar(*it) && it != line.end()) {
@@ -60,7 +60,7 @@ void Lexer::_splitLine(std::vector<Token> *tokens, std::string &line) {
 			}
 
 			// Add word to tokens
-			Token token(word);
+			Token	token(word);
 			tokens->push_back(token);
 		}
 	}
@@ -84,6 +84,24 @@ std::vector<Token> Lexer::tokenizeServer(const std::string &rawData) {
     return (tokens);
 }
 
+std::vector<ServerConfig>	Lexer::createServers(Configuration *config) {
+	std::vector<ServerConfig>	servers;
+	if (config->serverSections.empty()) {
+		throw NoServerSectionException();
+		std::cout << "Error: No server sections found" << std::endl;
+		return std::vector<ServerConfig>();
+	}
+	for (size_t i = 0; i < config->serverSections.size(); ++i) {
+		ServerConfig server(i, config->serverSections[i]);
+		servers.push_back(server);
+	}
+	if (servers.empty()) {
+		throw NoServerBlockException();
+		return std::vector<ServerConfig>();
+	}
+	return (servers);
+}
+
 std::vector<std::string> Lexer::splitServers(std::ifstream &configFile) {
 	std::string 				content((std::istreambuf_iterator<char>(configFile)), \
 											(std::istreambuf_iterator<char>()));
@@ -91,6 +109,8 @@ std::vector<std::string> Lexer::splitServers(std::ifstream &configFile) {
     size_t 						startPos = 0;
     std::stack<char> 			braceStack;
 
+	if (content.empty())
+		throw EmptyFileException();
     for (size_t i = 0; i < content.size(); ++i) {
         if (content[i] == '{') {
             braceStack.push('{');
@@ -108,21 +128,9 @@ std::vector<std::string> Lexer::splitServers(std::ifstream &configFile) {
 			}
         }
     }
-	if (!braceStack.empty()) {
+	if (!braceStack.empty())
 		throw UnmatchedBracesException();
-	}
+	if (sections.empty())
+		throw NoServerSectionException();
     return (sections);
-}
-
-std::vector<ServerConfig>	Lexer::createServers(Configuration *config) {
-	std::vector<ServerConfig>	servers;
-
-	for (size_t i = 0; i < config->serverSections.size(); ++i) {
-		ServerConfig server(i, config->serverSections[i]);
-		servers.push_back(server);
-	}
-	if (servers.empty()) {
-		return std::vector<ServerConfig>();
-	}
-	return (servers);
 }

@@ -167,8 +167,8 @@ void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &ro
 */
 void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing location block\n"; // ? debug
-	size_t			j = *i;
-	const std::string		requestUri = tokens.at(j).getWord();
+	size_t				j = *i;
+	const std::string	requestUri = tokens.at(j).getWord();
 
 	// TODO check valid request URI
 	if (requestUri[0] != '/')
@@ -250,7 +250,7 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 		}
 		j++;
 	}
-	const std::string		filePath = tokens.at(j).getWord();
+	const std::string			filePath = tokens.at(j).getWord();
 	if (!isValidPath(filePath))
 		throw PathException(filePath);
 	ErrorPageConfig	errorPage(errorCodes, filePath);
@@ -333,7 +333,7 @@ ServerConfig Parser::parseTokens(ServerConfig server) {
 	server.checkMissingDirective();
 
 	// Check for duplicate request URIs
-	std::vector<std::string> usedRequestUris;
+	std::vector<std::string>	usedRequestUris;
 	for (size_t i = 0; i < server.getLocationsConfig().size(); i++) {
 		const std::string requestUri = server.getLocationsConfig()[i].getRequestURI();
 		if (checkDuplicateRequestUri(usedRequestUris, requestUri)) {
