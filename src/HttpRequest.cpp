@@ -133,14 +133,6 @@ std::string HttpRequest::parseFileName(const std::map<std::string, std::string> 
     return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
 }
 
-void HttpRequest::bodyToDisk(const std::string &path)
-{
-    std::ofstream outf{path};
-    if (!outf)
-        throw StatusCodeException(400, "Error: ofstream");
-    outf << m_body;
-}
-
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
 {
@@ -221,6 +213,5 @@ void HttpRequest::parse(void)
         setGeneralHeaders();
         setFileName();
         setBody();
-        bodyToDisk("./www/" + m_fileName);
     }
 }

@@ -50,7 +50,6 @@ public:
     std::string parseFileName(const std::map<std::string, std::string> &generalHeaders);
     std::vector<std::string> split(const std::string &str) const;
     void strip(std::string &str);
-    void bodyToDisk(const std::string &path);
     int tokenize(const char *buf, int nbytes);
     void parse(void);
 

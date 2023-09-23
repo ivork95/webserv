@@ -176,6 +176,14 @@ void HttpResponse::getHandle(void)
     }
 }
 
+void HttpResponse::bodyToDisk(const std::string &path)
+{
+    std::ofstream outf{path};
+    if (!outf)
+        throw StatusCodeException(400, "Error: ofstream");
+    outf << m_request.m_body;
+}
+
 void HttpResponse::postHandle(void)
 {
     if (m_request.m_methodPathVersion[1].find("/cgi-bin/") != std::string::npos)
@@ -184,6 +192,10 @@ void HttpResponse::postHandle(void)
         // set correct body for cgi parameters
         CGI.execute();
         m_body = std::string(CGI.m_readBuf);
+    }
+    else
+    {
+        bodyToDisk("./www/" + m_request.m_fileName);
     }
 }
 

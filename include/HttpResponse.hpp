@@ -48,9 +48,11 @@ public:
     void postHandle(void);
     void deleteHandle(void);
     void responseHandle(void);
+    void bodyToDisk(const std::string &path);
 
     // outstream operator overload
-    friend std::ostream &operator<<(std::ostream &out, const HttpResponse &HttpResponse);
+    friend std::ostream &
+    operator<<(std::ostream &out, const HttpResponse &HttpResponse);
 
     std::map<int, std::string> m_statusCodes{
         {100, "HTTP/1.1 100 Continue"},
