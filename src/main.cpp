@@ -84,7 +84,7 @@ void run(int argc, char *argv[])
                 else if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
                     handleConnectedClient(client);
             }
-            else if ((multiplexerio.m_events.at(i).events & EPOLLOUT) && ePollDataPtr->isWriteReady) // If someone's ready to write
+            if ((multiplexerio.m_events.at(i).events & EPOLLOUT) && ePollDataPtr->isWriteReady) // If someone's ready to write
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {

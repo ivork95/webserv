@@ -34,7 +34,7 @@ std::string HttpResponse::percentEncode(const std::string &input) const
 
     for (char c : input)
     {
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') // Unreserver characters in RFC 3986
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') // Unreserved characters in RFC 3986
             encoded << c;
         else
             encoded << '%' << std::uppercase << std::hex << ((c >> 4) & 0x0F)
@@ -65,9 +65,7 @@ std::string HttpResponse::responseBuild(void)
     statusLineSet();
     std::string httpResponse = m_statusLine + "\r\n";
     for (const auto &pair : m_headers)
-    {
         httpResponse += pair.first + ": " + pair.second + "\r\n";
-    }
     httpResponse += "\r\n";
     httpResponse += m_body;
 

@@ -56,7 +56,7 @@ std::string HttpRequest::boundaryCodeParse(const std::map<std::string, std::stri
 {
     auto contentTypeIt = requestHeaders.find("Content-Type");
     if (contentTypeIt == requestHeaders.end())
-        throw StatusCodeException(400, "Error: missing Content-Length header");
+        throw StatusCodeException(400, "Error: missing Content-Type header");
 
     std::string contentType = contentTypeIt->second;
 
@@ -81,12 +81,12 @@ std::string HttpRequest::generalHeadersParse(const std::string &boundaryCode)
     size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
     if (BoundaryStartPos == std::string::npos)
     {
-        throw StatusCodeException(400, "Error: invalid Content-Length header");
+        throw StatusCodeException(400, "Error: invalid Content-Length header2");
     }
 
     size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
     if (generalHeadersEndPos == std::string::npos)
-        throw StatusCodeException(400, "Error: invalid Content-Length header");
+        throw StatusCodeException(400, "Error: invalid Content-Length header3");
 
     return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
 }
