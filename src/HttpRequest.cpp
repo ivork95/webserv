@@ -28,7 +28,8 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
         out << "m_methodPathVersion[" << i << "] = |" << item << "|\n";
         i++;
     }
-    out << "m_body = |" << httprequest.m_body << "|\n";
+    // out << "m_body = |" << httprequest.m_body << "|\n";
+    out << "m_body = |We're not printing this!|\n";
     out << "m_boundaryCode = |" << httprequest.m_boundaryCode << "|\n";
     out << "m_fileName = |" << httprequest.m_fileName << "|\n";
     out << "m_statusCode = |" << httprequest.m_statusCode << "|\n";
@@ -48,7 +49,7 @@ void HttpRequest::methodPathVersionSet(void)
 {
     size_t requestLineEndPos = m_rawMessage.find("\r\n");
     std::string requestLine = m_rawMessage.substr(0, requestLineEndPos);
-    m_methodPathVersion = split(requestLine);
+    m_methodPathVersion = Helper::split(requestLine);
 }
 
 std::string HttpRequest::boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders)
@@ -139,37 +140,7 @@ std::string HttpRequest::fileNameParse(const std::map<std::string, std::string> 
 void HttpRequest::fileNameSet(void)
 {
     m_fileName = fileNameParse(m_generalHeaders);
-    strip(m_fileName);
-}
-
-char hexToChar(const std::string &hex)
-{
-    int value{};
-    std::stringstream ss{};
-
-    ss << std::hex << hex;
-    ss >> value;
-    return static_cast<char>(value);
-}
-
-std::string decodePercentEncoding(const std::string &encoded)
-{
-    std::string decoded{};
-
-    for (size_t i = 0; i < encoded.length(); ++i)
-    {
-        if (encoded[i] == '%' && i + 2 < encoded.length())
-        {
-            std::string hexValue = encoded.substr(i + 1, 2);
-            decoded += hexToChar(hexValue);
-            i += 2; // skip the next two characters
-        }
-        else
-            decoded += encoded[i];
-    }
-    spdlog::critical("encoded = {}", encoded);
-    spdlog::critical("decoded = {}", decoded);
-    return decoded;
+    Helper::strip(m_fileName);
 }
 
 int HttpRequest::tokenize(const char *buf, int nbytes)
@@ -187,12 +158,12 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
     }
 
     if (m_requestHeaders.empty())
-        setRequestHeaders();
+        requestHeadersSet();
 
     if (m_requestHeaders.contains("Content-Length"))
     {
         if (!m_isContentLengthConverted)
-            setContentLength();
+            contentLengthSet();
         if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
         {
             spdlog::warn("Content-Length not reached [...]");
@@ -202,7 +173,7 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
     }
 
     spdlog::info("message complete!");
-    spdlog::info("m_rawMessage = \n|{}|", m_rawMessage);
+    // spdlog::info("m_rawMessage = \n|{}|", m_rawMessage);
 
     return 0;
 }
@@ -218,7 +189,7 @@ void HttpRequest::parse(void)
         throw StatusCodeException(405, "Warning: method not allowed");
 
     // Percentage decode URI string
-    m_methodPathVersion[1] = decodePercentEncoding(m_methodPathVersion[1]);
+    m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
     if (m_methodPathVersion[0] == "POST")
     {
@@ -230,21 +201,4 @@ void HttpRequest::parse(void)
         fileNameSet();
         bodySet();
     }
-}
-
-void HttpRequest::strip(std::string &str) const
-{
-    str.erase(std::remove(str.begin(), str.end(), '\"'), str.end());
-}
-
-std::vector<std::string> HttpRequest::split(const std::string &str) const
-{
-    std::vector<std::string> methodPathVersion;
-    std::istringstream iss(str);
-    std::string keyword;
-
-    while (getline(iss, keyword, ' '))
-        methodPathVersion.push_back(keyword);
-
-    return methodPathVersion;
 }

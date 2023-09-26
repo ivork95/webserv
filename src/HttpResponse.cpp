@@ -17,13 +17,40 @@ HttpResponse::~HttpResponse(void)
     spdlog::debug("HttpResponse destructor called");
 }
 
+// outstream operator overload
+std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
+{
+    out << "HttpResponse(\n";
+    out << "m_statusCode = |" << httpresponse.m_statusCode << "|\n";
+    out << "m_statusLine = |" << httpresponse.m_statusLine << "|\n";
+    out << ")";
+
+    return out;
+}
+
+std::string HttpResponse::percentEncode(const std::string &input) const
+{
+    std::ostringstream encoded;
+
+    for (char c : input)
+    {
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') // Unreserver characters in RFC 3986
+            encoded << c;
+        else
+            encoded << '%' << std::uppercase << std::hex << ((c >> 4) & 0x0F)
+                    << (c & 0x0F);
+    }
+
+    return encoded.str();
+}
+
 // getters/setters
 void HttpResponse::bodySet(const std::string &path)
 {
     m_body = resourceToStr(path);
 }
 
-void HttpResponse::setStatusLine(void)
+void HttpResponse::statusLineSet(void)
 {
     auto it = m_statusCodes.find(m_statusCode);
     if (it == m_statusCodes.end())
@@ -35,7 +62,7 @@ void HttpResponse::setStatusLine(void)
 // methods
 std::string HttpResponse::responseBuild(void)
 {
-    setStatusLine();
+    statusLineSet();
     std::string httpResponse = m_statusLine + "\r\n";
     for (const auto &pair : m_headers)
     {
@@ -51,6 +78,7 @@ int HttpResponse::targetRead(const std::string &requestTarget)
 {
     int n{};
     std::ifstream inf{requestTarget};
+
     if (!inf)
         throw std::runtime_error("404 NOT FOUND\n");
     while (inf)
@@ -62,22 +90,6 @@ int HttpResponse::targetRead(const std::string &requestTarget)
     }
 
     return n;
-}
-
-/*
-deze functie moet beter
-/index kan opgevraagd worden
-/directories kunnen ook opgevraagd worden
-/ kan ook opgevraagd worden
-moet minsten een / zijn
-...
-*/
-std::string HttpResponse::targetPathCreate(const std::string &target)
-{
-    if (!target.compare("/"))
-        return "./www/index.html";
-
-    return "./www" + target + ".html";
 }
 
 std::string HttpResponse::resourceToStr(const std::string &path)
@@ -141,20 +153,6 @@ bool isDirectory(std::string path)
     return false;
 }
 
-/*
-else if (path.find("/cgi-bin/") != std::string::npos)
-{
-    CGI CGI(path);
-    // what does child process do when error thrown?
-    CGI.execute();
-    m_body = std::string(CGI.m_readBuf);
-}
-else if (isDirectory("." + path))
-{
-    spdlog::debug("PATH IS DIR");
-    m_body = generateHtmlString(path);
-}
-*/
 void HttpResponse::getHandle(void)
 {
     std::string path{m_request.m_methodPathVersion[1]};
@@ -174,6 +172,7 @@ void HttpResponse::getHandle(void)
         path = "./www" + m_request.m_methodPathVersion[1] + ".html";
         bodySet(path);
     }
+    m_statusCode = 200;
 }
 
 void HttpResponse::bodyToDisk(const std::string &path)
@@ -187,10 +186,9 @@ void HttpResponse::bodyToDisk(const std::string &path)
 void HttpResponse::postHandle(void)
 {
     if (m_request.m_fileName.empty())
-        throw StatusCodeException(500, "Error: no fileName");
+        throw StatusCodeException(400, "Error: no fileName");
     bodyToDisk("./www/" + m_request.m_fileName);
-    // Error: when uploading image with space. Fakking decoding
-    m_headers.insert({"Location", "/" + m_request.m_fileName});
+    m_headers.insert({"Location", "/" + percentEncode(m_request.m_fileName)});
     m_statusCode = 303;
 }
 
@@ -218,7 +216,6 @@ void HttpResponse::responseHandle(void)
         {
             spdlog::debug("GET method");
             getHandle();
-            m_statusCode = 200;
         }
         else if (m_request.m_methodPathVersion[0] == "POST")
         {
@@ -236,15 +233,4 @@ void HttpResponse::responseHandle(void)
         m_statusCode = e.getStatusCode();
         spdlog::warn(e.what());
     }
-}
-
-// outstream operator overload
-std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
-{
-    out << "HttpResponse(\n";
-    out << "m_statusCode = |" << httpresponse.m_statusCode << "|\n";
-    out << "m_statusLine = |" << httpresponse.m_statusLine << "|\n";
-    out << ")";
-
-    return out;
 }

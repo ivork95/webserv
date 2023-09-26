@@ -21,6 +21,12 @@ MultiplexerIO::~MultiplexerIO(void)
 }
 
 // member functions
+MultiplexerIO &MultiplexerIO::getInstance(void)
+{
+    static MultiplexerIO instance;
+    return instance;
+}
+
 void MultiplexerIO::addSocketToEpollFd(Socket *ptr, int events)
 {
     struct epoll_event ev

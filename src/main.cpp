@@ -8,7 +8,6 @@
 #include "HttpRequest.hpp"
 #include "Timer.hpp"
 #include "HttpResponse.hpp"
-#include "Cgi.hpp"
 
 #define BUFSIZE 256
 
@@ -94,7 +93,6 @@ void run(int argc, char *argv[])
                     spdlog::critical(response);
 
                     std::string s{response.responseBuild()};
-                    spdlog::critical("s = |{}|", s);
                     send(client->m_socketFd, s.data(), s.length(), 0);
                     delete (client);
                 }
