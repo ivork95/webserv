@@ -8,6 +8,8 @@
 */
 bool	isValidPath(const std::string &str) {
 	// std::cout << "isValidPath: " << str << std::endl; // ? debug
+	// std::string path = "www/" + str;
+	// std::cout << "isValidPath: " << path << std::endl; // ? debug
 	if (str.empty())
 		return false;
 	// if (!std::filesystem::exists(str)) {

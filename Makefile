@@ -13,13 +13,13 @@ OBJECTS		:=	obj/main.o \
 				obj/Timer.o \
 				obj/TcpServer.o \
 				obj/InitConfig.o \
-				obj/config-parsing/Token.o \
-				obj/config-parsing/Lexer.o \
-				obj/config-parsing/Parser.o \
-				obj/config-parsing/Configuration.o \
-				obj/config-parsing/ServerConfig.o \
-				obj/config-parsing/LocationConfig.o \
-				obj/config-parsing/ErrorPageConfig.o \
+				obj/config/Token.o \
+				obj/config/Lexer.o \
+				obj/config/Parser.o \
+				obj/config/Configuration.o \
+				obj/config/ServerConfig.o \
+				obj/config/LocationConfig.o \
+				obj/config/ErrorPageConfig.o \
 				obj/utils/config/hasConversionUnit.o \
 				obj/utils/config/isAlphaNum.o \
 				obj/utils/config/isNumber.o \
@@ -34,8 +34,6 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidUri.o \
 				obj/logger/Logger.o \
 
-
-# CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20 $(PARSTER_FLAG)
 CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 

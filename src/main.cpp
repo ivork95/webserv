@@ -165,14 +165,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-	// // To run only the parser and display the output
-	// #if (PARSTER)
-	// 	std::cout << "\n\t\t -----------------\n \t\t[  SERVER CONFIG  ]\n\t\t -----------------\n";
-	// 	for (size_t i = 0; i < config.serversConfig.size(); ++i) {
-	// 		std::cout << config.serversConfig[i];
-	// 	}
-	// 	return 0;
-	// #endif
+	// To run only the parser and display the output
+	#if (PARSTER)
+		std::cout << "\n\t\t -----------------\n \t\t[  SERVER CONFIG  ]\n\t\t -----------------\n";
+		for (size_t i = 0; i < config.serversConfig.size(); ++i) {
+			std::cout << config.serversConfig[i];
+		}
+		return 0;
+	#endif
 
     spdlog::set_level(spdlog::level::debug);
 
