@@ -74,9 +74,10 @@ static int	openFile(std::ifstream &configFile, const std::string &filePath) {
 	return (0);
 }
 
+// #define PARSTER true
+
 int initConfig(const std::string &filePath, Configuration &config) {
 	std::ifstream 		configFile;
-	// Configuration 		config;
 
 	// open file for read
 	if (openFile(configFile, filePath))
@@ -101,13 +102,14 @@ int initConfig(const std::string &filePath, Configuration &config) {
 	if (parseTokens(&config))
 		return (1);
 
-	// ? debug
-	std::cout << "\n\t\t -----------------\n";
-	std::cout << "\t\t[  SERVER CONFIG  ]\n";
-	std::cout << "\t\t -----------------\n";
-	for (size_t i = 0; i < config.serversConfig.size(); ++i) {
-		std::cout << config.serversConfig[i];
-	}
+	// To run only the parser and display the output
+	#if (PARSTER)
+		std::cout << "\n\t\t -----------------\n \t\t[  SERVER CONFIG  ]\n\t\t -----------------\n";
+		for (size_t i = 0; i < config.serversConfig.size(); ++i) {
+			std::cout << config.serversConfig[i];
+		}
+		return 0;
+	#endif
 
 	return (0);
 }

@@ -1,7 +1,7 @@
-VPATH		:=	src:
 NAME		:=	webserv
-CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
-LDFLAGS		?=
+
+VPATH		:=	src:
+
 OBJECTS		:=	obj/main.o \
 				obj/Client.o \
 				obj/Cgi.o \
@@ -34,13 +34,21 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidUri.o \
 				obj/logger/Logger.o \
 
+
+# CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20 $(PARSTER_FLAG)
+CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
+LDFLAGS		?=
+
+ifeq ($(PARSTER),true)
+    CXXFLAGS += -DPARSTER
+endif
+
 INCL_DIR	:=	includes/
-
-CONTAINER	:= webserv-container
-IMAGE		:= ubuntu-c-plus
 SPDLOGLIB	:=	./spdlog/build/libspdlog.a
-SPDLOGINCLUDE	:= -DSPDLOG_COMPILED_LIB -I./spdlog/include
+SPDLOGINCL	:=	-DSPDLOG_COMPILED_LIB -I./spdlog/include
 
+CONTAINER	:=	webserv-container
+IMAGE		:=	ubuntu-c-plus
 
 all : $(NAME)
 
@@ -49,7 +57,7 @@ $(NAME) : $(OBJECTS)
 
 obj/%.o : %.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) -c $(CXXFLAGS) $(SPDLOGINCLUDE) -o $@ $< -I$(INCL_DIR)
+	$(CXX) -c $(CXXFLAGS) $(SPDLOGINCL) -o $@ $< -I$(INCL_DIR)
 
 clean :
 	$(RM) -r obj
@@ -59,6 +67,21 @@ fclean : clean
 	$(RM) -r ./parster-results
 
 re : fclean all
+
+docker-pwd-san:
+	docker run \
+	-p 12345:12345 \
+	--name $(CONTAINER) \
+	-it \
+	--rm \
+	--init \
+	-v "$$PWD:/pwd" \
+	--cap-add=SYS_PTRACE \
+	--security-opt seccomp=unconfined \
+	-e CXX="clang++" \
+	-e CXXFLAGS="-Wall -Wextra -std=c++20 -O1 -g -fsanitize=address -fsanitize=leak -fno-omit-frame-pointer" \
+	-e LDFLAGS="-g3 -fsanitize=address -fsanitize=leak" \
+	$(IMAGE) sh -c "cd /pwd; bash"
 
 docker-pwd:
 	docker run \
@@ -88,6 +111,9 @@ test: all
 	./webserv config-files/valid/multiple-servers.conf
 
 run: all
+	./webserv config-files/valid/complexe-server.conf
+
+parster: re
 	./webserv config-files/valid/complexe-server.conf
 
 db:
