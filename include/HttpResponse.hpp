@@ -36,7 +36,7 @@ public:
     ~HttpResponse(void);
 
     // getters/setters
-    void setBody(const std::string &path);
+    void bodySet(const std::string &path);
     void setStatusLine(void);
 
     // methods

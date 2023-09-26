@@ -18,7 +18,7 @@ HttpResponse::~HttpResponse(void)
 }
 
 // getters/setters
-void HttpResponse::setBody(const std::string &path)
+void HttpResponse::bodySet(const std::string &path)
 {
     m_body = resourceToStr(path);
 }
@@ -162,17 +162,17 @@ void HttpResponse::getHandle(void)
     if (path == "/")
     {
         path = "./www/index.html";
-        setBody(path);
+        bodySet(path);
     }
     else if (std::filesystem::exists("./www" + path)) // i.e. /image.jpeg
     {
         path = "./www" + path;
-        setBody(path);
+        bodySet(path);
     }
     else if (path.find('.' != std::string::npos)) // i.e. /upload
     {
         path = "./www" + m_request.m_methodPathVersion[1] + ".html";
-        setBody(path);
+        bodySet(path);
     }
 }
 
@@ -186,17 +186,12 @@ void HttpResponse::bodyToDisk(const std::string &path)
 
 void HttpResponse::postHandle(void)
 {
-    if (m_request.m_methodPathVersion[1].find("/cgi-bin/") != std::string::npos)
-    {
-        CGI CGI(m_request.m_methodPathVersion[1], "num1=5&num2=5");
-        // set correct body for cgi parameters
-        CGI.execute();
-        m_body = std::string(CGI.m_readBuf);
-    }
-    else
-    {
-        bodyToDisk("./www/" + m_request.m_fileName);
-    }
+    if (m_request.m_fileName.empty())
+        throw StatusCodeException(500, "Error: no fileName");
+    bodyToDisk("./www/" + m_request.m_fileName);
+    // Error: when uploading image with space. Fakking decoding
+    m_headers.insert({"Location", "/" + m_request.m_fileName});
+    m_statusCode = 303;
 }
 
 void HttpResponse::deleteHandle(void)
@@ -229,7 +224,6 @@ void HttpResponse::responseHandle(void)
         {
             spdlog::info("POST method");
             postHandle();
-            m_statusCode = 201;
         }
         else if (m_request.m_methodPathVersion[0] == "DELETE")
         {
