@@ -10,18 +10,13 @@ bool	isValidPath(const std::string &str, const bool &isDirectory) {
 	// std::cout << "isValidPath: " << str << std::endl; // ? debug
 	if (str.empty())
 		return false;
-	if (str[0] == '/'){
-		const std::string cleanedPath = str.substr(1, str.size());
-		// std::cout << cleanedPath << std::endl; // ? debug
-		if (isDirectory && !std::filesystem::is_directory(cleanedPath))
-			return false;
-		if (!isDirectory && !std::filesystem::is_regular_file(cleanedPath))
-			return false;
-		return true;
+	std::string inputPath = str;
+	if (inputPath[0] == '/') {
+		inputPath = inputPath.substr(1, inputPath.size());
 	}
-	if (isDirectory && !std::filesystem::is_directory(str))
+	if (isDirectory && !std::filesystem::is_directory(inputPath))
 		return false;
-	if (!isDirectory && !std::filesystem::is_regular_file(str))
+	if (!isDirectory && !std::filesystem::is_regular_file(inputPath))
 		return false;
 	return true;
 }

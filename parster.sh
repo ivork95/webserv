@@ -8,7 +8,7 @@ VALID_DIR="config-files/valid"
 INVALID_DIR="config-files/invalid"
 
 # Tmp folder to store results
-TMP_DIR="./parster-results"
+TMP_DIR="./results-parster"
 mkdir -p "$TMP_DIR"
 
 # Colors
@@ -48,14 +48,14 @@ else
 	printf "\n"
 
 	print_header "Valid"
-	for valid_config in $VALID_DIR/*.conf; do
+	for valid_config in $VALID_DIR/*; do
 		run_webserv "$valid_config"
 	done
 
 	printf "\n"
 
 	print_header "Invalid"
-	for invalid_config in $INVALID_DIR/*.conf; do
+	for invalid_config in $INVALID_DIR/*; do
 		run_webserv "$invalid_config"
 	done
 fi

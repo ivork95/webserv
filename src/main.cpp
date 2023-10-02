@@ -152,7 +152,7 @@
 //     }
 // }
 
-#define PARSTER false // parster
+#define PARSTER true // change this
 
 int main(int argc, char *argv[])
 {
