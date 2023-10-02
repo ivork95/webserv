@@ -3,6 +3,8 @@
 #include "Parser.hpp"
 #include "Configuration.hpp"
 
+#include <filesystem> // ? only used for checking the config file extension => include somewhere else?
+
 static int	checkDuplicatePortNumbers(std::vector<std::string> &usedPorts, const std::string &portNb) {
 	if (std::find(usedPorts.begin(), usedPorts.end(), portNb) != usedPorts.end()) {
 		return 1;
@@ -74,42 +76,56 @@ static int	openFile(std::ifstream &configFile, const std::string &filePath) {
 	return (0);
 }
 
-// #define PARSTER true
+static bool	isValidConfigExtension(const std::string &str) {
+	const std::string inputFileExtension = std::filesystem::path(str).extension();
+	// std::cout << inputFileExtension << std::endl; // ? debug
+
+	if (inputFileExtension != ".conf") {
+		return false;
+	}
+	return true;
+}
+
+#define PARSTER true // TODO change value here
 
 int initConfig(const std::string &filePath, Configuration &config) {
 	std::ifstream 		configFile;
 
+	// check config file extension
+	if (!isValidConfigExtension(filePath))
+		return 1;
+
 	// open file for read
 	if (openFile(configFile, filePath))
-		return (1);
+		return 1;
 
 	// read file, check braces & split sections
 	if (readFile(configFile, &config))
-		return (1);
+		return 1;
 	
 	// close file
 	configFile.close();
 
 	// create Server objects from server sections
 	if (createServers(&config))
-		return (1);
+		return 1;
 
 	// tokenize each server
 	if (tokenizeServers(&config))
-		return (1);
+		return 1;
 
 	// parse tokens into data structures
 	if (parseTokens(&config))
-		return (1);
+		return 1;
 
 	// To run only the parser and display the output
-	// #if (PARSTER)
-	// 	std::cout << "\n\t\t -----------------\n \t\t[  SERVER CONFIG  ]\n\t\t -----------------\n";
-	// 	for (size_t i = 0; i < config.serversConfig.size(); ++i) {
-	// 		std::cout << config.serversConfig[i];
-	// 	}
-	// 	return 0;
-	// #endif
+	#if (PARSTER)
+		std::cout << "\n\t\t -----------------\n \t\t[  SERVER CONFIG  ]\n\t\t -----------------\n";
+		for (size_t i = 0; i < config.serversConfig.size(); ++i) {
+			std::cout << config.serversConfig[i];
+		}
+		return 0;
+	#endif
 
-	return (0);
+	return 0;
 }

@@ -4,24 +4,24 @@
 #include <filesystem>
 
 /**
- * TODO check path access? 
+ * ? For some reason this does not work with "/" at the start => ugly workaround
 */
-bool	isValidPath(const std::string &str) {
+bool	isValidPath(const std::string &str, const bool &isDirectory) {
 	// std::cout << "isValidPath: " << str << std::endl; // ? debug
-	// std::string path = "www/" + str;
-	// std::cout << "isValidPath: " << path << std::endl; // ? debug
 	if (str.empty())
 		return false;
-	// if (!std::filesystem::exists(str)) {
-	// 	std::cout << "does not exist\n";
-	// 	// return false;
-	// }
-	// if (std::filesystem::is_empty(str)) {
-	// 	std::cout << "is empty\n";
-	// 	// return false;
-	// }
-	if (!std::filesystem::is_regular_file(str) && !std::filesystem::is_directory(str)) {
-		return false;
+	if (str[0] == '/'){
+		const std::string cleanedPath = str.substr(1, str.size());
+		// std::cout << cleanedPath << std::endl; // ? debug
+		if (isDirectory && !std::filesystem::is_directory(cleanedPath))
+			return false;
+		if (!isDirectory && !std::filesystem::is_regular_file(cleanedPath))
+			return false;
+		return true;
 	}
+	if (isDirectory && !std::filesystem::is_directory(str))
+		return false;
+	if (!isDirectory && !std::filesystem::is_regular_file(str))
+		return false;
 	return true;
 }

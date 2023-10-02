@@ -8,15 +8,15 @@
 class ErrorPageConfig {
 	private:
 		std::vector<std::string>	_errorCode;
-		std::string 				_filePath;
+		std::string 				_uriPath;
 
 	public:
 		ErrorPageConfig(void);
-		ErrorPageConfig(const std::vector<std::string> &errorCode, const std::string &filePath);
+		ErrorPageConfig(const std::vector<std::string> &errorCode, const std::string &uriPath);
 		~ErrorPageConfig(void);
 
 		const std::vector<std::string>	&getErrorCode(void) const;
-		const std::string				&getFilePath(void) const;
+		const std::string				&getUriPath(void) const;
 
 		friend std::ostream				&operator << (std::ostream &out, const ErrorPageConfig &errorPage);
 };

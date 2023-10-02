@@ -25,9 +25,11 @@ bool	isValidIpv4(const std::string &str);
 
 bool	isValidCgiExtension(const std::string &str);
 
+// bool	isValidConfigExtension(const std::string &str); // ! now static in InitConfig.cpp
+
 bool	isValidIndexExtension(const std::string &str);
 
-bool	isValidPath(const std::string &str);
+bool	isValidPath(const std::string &str, const bool &isDirectory);
 
 bool	isValidUri(const std::string &str);
 

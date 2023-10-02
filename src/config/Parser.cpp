@@ -86,7 +86,7 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 		if (tokens.at(*i + 1).getType() == Token::WORD) {
 			(*i)++;
 			const std::string					cgiPath = tokens.at(*i).getWord();
-			if (!isValidPath(cgiPath))
+			if (!isValidPath(cgiPath, true))
 				throw PathException(cgiPath);
 			std::map<std::string, std::string>	cgiHandler;
 			cgiHandler[cgiExtension] = cgiPath;
@@ -102,6 +102,7 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 /**
  * index index.html index.php
  * index <file_name> (<file_name> ...)
+ * ! we are looking for these files in the root directory
 */
 void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing index directive\n"; // ? debug
@@ -145,12 +146,12 @@ void	Parser::_parseLocationClientMaxBodySize(std::vector<Token> tokens, size_t *
 
 /**
  * root /var/www/html
- * root <path_to_root>
+ * root <path_to_root_dir>
 */
 void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing root directive\n"; // ? debug
 	const std::string	rootPath = tokens.at(*i).getWord();
-	if (!isValidPath(rootPath)) // TODO wip
+	if (!isValidPath(rootPath, true)) // TODO wip
 		throw PathException(rootPath);
 	route.setRootPath(tokens.at(*i).getWord());
 }
@@ -173,10 +174,10 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
 	// TODO check valid request URI
 	if (requestUri[0] != '/')
 		throw UriException(requestUri);
-	if (requestUri != "/") {
-		if (!isValidPath(requestUri.substr(1)))
-			throw UriException(requestUri);
-	}
+	// if (requestUri != "/") {
+	// 	if (!isValidPath(requestUri.substr(1)))
+	// 		throw UriException(requestUri);
+	// }
 	if (!isValidUri(requestUri))
 		throw UriException(requestUri);
 
@@ -235,7 +236,7 @@ void	Parser::_parseServerClientMaxBodySize(ServerConfig *server, std::vector<Tok
 
 /**
  * error_page 404 files/html/Website/Error/404.html
- * error_page <error_code (error_code ...)> <path_to_error_page>
+ * error_page <error_code (error_code ...)> <URI_path>
 */
 void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing error_page directive\n"; // ? debug
@@ -250,10 +251,10 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 		}
 		j++;
 	}
-	const std::string			filePath = tokens.at(j).getWord();
-	if (!isValidPath(filePath))
-		throw PathException(filePath);
-	ErrorPageConfig	errorPage(errorCodes, filePath);
+	const std::string			uriPath = tokens.at(j).getWord();
+	if (!isValidUri(uriPath))
+		throw PathException(uriPath);
+	ErrorPageConfig	errorPage(errorCodes, uriPath);
 	server->setErrorPagesConfig(errorPage);
 	(*i) = j;
 }
@@ -262,7 +263,7 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
  * server_name localhost
  * server_name <server_name>
  * server_name <server_name> (<server_name> ...)
- * TODO multiple server names
+ * TODO multiple server names?
 */
 void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing server_name directive\n"; // ? debug

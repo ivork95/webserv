@@ -24,6 +24,7 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isAlphaNum.o \
 				obj/utils/config/isNumber.o \
 				obj/utils/config/isValidCgiExtension.o \
+				obj/utils/config/isValidConfigExtension.o \
 				obj/utils/config/isValidErrorCode.o \
 				obj/utils/config/isValidHttpMethod.o \
 				obj/utils/config/isValidIndexExtension.o \
@@ -111,7 +112,7 @@ test: all
 run: all
 	./webserv config-files/valid/complexe-server.conf
 
-parster: re
+pflag: re
 	./webserv config-files/valid/complexe-server.conf
 
 db:

@@ -4,12 +4,12 @@
 /**
  * CONSTRUCTORS / DESTRUCTORS
 */
-ErrorPageConfig::ErrorPageConfig(void) : _errorCode(), _filePath("N/A") {
+ErrorPageConfig::ErrorPageConfig(void) : _errorCode(), _uriPath("N/A") {
 	// std::cout << "ErrorPageConfig default constructor called\n";
 }
 
-ErrorPageConfig::ErrorPageConfig(const std::vector<std::string> &errorCode, const std::string &filePath) : \
-	_errorCode{errorCode}, _filePath(filePath) {
+ErrorPageConfig::ErrorPageConfig(const std::vector<std::string> &errorCode, const std::string &uriPath) : \
+	_errorCode{errorCode}, _uriPath(uriPath) {
 	// std::cout << "ErrorPageConfig parametric constructor called\n";
 }
 
@@ -24,8 +24,8 @@ const std::vector<std::string>	&ErrorPageConfig::getErrorCode(void) const {
 	return (_errorCode);
 }
 
-const std::string	&ErrorPageConfig::getFilePath(void) const {
-	return (_filePath);
+const std::string	&ErrorPageConfig::getUriPath(void) const {
+	return (_uriPath);
 }
 
 /**
@@ -38,7 +38,7 @@ std::ostream	&operator << (std::ostream &out, const ErrorPageConfig &errorPage) 
 		out << errorPage.getErrorCode()[i] << ",";
 	}
 	out << "]" << std::endl;
-	out << "\tfilePath: " << errorPage.getFilePath() << std::endl;
+	out << "\turiPath: " << errorPage.getUriPath() << std::endl;
 	return out;
 }
 
