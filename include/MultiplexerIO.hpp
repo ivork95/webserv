@@ -34,7 +34,6 @@ public:
     // member functions
     static MultiplexerIO &getInstance(void);
     void addSocketToEpollFd(Socket *ptr, int events);
-    void modifyEpollEvents(Socket *ptr, int events);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const MultiplexerIO &multiplexerio);

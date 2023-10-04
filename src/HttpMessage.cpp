@@ -14,6 +14,27 @@ HttpMessage::~HttpMessage(void)
     spdlog::debug("HttpMessage destructor called");
 }
 
+// outstream operator overload
+std::ostream &operator<<(std::ostream &out, const HttpMessage &httpmessage)
+{
+    int i{};
+
+    out << "HttpMessage (\n";
+    out << "m_rawMessage = |" << httpmessage.m_rawMessage << "|\n";
+    out << "m_requestHeaders = {\n";
+    for (const auto &elem : httpmessage.m_requestHeaders)
+    {
+        out << "[" << i << "] = (" << elem.first << ", " << elem.second << ")\n";
+        i++;
+    }
+    out << "}\n";
+    out << "m_contentLength = " << httpmessage.m_contentLength << '\n';
+    out << "m_isContentLengthConverted = " << httpmessage.m_isContentLengthConverted << '\n';
+    out << ")";
+
+    return out;
+}
+
 // getters/setters
 void HttpMessage::requestHeadersSet(void)
 {
@@ -75,25 +96,4 @@ void HttpMessage::requestHeadersPrint(const std::map<std::string, std::string> &
         spdlog::debug("[{0}] = ({1}, {2})", i, elem.first, elem.second);
         i++;
     }
-}
-
-// outstream operator overload
-std::ostream &operator<<(std::ostream &out, const HttpMessage &httpmessage)
-{
-    int i{};
-
-    out << "HttpMessage (\n";
-    out << "m_rawMessage = |" << httpmessage.m_rawMessage << "|\n";
-    out << "m_requestHeaders = {\n";
-    for (const auto &elem : httpmessage.m_requestHeaders)
-    {
-        out << "[" << i << "] = (" << elem.first << ", " << elem.second << ")\n";
-        i++;
-    }
-    out << "}\n";
-    out << "m_contentLength = " << httpmessage.m_contentLength << '\n';
-    out << "m_isContentLengthConverted = " << httpmessage.m_isContentLengthConverted << '\n';
-    out << ")";
-
-    return out;
 }

@@ -23,6 +23,14 @@ MultiplexerIO::~MultiplexerIO(void)
     close(m_epollfd);
 }
 
+// outstream operator overload
+std::ostream &operator<<(std::ostream &out, const MultiplexerIO &multiplexerio)
+{
+    out << "MultiplexerIO(" << multiplexerio.m_epollfd << ")";
+
+    return out;
+}
+
 // member functions
 MultiplexerIO &MultiplexerIO::getInstance(void)
 {
@@ -43,24 +51,4 @@ void MultiplexerIO::addSocketToEpollFd(Socket *ptr, int events)
         std::perror("epoll_ctl() failed");
         throw std::runtime_error("Error: epoll_ctl() failed\n");
     }
-}
-
-void MultiplexerIO::modifyEpollEvents(Socket *ptr, int events)
-{
-    struct epoll_event ev
-    {
-    };
-    ev.data.ptr = ptr;
-    ev.events = events;
-
-    if (epoll_ctl(m_epollfd, EPOLL_CTL_MOD, ptr->m_socketFd, &ev) == -1)
-        throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
-}
-
-// outstream operator overload
-std::ostream &operator<<(std::ostream &out, const MultiplexerIO &multiplexerio)
-{
-    out << "MultiplexerIO(" << multiplexerio.m_epollfd << ")";
-
-    return out;
 }

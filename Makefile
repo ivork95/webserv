@@ -1,7 +1,9 @@
+VPATH		:=	src:
 NAME		:=	webserv
 CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
-OBJECTS		:=	obj/Client.o \
+OBJECTS		:=	obj/main.o \
+				obj/Client.o \
 				obj/Helper.o \
 				obj/HttpMessage.o \
 				obj/HttpRequest.o \
@@ -32,7 +34,6 @@ OBJECTS		:=	obj/Client.o \
 				obj/utils/config/isValidServerName.o \
 				obj/utils/config/isValidUri.o \
 				obj/logger/Logger.o
-
 HEADERS		:=	include/Client.hpp \
 				include/Helper.hpp \
 				include/HttpMessage.hpp \
@@ -51,13 +52,8 @@ HEADERS		:=	include/Client.hpp \
 				include/LocationConfig.hpp \
 				include/ErrorPageConfig.hpp \
 				include/UtilsConfig.hpp
-
-CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
-LDFLAGS		?=
-
 SPDLOGLIB	:=	./spdlog/build/libspdlog.a
 SPDLOGINCL	:=	-DSPDLOG_COMPILED_LIB -I./spdlog/include
-
 CONTAINER	:=	webserv-container
 IMAGE		:=	ubuntu-c-plus
 INCLUDE		:= -I./include
@@ -97,7 +93,7 @@ docker-pwd-san:
 
 docker-pwd:
 	docker run \
-	-p 12345:12345 \
+	-p 8081:8081 \
 	--name $(CONTAINER) \
 	-it \
 	--rm \
