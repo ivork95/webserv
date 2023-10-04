@@ -1,10 +1,8 @@
 NAME		:=	webserv
-
-VPATH		:=	src:
-
-OBJECTS		:=	obj/main.o \
-				obj/Client.o \
-				obj/Cgi.o \
+CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
+LDFLAGS		?=
+OBJECTS		:=	obj/Client.o \
+				obj/Helper.o \
 				obj/HttpMessage.o \
 				obj/HttpRequest.o \
 				obj/HttpResponse.o \
@@ -36,7 +34,7 @@ OBJECTS		:=	obj/main.o \
 				obj/logger/Logger.o
 
 HEADERS		:=	include/Client.hpp \
-				include/Cgi.hpp \
+				include/Helper.hpp \
 				include/HttpMessage.hpp \
 				include/HttpRequest.hpp \
 				include/HttpResponse.hpp \

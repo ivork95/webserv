@@ -31,6 +31,12 @@ public:
     // port constructor
     TcpServer(const char *port);
 
+    // copy constructor
+    TcpServer(const TcpServer &source) = delete;
+
+    // copy assignment operator overload
+    TcpServer &operator=(const TcpServer &source) = delete;
+
     // destructor
     ~TcpServer(void);
 

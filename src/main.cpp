@@ -9,7 +9,6 @@
 #include "HttpRequest.hpp"
 #include "Timer.hpp"
 #include "HttpResponse.hpp"
-#include "Cgi.hpp"
 
 #define BUFSIZE 256
 #define PARSTER false // change this

@@ -15,7 +15,7 @@ HttpMessage::~HttpMessage(void)
 }
 
 // getters/setters
-void HttpMessage::setRequestHeaders(void)
+void HttpMessage::requestHeadersSet(void)
 {
     size_t requestLineEndPos = m_rawMessage.find("\r\n");
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
@@ -24,7 +24,7 @@ void HttpMessage::setRequestHeaders(void)
     m_requestHeaders = fieldLinesToHeaders(fieldLines);
 }
 
-void HttpMessage::setContentLength(void)
+void HttpMessage::contentLengthSet(void)
 {
     try
     {
@@ -33,12 +33,12 @@ void HttpMessage::setContentLength(void)
     }
     catch (...)
     {
-        throw StatusCodeException(400, "Error: invalid Content-Length header");
+        throw StatusCodeException(400, "Error: invalid Content-Length header1");
     }
 }
 
 // methods
-std::pair<std::string, std::string> HttpMessage::parseFieldLine(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const
+std::pair<std::string, std::string> HttpMessage::fieldLineParse(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const
 {
     std::string key = fieldLine.substr(0, keyDelimPos);
     std::string value = fieldLine.substr(keyDelimPos + keyDelim.length());
@@ -59,7 +59,7 @@ std::map<std::string, std::string> HttpMessage::fieldLinesToHeaders(std::string 
     {
         fieldLine = fieldLines.substr(0, fieldLineDelimPos);
         if ((keyDelimPos = fieldLine.find(keyDelim)) != std::string::npos)
-            headers.insert(parseFieldLine(fieldLine, keyDelim, keyDelimPos));
+            headers.insert(fieldLineParse(fieldLine, keyDelim, keyDelimPos));
         fieldLines.erase(0, fieldLineDelimPos + fieldLineDelim.length());
     }
 

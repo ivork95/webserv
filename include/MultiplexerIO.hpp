@@ -32,12 +32,7 @@ public:
     ~MultiplexerIO(void);
 
     // member functions
-    static MultiplexerIO &getInstance()
-    {
-        static MultiplexerIO instance;
-        return instance;
-    }
-    void run(std::vector<TcpServer *> servers);
+    static MultiplexerIO &getInstance(void);
     void addSocketToEpollFd(Socket *ptr, int events);
     void modifyEpollEvents(Socket *ptr, int events);
 

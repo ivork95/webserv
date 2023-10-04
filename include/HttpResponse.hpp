@@ -11,15 +11,15 @@
 
 #include "StatusCodes.hpp"
 #include "HttpRequest.hpp"
-#include "Cgi.hpp"
 
 class HttpResponse
 {
 public:
     const HttpRequest &m_request;
-    int m_statusCode{};
-    std::string m_statusLine{};
     std::map<std::string, std::string> m_headers{};
+    std::string m_statusLine{};
+
+    int m_statusCode{};
     std::string m_body{};
 
     // default constructor
@@ -35,24 +35,23 @@ public:
     // destructor
     ~HttpResponse(void);
 
+    // outstream operator overload
+    friend std::ostream &operator<<(std::ostream &out, const HttpResponse &HttpResponse);
+
     // getters/setters
     void bodySet(const std::string &path);
-    void setStatusLine(void);
+    void statusLineSet(void);
 
     // methods
     std::string responseBuild(void);
     int targetRead(const std::string &requestTarget);
-    std::string targetPathCreate(const std::string &target);
     std::string resourceToStr(const std::string &path);
     void getHandle(void);
     void postHandle(void);
     void deleteHandle(void);
     void responseHandle(void);
     void bodyToDisk(const std::string &path);
-
-    // outstream operator overload
-    friend std::ostream &
-    operator<<(std::ostream &out, const HttpResponse &HttpResponse);
+    std::string percentEncode(const std::string &input) const;
 
     std::map<int, std::string> m_statusCodes{
         {100, "HTTP/1.1 100 Continue"},
