@@ -121,9 +121,6 @@ test: all
 run: all
 	./webserv config-files/valid/complexe-server.conf
 
-pflag: re
-	./webserv config-files/valid/complexe-server.conf
-
 db:
 	lldb webserv -- config-files/valid/multiple-servers.conf
 

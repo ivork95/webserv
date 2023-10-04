@@ -87,8 +87,6 @@ static bool	isValidConfigExtension(const std::string &str) {
 	return true;
 }
 
-#define PARSTER true // TODO change value here
-
 int initConfig(const std::string &filePath, Configuration &config) {
 	std::ifstream 		configFile;
 
@@ -118,15 +116,6 @@ int initConfig(const std::string &filePath, Configuration &config) {
 	// parse tokens into data structures
 	if (parseTokens(&config))
 		return 1;
-
-	// To run only the parser and display the output
-	#if (PARSTER)
-		std::cout << "\n\t\t -----------------\n \t\t[  SERVER CONFIG  ]\n\t\t -----------------\n";
-		for (size_t i = 0; i < config.serversConfig.size(); ++i) {
-			std::cout << config.serversConfig[i];
-		}
-		return 0;
-	#endif
 
 	return 0;
 }

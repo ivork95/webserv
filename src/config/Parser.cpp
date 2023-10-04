@@ -235,7 +235,7 @@ void	Parser::_parseServerClientMaxBodySize(ServerConfig *server, std::vector<Tok
 }
 
 /**
- * error_page 404 files/html/Website/Error/404.html
+ * error_page 404 www/html/error/404.html
  * error_page <error_code (error_code ...)> <URI_path>
 */
 void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
