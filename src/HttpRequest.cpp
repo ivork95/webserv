@@ -16,131 +16,6 @@ HttpRequest::~HttpRequest(void)
     spdlog::debug("HttpRequest destructor called");
 }
 
-// getters/setters
-void HttpRequest::setMethodPathVersion(void)
-{
-    size_t requestLineEndPos = m_rawMessage.find("\r\n");
-    std::string requestLine = m_rawMessage.substr(0, requestLineEndPos);
-    m_methodPathVersion = split(requestLine);
-}
-
-void HttpRequest::setBoundaryCode(void)
-{
-    m_boundaryCode = parseBoundaryCode(m_requestHeaders);
-}
-
-void HttpRequest::setGeneralHeaders(void)
-{
-    std::string generalFieldLines = parseGeneralHeaders(m_boundaryCode);
-    m_generalHeaders = fieldLinesToHeaders(generalFieldLines);
-}
-
-void HttpRequest::setBody(void)
-{
-    m_body = parseBody(m_boundaryCode);
-}
-
-void HttpRequest::setFileName(void)
-{
-    m_fileName = parseFileName(m_generalHeaders);
-    strip(m_fileName);
-}
-
-// methods
-std::string HttpRequest::parseBoundaryCode(const std::map<std::string, std::string> &requestHeaders)
-{
-    auto contentTypeIt = requestHeaders.find("Content-Type");
-    if (contentTypeIt == requestHeaders.end())
-        throw StatusCodeException(400, "Error: missing Content-Length header");
-
-    std::string contentType = contentTypeIt->second;
-
-    std::string_view boundary{"boundary="};
-    size_t boundaryStartPos = contentType.find(boundary);
-    if (boundaryStartPos == std::string::npos)
-        throw StatusCodeException(400, "Error: missing boundary=");
-
-    return contentType.substr(boundaryStartPos + boundary.length());
-}
-
-std::string HttpRequest::parseGeneralHeaders(const std::string &boundaryCode)
-{
-    const std::string boundaryStart = "--" + boundaryCode + "\r\n";
-    const std::string generalHeadersEnd = "\r\n\r\n";
-
-    size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
-    if (BoundaryStartPos == std::string::npos)
-    {
-        throw StatusCodeException(400, "Error: invalid Content-Length header");
-    }
-
-    size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
-    if (generalHeadersEndPos == std::string::npos)
-        throw StatusCodeException(400, "Error: invalid Content-Length header");
-
-    return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
-}
-
-void HttpRequest::strip(std::string &str)
-{
-    str.erase(std::remove(str.begin(), str.end(), '\"'), str.end());
-}
-
-std::vector<std::string> HttpRequest::split(const std::string &str) const
-{
-    std::vector<std::string> methodPathVersion;
-    std::istringstream iss(str);
-    std::string keyword;
-
-    while (getline(iss, keyword, ' '))
-        methodPathVersion.push_back(keyword);
-
-    return methodPathVersion;
-}
-
-std::string HttpRequest::parseBody(const std::string &boundaryCode)
-{
-    const std::string headersEnd = "\r\n\r\n";
-    size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
-    size_t generalHeadersEndPos = m_rawMessage.find(headersEnd, requestHeadersEndPos + 1);
-
-    if (boundaryCode.empty())
-    {
-        requestHeadersEndPos += 4;
-        spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
-        return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
-    }
-
-    const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
-    size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
-    if (boundaryEndPos == std::string::npos)
-        throw StatusCodeException(400, "Error: couldn't find boundaryEnd");
-
-    return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
-}
-
-std::string HttpRequest::parseFileName(const std::map<std::string, std::string> &generalHeaders)
-{
-    auto contentDispositionIt = generalHeaders.find("Content-Disposition");
-    if (contentDispositionIt == generalHeaders.end())
-        throw StatusCodeException(400, "Error: couldn't find Content-Disposition");
-
-    std::string fileNameStart{"filename="};
-    size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
-    if (fileNameStartPos == std::string::npos)
-        throw StatusCodeException(400, "Error: couldn't find filename=");
-
-    return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
-}
-
-void HttpRequest::bodyToDisk(const std::string &path)
-{
-    std::ofstream outf{path};
-    if (!outf)
-        throw StatusCodeException(400, "Error: ofstream");
-    outf << m_body;
-}
-
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
 {
@@ -167,4 +42,209 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
     out << ")";
 
     return out;
+}
+
+void HttpRequest::methodPathVersionSet(void)
+{
+    size_t requestLineEndPos = m_rawMessage.find("\r\n");
+    std::string requestLine = m_rawMessage.substr(0, requestLineEndPos);
+    m_methodPathVersion = split(requestLine);
+}
+
+std::string HttpRequest::boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders)
+{
+    auto contentTypeIt = requestHeaders.find("Content-Type");
+    if (contentTypeIt == requestHeaders.end())
+        throw StatusCodeException(400, "Error: missing Content-Length header");
+
+    std::string contentType = contentTypeIt->second;
+
+    std::string_view boundary{"boundary="};
+    size_t boundaryStartPos = contentType.find(boundary);
+    if (boundaryStartPos == std::string::npos)
+        throw StatusCodeException(400, "Error: missing boundary=");
+
+    return contentType.substr(boundaryStartPos + boundary.length());
+}
+
+void HttpRequest::boundaryCodeSet(void)
+{
+    m_boundaryCode = boundaryCodeParse(m_requestHeaders);
+}
+
+std::string HttpRequest::generalHeadersParse(const std::string &boundaryCode)
+{
+    const std::string boundaryStart = "--" + boundaryCode + "\r\n";
+    const std::string generalHeadersEnd = "\r\n\r\n";
+
+    size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
+    if (BoundaryStartPos == std::string::npos)
+    {
+        throw StatusCodeException(400, "Error: invalid Content-Length header");
+    }
+
+    size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
+    if (generalHeadersEndPos == std::string::npos)
+        throw StatusCodeException(400, "Error: invalid Content-Length header");
+
+    return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
+}
+
+void HttpRequest::generalHeadersSet(void)
+{
+    std::string generalFieldLines = generalHeadersParse(m_boundaryCode);
+    m_generalHeaders = fieldLinesToHeaders(generalFieldLines);
+}
+
+std::string HttpRequest::bodyParse(const std::string &boundaryCode)
+{
+    const std::string headersEnd = "\r\n\r\n";
+    size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
+    size_t generalHeadersEndPos = m_rawMessage.find(headersEnd, requestHeadersEndPos + 1);
+
+    if (boundaryCode.empty())
+    {
+        requestHeadersEndPos += 4;
+        spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+        return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+    }
+
+    const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
+    size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
+    if (boundaryEndPos == std::string::npos)
+        throw StatusCodeException(400, "Error: couldn't find boundaryEnd");
+
+    return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
+}
+
+void HttpRequest::bodySet(void)
+{
+    m_body = bodyParse(m_boundaryCode);
+}
+
+std::string HttpRequest::fileNameParse(const std::map<std::string, std::string> &generalHeaders)
+{
+    auto contentDispositionIt = generalHeaders.find("Content-Disposition");
+    if (contentDispositionIt == generalHeaders.end())
+        throw StatusCodeException(400, "Error: couldn't find Content-Disposition");
+
+    std::string fileNameStart{"filename="};
+    size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
+    if (fileNameStartPos == std::string::npos)
+        throw StatusCodeException(400, "Error: couldn't find filename=");
+
+    return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
+}
+
+void HttpRequest::fileNameSet(void)
+{
+    m_fileName = fileNameParse(m_generalHeaders);
+    strip(m_fileName);
+}
+
+char hexToChar(const std::string &hex)
+{
+    int value{};
+    std::stringstream ss{};
+
+    ss << std::hex << hex;
+    ss >> value;
+    return static_cast<char>(value);
+}
+
+std::string decodePercentEncoding(const std::string &encoded)
+{
+    std::string decoded{};
+
+    for (size_t i = 0; i < encoded.length(); ++i)
+    {
+        if (encoded[i] == '%' && i + 2 < encoded.length())
+        {
+            std::string hexValue = encoded.substr(i + 1, 2);
+            decoded += hexToChar(hexValue);
+            i += 2; // skip the next two characters
+        }
+        else
+            decoded += encoded[i];
+    }
+    spdlog::critical("encoded = {}", encoded);
+    spdlog::critical("decoded = {}", decoded);
+    return decoded;
+}
+
+int HttpRequest::tokenize(const char *buf, int nbytes)
+{
+    // We got some good data from a client
+    spdlog::info("nbytes = {}", nbytes);
+
+    m_rawMessage.append(buf, buf + nbytes);
+
+    size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
+    if (fieldLinesEndPos == std::string::npos)
+    {
+        spdlog::warn("message incomplete [...]");
+        return 1;
+    }
+
+    if (m_requestHeaders.empty())
+        setRequestHeaders();
+
+    if (m_requestHeaders.contains("Content-Length"))
+    {
+        if (!m_isContentLengthConverted)
+            setContentLength();
+        if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
+        {
+            spdlog::warn("Content-Length not reached [...]");
+            return 2;
+        }
+        spdlog::info("Content-Length reached!");
+    }
+
+    spdlog::info("message complete!");
+    spdlog::info("m_rawMessage = \n|{}|", m_rawMessage);
+
+    return 0;
+}
+
+void HttpRequest::parse(void)
+{
+    methodPathVersionSet();
+    if (m_methodPathVersion.size() != 3)
+        throw StatusCodeException(400, "Error: not 3 elements in request-line");
+    if (m_methodPathVersion[2] != "HTTP/1.1")
+        throw StatusCodeException(505, "Warning: http version not allowed");
+    if ((m_methodPathVersion[0] != "GET") && (m_methodPathVersion[0] != "POST") && (m_methodPathVersion[0] != "DELETE"))
+        throw StatusCodeException(405, "Warning: method not allowed");
+
+    // Percentage decode URI string
+    m_methodPathVersion[1] = decodePercentEncoding(m_methodPathVersion[1]);
+
+    if (m_methodPathVersion[0] == "POST")
+    {
+        if (m_contentLength > m_client_max_body_size)
+            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+
+        boundaryCodeSet();
+        generalHeadersSet();
+        fileNameSet();
+        bodySet();
+    }
+}
+
+void HttpRequest::strip(std::string &str) const
+{
+    str.erase(std::remove(str.begin(), str.end(), '\"'), str.end());
+}
+
+std::vector<std::string> HttpRequest::split(const std::string &str) const
+{
+    std::vector<std::string> methodPathVersion;
+    std::istringstream iss(str);
+    std::string keyword;
+
+    while (getline(iss, keyword, ' '))
+        methodPathVersion.push_back(keyword);
+
+    return methodPathVersion;
 }

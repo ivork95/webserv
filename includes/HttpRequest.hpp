@@ -37,21 +37,21 @@ public:
     ~HttpRequest(void);
 
     // getters/setters
-    void setMethodPathVersion(void);
-    void setGeneralHeaders(void);
-    void setFileName(void);
-    void setBoundaryCode(void);
-    void setBody(void);
+    void methodPathVersionSet(void);
+    void generalHeadersSet(void);
+    void fileNameSet(void);
+    void boundaryCodeSet(void);
+    void bodySet(void);
 
     // methods
-    std::string parseBoundaryCode(const std::map<std::string, std::string> &requestHeaders);
-    std::string parseBody(const std::string &boundaryCode);
-    std::string parseGeneralHeaders(const std::string &boundaryCode);
-    std::string parseFileName(const std::map<std::string, std::string> &generalHeaders);
+    std::string boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders);
+    std::string bodyParse(const std::string &boundaryCode);
+    std::string generalHeadersParse(const std::string &boundaryCode);
+    std::string fileNameParse(const std::map<std::string, std::string> &generalHeaders);
     std::vector<std::string> split(const std::string &str) const;
-    void strip(std::string &str);
-    void bodyToDisk(const std::string &path);
+    void strip(std::string &str) const;
     int tokenize(const char *buf, int nbytes);
+    void parse(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);
