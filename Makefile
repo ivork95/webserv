@@ -33,30 +33,45 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidPortNumber.o \
 				obj/utils/config/isValidServerName.o \
 				obj/utils/config/isValidUri.o \
-				obj/logger/Logger.o \
+				obj/logger/Logger.o
+
+HEADERS		:=	include/Client.hpp \
+				include/Cgi.hpp \
+				include/HttpMessage.hpp \
+				include/HttpRequest.hpp \
+				include/HttpResponse.hpp \
+				include/MultiplexerIO.hpp \
+				include/Socket.hpp \
+				include/StatusCodes.hpp \
+				include/TcpServer.hpp \
+				include/Timer.hpp \
+				include/Token.hpp \
+				include/Lexer.hpp \
+				include/Parser.hpp \
+				include/Configuration.hpp \
+				include/ServerConfig.hpp \
+				include/LocationConfig.hpp \
+				include/ErrorPageConfig.hpp \
+				include/UtilsConfig.hpp
 
 CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 
-ifeq ($(PARSTER),true)
-    CXXFLAGS += -DPARSTER
-endif
-
-INCL_DIR	:=	includes/
 SPDLOGLIB	:=	./spdlog/build/libspdlog.a
 SPDLOGINCL	:=	-DSPDLOG_COMPILED_LIB -I./spdlog/include
 
 CONTAINER	:=	webserv-container
 IMAGE		:=	ubuntu-c-plus
+INCLUDE		:= -I./include
 
 all : $(NAME)
 
 $(NAME) : $(OBJECTS)
 	$(CXX) $(LDFLAGS) -o $@ $^ $(SPDLOGLIB)
 
-obj/%.o : %.cpp
+obj/%.o : %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	$(CXX) -c $(CXXFLAGS) $(SPDLOGINCL) -o $@ $< -I$(INCL_DIR)
+	$(CXX) -c $(CXXFLAGS) $(INCLUDE) $(SPDLOGINCL) -o $@ $<
 
 clean :
 	$(RM) -r obj

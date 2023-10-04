@@ -47,8 +47,66 @@ void handleConnectedClient(Client *client)
     client->isWriteReady = true;
 }
 
+void run(const Configuration &config)
+{
+    std::vector<TcpServer *> servers{};
+    for (auto &serverConfig : config.serversConfig)
+        servers.push_back(new TcpServer{serverConfig.getPortNb().c_str()});
+
+    MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
+    for (auto &server : servers)
+        multiplexerio.addSocketToEpollFd(server, EPOLLIN);
+
+    while (true)
+    {
+        int epollCount{epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, -1)};
+        if (epollCount < 0)
+        {
+            std::perror("epoll_wait() failed");
+            throw std::runtime_error("Error: epoll_wait() failed\n");
+        }
+
+        for (int i{0}; i < epollCount; i++) // Run through the existing connections looking for data to read
+        {
+            Socket *ePollDataPtr{static_cast<Socket *>(multiplexerio.m_events.at(i).data.ptr)};
+
+            if ((multiplexerio.m_events.at(i).events & EPOLLIN) && ePollDataPtr->isReadReady) // If someone's ready to read
+            {
+                if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr)) // If listener is ready to read, handle new connection
+                {
+                    Client *client = new Client{*server};
+                    multiplexerio.addSocketToEpollFd(client, EPOLLIN | EPOLLOUT | EPOLLRDHUP);
+                    multiplexerio.addSocketToEpollFd(client->timer, EPOLLIN);
+                }
+                else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
+                {
+                    spdlog::warn("Timeout expired. Closing: {}", *(timer->m_client));
+                    delete timer->m_client;
+                }
+                else if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
+                    handleConnectedClient(client);
+            }
+            if ((multiplexerio.m_events.at(i).events & EPOLLOUT) && ePollDataPtr->isWriteReady) // If someone's ready to write
+            {
+                if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
+                {
+                    HttpResponse response{client->httpRequest};
+                    response.responseHandle();
+                    spdlog::critical(response);
+
+                    std::string s{response.responseBuild()};
+                    send(client->m_socketFd, s.data(), s.length(), 0);
+                    delete (client);
+                }
+            }
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
+    spdlog::set_level(spdlog::level::debug);
+
     if (argc != 2)
         throw std::runtime_error("usage: webserv [port]\n\n\n");
 
@@ -68,17 +126,7 @@ int main(int argc, char *argv[])
     return 0;
 #endif
 
-    spdlog::set_level(spdlog::level::debug);
-
-    std::vector<TcpServer *> servers{};
-    for (auto &serverConfig : config.serversConfig)
-    {
-        spdlog::critical("YOO");
-        servers.push_back(new TcpServer{serverConfig.getPortNb().c_str()});
-    }
-
-    MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
-    multiplexerio.run(servers);
+    run(config);
 
     return 0;
 }
