@@ -17,14 +17,14 @@
  *      limit_except: -;
 */
 ServerConfig::ServerConfig(void) : \
-	_index(0), _portNb("N/A"), _serverName("N/A"), _clientMaxBodySize("N/A"), \
-	_errorPagesConfig(), _locationsConfig(), _rawData("N/A") {
+	_index{}, _portNb{}, _serverName{}, _clientMaxBodySize{}, \
+	_errorPagesConfig{}, _locationsConfig{}, _rawData{} {
 	// std::cout << "ServerConfig default constructor called\n";
 }
 
 ServerConfig::ServerConfig(unsigned int index, std::string rawData) : \
-	_index(index), _portNb("N/A"), _serverName("N/A"), _clientMaxBodySize("N/A"), \
-	_errorPagesConfig(), _locationsConfig(), _rawData(rawData) {
+	_index(index), _portNb{}, _serverName{}, _clientMaxBodySize{}, \
+	_errorPagesConfig{}, _locationsConfig{}, _rawData(rawData) {
 	// std::cout << "ServerConfig parametric constructor called\n";
 }
 
@@ -43,7 +43,7 @@ const std::string &ServerConfig::getPortNb(void) const {
 	return (_portNb);
 }
 
-const std::string &ServerConfig::getServerName(void) const {
+const std::vector<std::string> &ServerConfig::getServerName(void) const {
 	return (_serverName);
 }
 
@@ -78,7 +78,7 @@ void ServerConfig::setPortNb(const std::string &portNb) {
 	_hasPortNb = true;
 }
 
-void ServerConfig::setServerName(const std::string &serverName) {
+void ServerConfig::setServerName(const std::vector<std::string> &serverName) {
 	if (_hasServerName)
 		throw AlreadySetException("server name");
 	_serverName = serverName;
@@ -146,7 +146,11 @@ std::ostream &operator << (std::ostream &out, const ServerConfig &server) {
 	out << "=============================================================\n";
 	out << "ServerConfig " << server.getIndex() << ":\n";
 	out << "\tportNb: " << server.getPortNb() << std::endl;
-	out << "\tserverName: " << server.getServerName() << std::endl;
+	out << "\tserverName(s): [";
+	for (size_t i = 0; i < server.getServerName().size(); ++i) {
+		out << server.getServerName()[i] << ",";
+	}
+	out << "]" << std::endl;
 	out << "\tclientBodySizeLimit: " << server.getClientMaxBodySize() << std::endl;
 	if (server.getErrorPagesConfig().size() == 0) {
 		out << "\nErrorPageConfig: empty\n";
@@ -179,7 +183,7 @@ void	ServerConfig::checkMissingDirective(void) {
 	}
 	if (!hasServerName()) {
 		// std::cout << "No server name (setting to default)\n"; // ? debug
-		setServerName("");
+		setServerName({""});
 	}
 	if (!hasClientMaxBodySize()) {
 		// std::cout << "No client max body size (setting to default)\n"; // ? debug

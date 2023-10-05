@@ -15,14 +15,14 @@
  *  limit_except: -;
 */
 LocationConfig::LocationConfig(void) : \
-	_requestURI("N/A"), _rootPath("N/A"), _clientMaxBodySize("N/A"), \
-	_autoIndex(false), _indexFile{"N/A"}, _cgiHandler{}, _httpMethods{"N/A"} {
+	_requestURI{}, _rootPath{}, _clientMaxBodySize{}, \
+	_autoIndex(false), _indexFile{}, _cgiHandler{}, _httpMethods{} {
 	// std::cout << "LocationConfig default constructor called\n";
 }
 
 LocationConfig::LocationConfig(const std::string &requestURI) : \
-	_requestURI(requestURI), _hasRequestURI(true), _rootPath("N/A"), _clientMaxBodySize("N/A"), \
-	_autoIndex(false), _indexFile{"N/A"}, _cgiHandler{}, _httpMethods{"N/A"} {
+	_requestURI(requestURI), _hasRequestURI(true), _rootPath{}, _clientMaxBodySize{}, \
+	_autoIndex(false), _indexFile{}, _cgiHandler{}, _httpMethods{} {
 	// std::cout << "LocationConfig parametric constructor called\n";
 }
 
@@ -147,16 +147,17 @@ std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
 	out << "\trootPath: " << route.getRootPath() << std::endl;
 	out << "\tclientMaxBodySize: " << route.getClientMaxBodySize() << std::endl;
 	out << "\tautoIndex: " << route.getAutoIndex() << std::endl;
-	out << "\tindexFile: [";
+	out << "\tindexFile(s): [";
 	for (size_t i = 0; i < route.getIndexFile().size(); ++i) {
 		out << route.getIndexFile()[i] << ",";
 	}
 	out << "]" << std::endl;
-	out << "\tcgiHandler: ";
+	out << "\tcgiHandler(s): [";
 	for (std::map<std::string, std::string>::const_iterator it = route.getCgiHandler().begin(); it != route.getCgiHandler().end(); ++it) {
-		out << "[" << it->first << ", " << it->second << "], ";
+		out << "(" << it->first << ", " << it->second << "), ";
 	}
-	out << "\n\thttpMethods: [";
+	out << "]" << std::endl;
+	out << "\thttpMethod(s): [";
 	for (size_t i = 0; i < route.getHttpMethods().size(); ++i) {
 		out << route.getHttpMethods()[i] << ",";
 	}

@@ -4,12 +4,12 @@
 /**
  * CONSTRUCTORS / DESTRUCTORS
 */
-ErrorPageConfig::ErrorPageConfig(void) : _errorCode(), _uriPath("N/A") {
+ErrorPageConfig::ErrorPageConfig(void) : _errorCode{}, _uriPath{} {
 	// std::cout << "ErrorPageConfig default constructor called\n";
 }
 
 ErrorPageConfig::ErrorPageConfig(const std::vector<std::string> &errorCode, const std::string &uriPath) : \
-	_errorCode{errorCode}, _uriPath(uriPath) {
+	_errorCode(errorCode), _uriPath(uriPath) {
 	// std::cout << "ErrorPageConfig parametric constructor called\n";
 }
 
