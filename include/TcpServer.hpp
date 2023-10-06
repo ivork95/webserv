@@ -26,7 +26,7 @@ public:
     {
     };
 
-    const ServerConfig &m_serverConfig;
+    const ServerConfig &m_serverconfig;
 
     // default constructor
     TcpServer(void) = delete;

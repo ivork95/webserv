@@ -11,6 +11,7 @@
 
 #include "StatusCodes.hpp"
 #include "HttpRequest.hpp"
+#include "ServerConfig.hpp"
 
 class HttpResponse
 {
@@ -21,12 +22,13 @@ public:
 
     int m_statusCode{};
     std::string m_body{};
+    ServerConfig m_serverconfig;
 
     // default constructor
     HttpResponse(void) = delete;
 
     // request constrcuctor
-    HttpResponse(const HttpRequest &request);
+    HttpResponse(const HttpRequest &request, const ServerConfig &serverconfig);
 
     // copy constructor
 

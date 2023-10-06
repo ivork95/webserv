@@ -2,7 +2,7 @@
 #include <filesystem>
 
 // request constructor
-HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request), m_statusCode(request.m_statusCode)
+HttpResponse::HttpResponse(const HttpRequest &request, const ServerConfig &serverconfig) : m_request(request), m_statusCode(request.m_statusCode), m_serverconfig(serverconfig)
 {
     spdlog::debug("HttpResponseconstructor called");
 }
@@ -161,21 +161,59 @@ void HttpResponse::getHandle(void)
 
     // Hier ergens moet LocationConfig._clientMaxBodySize gecheckt worden
 
-    if (path == "/")
+    spdlog::critical("m_serverconfig = {}", m_serverconfig);
+    for (auto &a : m_serverconfig.getLocationsConfig())
     {
-        path = "./www/index.html";
-        bodySet(path);
+        spdlog::critical("_requestURI = {}", a.getRequestURI());
+        if (m_request.m_methodPathVersion[1] == a.getRequestURI())
+        {
+
+            // auto it = std::find(a.getIndexFile().begin(), a.getIndexFile().end(), m_request.m_methodPathVersion[1]);
+            // spdlog::critical("*it = {}", *it);
+            // if (it != a.getIndexFile().end())
+            // {
+            //     bodySet(a.getRootPath() + *it);
+            // }
+            // else
+            // {
+            //     throw StatusCodeException(404, "Error: ifstream");
+            // }
+
+            bool found{false};
+            for (auto &b : a.getIndexFile())
+            {
+                spdlog::critical("actual path = {}", a.getRootPath() + b);
+                try
+                {
+                    bodySet(a.getRootPath() + b);
+                    found = true;
+                    break;
+                }
+                catch (const StatusCodeException &e)
+                {
+                    spdlog::warn(e.what());
+                }
+            }
+            if (!found)
+                throw StatusCodeException(404, "Error: ifstream");
+        }
     }
-    else if (std::filesystem::exists("./www" + path)) // i.e. /image.jpeg
-    {
-        path = "./www" + path;
-        bodySet(path);
-    }
-    else if (path.find('.' != std::string::npos)) // i.e. /upload
-    {
-        path = "./www" + m_request.m_methodPathVersion[1] + ".html";
-        bodySet(path);
-    }
+
+    // if (path == "/")
+    // {
+    //     path = "./www/index.html";
+    //     bodySet(path);
+    // }
+    // else if (std::filesystem::exists("./www" + path)) // i.e. /image.jpeg
+    // {
+    //     path = "./www" + path;
+    //     bodySet(path);
+    // }
+    // else if (path.find('.' != std::string::npos)) // i.e. /upload
+    // {
+    //     path = "./www" + m_request.m_methodPathVersion[1] + ".html";
+    //     bodySet(path);
+    // }
     m_statusCode = 200;
 }
 

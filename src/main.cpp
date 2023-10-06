@@ -89,7 +89,7 @@ void run(const Configuration &config)
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
-                    HttpResponse response{client->httpRequest};
+                    HttpResponse response{client->httpRequest, client->m_server.m_serverconfig};
                     response.responseHandle();
                     spdlog::critical(response);
 
