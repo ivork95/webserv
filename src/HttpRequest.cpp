@@ -193,6 +193,7 @@ void HttpRequest::parse(void)
 
     if (m_methodPathVersion[0] == "POST")
     {
+        // Hier moet ServerConfig._clientMaxBodySize gecheckt worden!
         if (m_contentLength > m_client_max_body_size)
             throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 

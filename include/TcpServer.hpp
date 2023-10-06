@@ -17,6 +17,7 @@
 
 #include "Client.hpp"
 #include "Socket.hpp"
+#include "ServerConfig.hpp"
 
 class TcpServer : public Socket
 {
@@ -25,11 +26,13 @@ public:
     {
     };
 
+    const ServerConfig &m_serverConfig;
+
     // default constructor
     TcpServer(void) = delete;
 
-    // port constructor
-    TcpServer(const char *port);
+    // serverConfig constructor
+    TcpServer(const ServerConfig &serverconfig);
 
     // copy constructor
     TcpServer(const TcpServer &source) = delete;

@@ -50,7 +50,7 @@ void run(const Configuration &config)
 {
     std::vector<TcpServer *> servers{};
     for (auto &serverConfig : config.serversConfig)
-        servers.push_back(new TcpServer{serverConfig.getPortNb().c_str()});
+        servers.push_back(new TcpServer{serverConfig});
 
     MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
     for (auto &server : servers)

@@ -155,6 +155,12 @@ void HttpResponse::getHandle(void)
 {
     std::string path{m_request.m_methodPathVersion[1]};
 
+    // 1. Loop through location blocks
+    // 2. Check match between path and location-path(whats the correct name?)
+    // 2a. If match -> loop through resources and set path equal to iteratable -> until its possible to return?
+
+    // Hier ergens moet LocationConfig._clientMaxBodySize gecheckt worden
+
     if (path == "/")
     {
         path = "./www/index.html";

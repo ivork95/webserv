@@ -1,7 +1,7 @@
 #include "TcpServer.hpp"
 
-// port constructor
-TcpServer::TcpServer(const char *port)
+// serverConfig constructor
+TcpServer::TcpServer(const ServerConfig &serverconfig) : m_serverConfig(serverconfig)
 {
     int yes{1}; // For setsockopt() SO_REUSEADDR, below
     int rv{};
@@ -13,7 +13,7 @@ TcpServer::TcpServer(const char *port)
     m_hints.ai_family = AF_UNSPEC;
     m_hints.ai_socktype = SOCK_STREAM;
     m_hints.ai_flags = AI_PASSIVE;
-    if ((rv = getaddrinfo(NULL, port, &m_hints, &ai)) != 0)
+    if ((rv = getaddrinfo(NULL, m_serverConfig.getPortNb().c_str(), &m_hints, &ai)) != 0)
     {
         std::cerr << "selectserver: " << gai_strerror(rv) << '\n';
         throw std::runtime_error("Error: getaddrinfo() failed\n");
