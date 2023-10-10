@@ -24,11 +24,12 @@ class Client : public Socket
 public:
     Timer *timer{};
     const TcpServer &m_server;
-    HttpRequest httpRequest{};
+    HttpRequest m_httprequest{};
     struct sockaddr_storage m_remoteaddr
     {
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
+
     // default constructor
     Client(void) = delete;
 

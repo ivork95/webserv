@@ -29,20 +29,20 @@ void handleConnectedClient(Client *client)
 
     try
     {
-        if (client->httpRequest.tokenize(buf, nbytes))
+        if (client->m_httprequest.tokenize(buf, nbytes))
             return;
 
         if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
             throw StatusCodeException(500, "Error: timerfd_settime()");
 
-        client->httpRequest.parse();
+        client->m_httprequest.parse();
     }
     catch (const StatusCodeException &e)
     {
-        client->httpRequest.m_statusCode = e.getStatusCode();
+        client->m_httprequest.m_statusCode = e.getStatusCode();
         spdlog::warn(e.what());
     }
-    spdlog::critical(client->httpRequest);
+    spdlog::critical(client->m_httprequest);
     client->isWriteReady = true;
 }
 
@@ -89,7 +89,7 @@ void run(const Configuration &config)
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
-                    HttpResponse response{client->httpRequest, client->m_server.m_serverconfig};
+                    HttpResponse response{client->m_httprequest, client->m_server.m_serverconfig};
                     response.responseHandle();
                     spdlog::critical(response);
 

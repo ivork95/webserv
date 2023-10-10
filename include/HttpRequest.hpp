@@ -15,6 +15,7 @@
 #include "HttpMessage.hpp"
 #include "StatusCodes.hpp"
 #include "Helper.hpp"
+#include "ServerConfig.hpp"
 
 class HttpRequest : public HttpMessage
 {
@@ -28,8 +29,12 @@ public:
     int m_statusCode{};
     std::string m_body{};
 
+    ServerConfig m_serverconfig;
+
     // constructor
     HttpRequest(void);
+
+    HttpRequest(const ServerConfig &serverconfig);
 
     // copy constructor
 

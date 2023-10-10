@@ -33,6 +33,9 @@ Client::Client(const TcpServer &server) : m_server(server)
     timer = new Timer{this};
 
     spdlog::debug("{0} constructor called", *this);
+
+    // heel goor
+    m_httprequest = HttpRequest{m_server.m_serverconfig};
 }
 
 // destructor

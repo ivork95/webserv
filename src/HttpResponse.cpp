@@ -94,7 +94,7 @@ std::string HttpResponse::resourceToStr(const std::string &path)
 {
     std::ifstream inf(path);
     if (!inf)
-        throw StatusCodeException(404, "Error: ifstream");
+        throw StatusCodeException(404, "Error: ifstream2");
     std::ostringstream sstr;
     sstr << inf.rdbuf();
     return sstr.str();
@@ -153,40 +153,22 @@ bool isDirectory(std::string path)
 
 void HttpResponse::getHandle(void)
 {
-    std::string path{m_request.m_methodPathVersion[1]};
-
-    // 1. Loop through location blocks
-    // 2. Check match between path and location-path(whats the correct name?)
-    // 2a. If match -> loop through resources and set path equal to iteratable -> until its possible to return?
-
-    // Hier ergens moet LocationConfig._clientMaxBodySize gecheckt worden
-
     spdlog::critical("m_serverconfig = {}", m_serverconfig);
-    for (auto &a : m_serverconfig.getLocationsConfig())
+    bool isLocationFound{false};
+    for (auto &a : m_serverconfig.getLocationsConfig()) // loop over location blocks
     {
-        spdlog::critical("_requestURI = {}", a.getRequestURI());
         if (m_request.m_methodPathVersion[1] == a.getRequestURI())
         {
-
-            // auto it = std::find(a.getIndexFile().begin(), a.getIndexFile().end(), m_request.m_methodPathVersion[1]);
-            // spdlog::critical("*it = {}", *it);
-            // if (it != a.getIndexFile().end())
-            // {
-            //     bodySet(a.getRootPath() + *it);
-            // }
-            // else
-            // {
-            //     throw StatusCodeException(404, "Error: ifstream");
-            // }
-
-            bool found{false};
-            for (auto &b : a.getIndexFile())
+            spdlog::critical("_requestURI = {}", a.getRequestURI());
+            isLocationFound = true;
+            bool isIndexFileFound{false};
+            for (auto &b : a.getIndexFile()) // loop over index files
             {
                 spdlog::critical("actual path = {}", a.getRootPath() + b);
                 try
                 {
                     bodySet(a.getRootPath() + b);
-                    found = true;
+                    isIndexFileFound = true;
                     break;
                 }
                 catch (const StatusCodeException &e)
@@ -194,26 +176,12 @@ void HttpResponse::getHandle(void)
                     spdlog::warn(e.what());
                 }
             }
-            if (!found)
-                throw StatusCodeException(404, "Error: ifstream");
+            if (!isIndexFileFound)
+                throw StatusCodeException(404, "Error: ifstream3");
         }
     }
-
-    // if (path == "/")
-    // {
-    //     path = "./www/index.html";
-    //     bodySet(path);
-    // }
-    // else if (std::filesystem::exists("./www" + path)) // i.e. /image.jpeg
-    // {
-    //     path = "./www" + path;
-    //     bodySet(path);
-    // }
-    // else if (path.find('.' != std::string::npos)) // i.e. /upload
-    // {
-    //     path = "./www" + m_request.m_methodPathVersion[1] + ".html";
-    //     bodySet(path);
-    // }
+    if (!isLocationFound) // there's no matching URI
+        throw StatusCodeException(404, "Error: ifstream4");
     m_statusCode = 200;
 }
 

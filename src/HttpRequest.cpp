@@ -3,7 +3,12 @@
 // constructor
 HttpRequest::HttpRequest(void)
 {
-    spdlog::debug("HttpRequest constructor called");
+    spdlog::debug("HttpRequest default constructor called");
+}
+
+HttpRequest::HttpRequest(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
+{
+    spdlog::debug("HttpRequest serverconfig constructor called");
 }
 
 // copy constructor
@@ -185,16 +190,45 @@ void HttpRequest::parse(void)
         throw StatusCodeException(400, "Error: not 3 elements in request-line");
     if (m_methodPathVersion[2] != "HTTP/1.1")
         throw StatusCodeException(505, "Warning: http version not allowed");
-    if ((m_methodPathVersion[0] != "GET") && (m_methodPathVersion[0] != "POST") && (m_methodPathVersion[0] != "DELETE"))
+    if ((m_methodPathVersion[0] != "GET") && (m_methodPathVersion[0] != "POST") && (m_methodPathVersion[0] != "DELETE")) // Maybe this can be removed
         throw StatusCodeException(405, "Warning: method not allowed");
 
     // Percentage decode URI string
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
+    LocationConfig locationconfig{}; // Maybe this should be class member
+    bool isLocationFound{false};
+    for (auto &location : m_serverconfig.getLocationsConfig()) // loop over location blocks
+    {
+        if (m_methodPathVersion[1] == location.getRequestURI()) // als location URI matched met request path
+        {
+            spdlog::critical("_requestURI = {}", location.getRequestURI());
+
+            locationconfig = location;
+            isLocationFound = true;
+            break;
+        }
+    }
+    if (!isLocationFound) // there's no matching URI
+    {
+        throw StatusCodeException(404, "Error: ifstream1");
+    }
+
+    bool isMethodFound{false};
+    for (auto &httpmethods : locationconfig.getHttpMethods())
+    {
+        if (m_methodPathVersion[0] == httpmethods)
+        {
+            isMethodFound = true;
+            break;
+        }
+    }
+    if (!isMethodFound)
+        throw StatusCodeException(405, "Warning: method not allowed");
+
     if (m_methodPathVersion[0] == "POST")
     {
-        // Hier moet ServerConfig._clientMaxBodySize gecheckt worden!
-        if (m_contentLength > m_client_max_body_size)
+        if (m_contentLength > std::atoi(locationconfig.getClientMaxBodySize().c_str()))
             throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
         boundaryCodeSet();
