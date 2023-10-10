@@ -138,4 +138,10 @@ class DuplicateRequestUriException : public InvalidDirectiveException {
 			: InvalidDirectiveException("Duplicate request URI: " + input) {}
 };
 
+class DuplicateServerNameException : public InvalidDirectiveException {
+	public:
+		DuplicateServerNameException(const std::string &input)
+			: InvalidDirectiveException("Duplicate server name: " + input) {}
+};
+
 #endif

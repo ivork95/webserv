@@ -272,15 +272,23 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
  * server_name localhost
  * server_name <server_name>
  * server_name <server_name> (<server_name> ...)
- * TODO multiple server names?
 */
 void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing server_name directive\n"; // ? debug
-	const std::string	serverName = tokens.at(*i).getWord();
-	if (!isValidServerName(serverName)) {
-		throw ServerNameException(serverName);
+	size_t						j = *i;
+	std::vector<std::string>	serverNames;
+	while (tokens.at(j).getType() == Token::WORD) {
+		const std::string	serverName = tokens.at(j).getWord();
+		if (!isValidServerName(serverName)) {
+			throw ServerNameException(serverName);
+		}
+		if (std::find(serverNames.begin(), serverNames.end(), serverName) != serverNames.end()) {
+			throw DuplicateServerNameException(serverName);
+		}
+		serverNames.push_back(serverName);
+		j++;
 	}
-	server->setServerName(serverName);
+	server->setServerName(serverNames);
 }
 
 /**
