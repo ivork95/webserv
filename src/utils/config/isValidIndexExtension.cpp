@@ -23,11 +23,14 @@ bool isPhpExtension(const std::string &str) {
 
 /**
  * TODO valid index extension? html, php, txt, ... ?
+ * ! eval sheet tries .bla extension
  */
 bool	isValidIndexExtension(const std::string &str) {
 	const std::string inputFileExtension = std::filesystem::path(str).extension(); // TODO what if .php.php ?
 	// std::cout << inputFileExtension << std::endl; // ? debug
 
+	if (inputFileExtension.size() > 0)
+		return true;
 	if (inputFileExtension != ".html" && inputFileExtension != ".php")
 		return false;
 	return true;
