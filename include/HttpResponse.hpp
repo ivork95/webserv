@@ -24,6 +24,8 @@ public:
     std::string m_body{};
     ServerConfig m_serverconfig;
 
+    std::string m_path{};
+
     // default constructor
     HttpResponse(void) = delete;
 

@@ -11,7 +11,7 @@
 #include "HttpResponse.hpp"
 
 #define BUFSIZE 256
-#define PARSTER true // change this
+#define PARSTER false // change this
 
 void handleConnectedClient(Client *client)
 {
@@ -91,6 +91,7 @@ void run(const Configuration &config)
                 {
                     HttpResponse response{client->m_httprequest, client->m_server.m_serverconfig};
                     response.responseHandle();
+                    response.bodySet(response.m_path);
                     spdlog::critical(response);
 
                     std::string s{response.responseBuild()};

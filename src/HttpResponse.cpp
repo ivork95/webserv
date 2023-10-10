@@ -47,6 +47,17 @@ std::string HttpResponse::percentEncode(const std::string &input) const
 // getters/setters
 void HttpResponse::bodySet(const std::string &path)
 {
+    for (const auto &errorPageConfig : m_request.m_serverconfig.getErrorPagesConfig())
+    {
+        for (const auto &errorCode : errorPageConfig.getErrorCodes())
+        {
+            if (std::atoi(errorCode.c_str()) == m_statusCode)
+            {
+                m_body = resourceToStr(errorPageConfig.getUriPath());
+                return;
+            }
+        }
+    }
     m_body = resourceToStr(path);
 }
 
@@ -154,34 +165,30 @@ bool isDirectory(std::string path)
 void HttpResponse::getHandle(void)
 {
     spdlog::critical("m_serverconfig = {}", m_serverconfig);
-    bool isLocationFound{false};
-    for (auto &a : m_serverconfig.getLocationsConfig()) // loop over location blocks
+
+    if (m_request.m_methodPathVersion[1] == m_request.m_locationconfig.getRequestURI())
     {
-        if (m_request.m_methodPathVersion[1] == a.getRequestURI())
+        spdlog::critical("_requestURI = {}", m_request.m_locationconfig.getRequestURI());
+        bool isIndexFileFound{false};
+        for (auto &b : m_request.m_locationconfig.getIndexFile()) // loop over index files
         {
-            spdlog::critical("_requestURI = {}", a.getRequestURI());
-            isLocationFound = true;
-            bool isIndexFileFound{false};
-            for (auto &b : a.getIndexFile()) // loop over index files
+            spdlog::critical("actual path = {}", m_request.m_locationconfig.getRootPath() + b);
+            try
             {
-                spdlog::critical("actual path = {}", a.getRootPath() + b);
-                try
-                {
-                    bodySet(a.getRootPath() + b);
-                    isIndexFileFound = true;
-                    break;
-                }
-                catch (const StatusCodeException &e)
-                {
-                    spdlog::warn(e.what());
-                }
+                bodySet(m_request.m_locationconfig.getRootPath() + b);
+                m_path = m_request.m_locationconfig.getRootPath() + b;
+                isIndexFileFound = true;
+                break;
             }
-            if (!isIndexFileFound)
-                throw StatusCodeException(404, "Error: ifstream3");
+            catch (const StatusCodeException &e)
+            {
+                m_path = m_request.m_locationconfig.getRootPath() + b;
+                spdlog::warn(e.what());
+            }
         }
+        if (!isIndexFileFound)
+            throw StatusCodeException(404, "Error: ifstream3");
     }
-    if (!isLocationFound) // there's no matching URI
-        throw StatusCodeException(404, "Error: ifstream4");
     m_statusCode = 200;
 }
 

@@ -31,6 +31,8 @@ public:
 
     ServerConfig m_serverconfig;
 
+    LocationConfig m_locationconfig{};
+
     // constructor
     HttpRequest(void);
 

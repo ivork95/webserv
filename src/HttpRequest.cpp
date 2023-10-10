@@ -196,7 +196,6 @@ void HttpRequest::parse(void)
     // Percentage decode URI string
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
-    LocationConfig locationconfig{}; // Maybe this should be class member
     bool isLocationFound{false};
     for (auto &location : m_serverconfig.getLocationsConfig()) // loop over location blocks
     {
@@ -204,7 +203,7 @@ void HttpRequest::parse(void)
         {
             spdlog::critical("_requestURI = {}", location.getRequestURI());
 
-            locationconfig = location;
+            m_locationconfig = location;
             isLocationFound = true;
             break;
         }
@@ -215,7 +214,7 @@ void HttpRequest::parse(void)
     }
 
     bool isMethodFound{false};
-    for (auto &httpmethods : locationconfig.getHttpMethods())
+    for (auto &httpmethods : m_locationconfig.getHttpMethods())
     {
         if (m_methodPathVersion[0] == httpmethods)
         {
@@ -228,9 +227,8 @@ void HttpRequest::parse(void)
 
     if (m_methodPathVersion[0] == "POST")
     {
-		// this is now an int by default
-        // if (m_contentLength > std::atoi(locationconfig.getClientMaxBodySize().c_str()))
-        //     throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+        if (m_contentLength > m_locationconfig.getClientMaxBodySize())
+            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
         boundaryCodeSet();
         generalHeadersSet();
