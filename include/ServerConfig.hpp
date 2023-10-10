@@ -19,7 +19,7 @@ class ServerConfig {
 		std::string						_serverName;
 		bool							_hasServerName{false};
 
-		std::string						_clientMaxBodySize;
+		int								_clientMaxBodySize;
 		bool							_hasClientMaxBodySize{false};
 		
 		std::vector<ErrorPageConfig>	_errorPagesConfig;
@@ -40,7 +40,7 @@ class ServerConfig {
 		
 		const std::string					&getPortNb(void) const;
 		const std::string					&getServerName(void) const;
-		const std::string					&getClientMaxBodySize(void) const;
+		const int							&getClientMaxBodySize(void) const;
 		const std::vector<ErrorPageConfig>	&getErrorPagesConfig(void) const;
 		const std::vector<LocationConfig>	&getLocationsConfig(void) const;
 		const std::string					&getRawData(void) const;
@@ -50,7 +50,7 @@ class ServerConfig {
 
 		void								setPortNb(const std::string &portNb);
 		void								setServerName(const std::string &serverName);
-		void								setClientMaxBodySize(const std::string &clientMaxBodySize);
+		void								setClientMaxBodySize(const int &clientMaxBodySize);
 		void								setErrorPagesConfig(const ErrorPageConfig &errorPagesConfig);
 		void								setLocationsConfig(const LocationConfig &locationsConfig);
 		void								setRawData(const std::string &rawData);

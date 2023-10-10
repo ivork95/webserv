@@ -228,8 +228,9 @@ void HttpRequest::parse(void)
 
     if (m_methodPathVersion[0] == "POST")
     {
-        if (m_contentLength > std::atoi(locationconfig.getClientMaxBodySize().c_str()))
-            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+		// this is now an int by default
+        // if (m_contentLength > std::atoi(locationconfig.getClientMaxBodySize().c_str()))
+        //     throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
         boundaryCodeSet();
         generalHeadersSet();

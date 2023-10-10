@@ -11,7 +11,7 @@
 #include "HttpResponse.hpp"
 
 #define BUFSIZE 256
-#define PARSTER false // change this
+#define PARSTER true // change this
 
 void handleConnectedClient(Client *client)
 {

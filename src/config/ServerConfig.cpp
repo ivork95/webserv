@@ -17,13 +17,13 @@
  *      limit_except: -;
 */
 ServerConfig::ServerConfig(void) : \
-	_index(0), _portNb("N/A"), _serverName("N/A"), _clientMaxBodySize("N/A"), \
+	_index(0), _portNb("N/A"), _serverName("N/A"), _clientMaxBodySize{}, \
 	_errorPagesConfig(), _locationsConfig(), _rawData("N/A") {
 	// std::cout << "ServerConfig default constructor called\n";
 }
 
 ServerConfig::ServerConfig(unsigned int index, std::string rawData) : \
-	_index(index), _portNb("N/A"), _serverName("N/A"), _clientMaxBodySize("N/A"), \
+	_index(index), _portNb("N/A"), _serverName("N/A"), _clientMaxBodySize{}, \
 	_errorPagesConfig(), _locationsConfig(), _rawData(rawData) {
 	// std::cout << "ServerConfig parametric constructor called\n";
 }
@@ -47,7 +47,7 @@ const std::string &ServerConfig::getServerName(void) const {
 	return (_serverName);
 }
 
-const std::string &ServerConfig::getClientMaxBodySize(void) const {
+const int &ServerConfig::getClientMaxBodySize(void) const {
 	return (_clientMaxBodySize);
 }
 
@@ -85,7 +85,7 @@ void ServerConfig::setServerName(const std::string &serverName) {
 	_hasServerName = true;
 }
 
-void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize) {
+void ServerConfig::setClientMaxBodySize(const int &clientMaxBodySize) {
 	if (_hasClientMaxBodySize)
 		throw AlreadySetException("client max body size");
 	_clientMaxBodySize = clientMaxBodySize;
@@ -183,7 +183,7 @@ void	ServerConfig::checkMissingDirective(void) {
 	}
 	if (!hasClientMaxBodySize()) {
 		// std::cout << "No client max body size (setting to default)\n"; // ? debug
-		setClientMaxBodySize("1000000");
+		setClientMaxBodySize(1000000);
 	}
 	if (!hasErrorPagesConfig()) {
 		// default value: -
