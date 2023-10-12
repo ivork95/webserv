@@ -10,8 +10,7 @@ private:
     int m_statusCode{};
 
 public:
-    StatusCodeException(int statusCode, const std::string &error) : std::runtime_error(error.c_str()), m_statusCode(statusCode){}; // std::runtime_error will handle the string
-    // no need to override what() since we can just use std::runtime_error::what()
+    StatusCodeException(int statusCode, const std::string &error) : std::runtime_error(error.c_str()), m_statusCode(statusCode){};
 
     int getStatusCode(void) const { return m_statusCode; }
 };

@@ -22,13 +22,13 @@ class Timer;
 class Client : public Socket
 {
 public:
-    Timer *timer{};
     const TcpServer &m_server;
-    HttpRequest m_httprequest{};
+    HttpRequest m_request{};
     struct sockaddr_storage m_remoteaddr
     {
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
+    Timer *timer{};
 
     // default constructor
     Client(void) = delete;

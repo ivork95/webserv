@@ -29,20 +29,29 @@ void handleConnectedClient(Client *client)
 
     try
     {
-        if (client->m_httprequest.tokenize(buf, nbytes))
+        if (client->m_request.tokenize(buf, nbytes))
             return;
 
         if (timerfd_settime(client->timer->m_socketFd, 0, &client->timer->m_spec, NULL) == -1)
             throw StatusCodeException(500, "Error: timerfd_settime()");
 
-        client->m_httprequest.parse();
+        client->m_request.parse();
     }
     catch (const StatusCodeException &e)
     {
-        client->m_httprequest.m_statusCode = e.getStatusCode();
+        client->m_request.m_response.m_statusCode = e.getStatusCode();
         spdlog::warn(e.what());
+
+        for (const auto &errorPageConfig : client->m_request.m_serverconfig.getErrorPagesConfig())
+        {
+            for (const auto &errorCode : errorPageConfig.getErrorCodes())
+            {
+                if (std::atoi(errorCode.c_str()) == client->m_request.m_response.m_statusCode)
+                    client->m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getUriPath());
+            }
+        }
     }
-    spdlog::critical(client->m_httprequest);
+    spdlog::critical(client->m_request);
     client->isWriteReady = true;
 }
 
@@ -89,12 +98,12 @@ void run(const Configuration &config)
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
-                    HttpResponse response{client->m_httprequest, client->m_server.m_serverconfig};
-                    response.responseHandle();
-                    response.bodySet(response.m_path);
-                    spdlog::critical(response);
+                    // HttpResponse response{client->m_request, client->m_server.m_serverconfig};
+                    // response.responseHandle();
+                    // response.bodySet(response.m_path);
+                    // spdlog::critical(response);
 
-                    std::string s{response.responseBuild()};
+                    std::string s{client->m_request.m_response.responseBuild()};
                     send(client->m_socketFd, s.data(), s.length(), 0);
                     delete (client);
                 }

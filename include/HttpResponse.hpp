@@ -1,36 +1,35 @@
 #ifndef HTTPRESPONSE_HPP
 #define HTTPRESPONSE_HPP
 
-#include <string>
 #include <map>
+#include <string>
 #include <fstream>
 #include <sstream>
+#include <iostream>
+#include <iomanip> // For std::setw
+#include <filesystem>
+#include <algorithm> // For std::max
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
-#include <filesystem>
 
 #include "StatusCodes.hpp"
-#include "HttpRequest.hpp"
 #include "ServerConfig.hpp"
+#include "Helper.hpp"
 
 class HttpResponse
 {
 public:
-    const HttpRequest &m_request;
-    std::map<std::string, std::string> m_headers{};
-    std::string m_statusLine{};
-
     int m_statusCode{};
-    std::string m_body{};
-    ServerConfig m_serverconfig;
 
+    std::string m_statusLine{};
     std::string m_path{};
+    std::map<std::string, std::string> m_headers{};
+    std::string m_body{};
 
     // default constructor
-    HttpResponse(void) = delete;
+    HttpResponse(void);
 
     // request constrcuctor
-    HttpResponse(const HttpRequest &request, const ServerConfig &serverconfig);
 
     // copy constructor
 
@@ -48,14 +47,10 @@ public:
 
     // methods
     std::string responseBuild(void);
-    int targetRead(const std::string &requestTarget);
-    std::string resourceToStr(const std::string &path);
     void getHandle(void);
     void postHandle(void);
     void deleteHandle(void);
     void responseHandle(void);
-    void bodyToDisk(const std::string &path);
-    std::string percentEncode(const std::string &input) const;
 
     std::map<int, std::string> m_statusCodes{
         {100, "HTTP/1.1 100 Continue"},

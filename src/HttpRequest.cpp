@@ -26,7 +26,7 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
 {
     int i{};
 
-    out << "HttpRequest (\n";
+    out << "HttpRequest {\n";
 
     for (auto item : httprequest.m_methodPathVersion)
     {
@@ -38,14 +38,16 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
     out << "m_boundaryCode = |" << httprequest.m_boundaryCode << "|\n";
     out << "m_fileName = |" << httprequest.m_fileName << "|\n";
     out << "m_statusCode = |" << httprequest.m_statusCode << "|\n";
-    out << "m_generalHeaders = {\n";
+    out << "m_generalHeaders = [\n";
     for (const auto &elem : httprequest.m_generalHeaders)
     {
         out << "[" << i << "] = (" << elem.first << ", " << elem.second << ")\n";
         i++;
     }
+    out << "]\n";
     out << "}\n";
-    out << ")";
+
+    out << "m_response = " << httprequest.m_response;
 
     return out;
 }
@@ -128,6 +130,14 @@ void HttpRequest::bodySet(void)
     m_body = bodyParse(m_boundaryCode);
 }
 
+void HttpRequest::bodyToDisk(const std::string &path)
+{
+    std::ofstream outf{path};
+    if (!outf)
+        throw StatusCodeException(400, "Error: ofstream");
+    outf << m_body;
+}
+
 std::string HttpRequest::fileNameParse(const std::map<std::string, std::string> &generalHeaders)
 {
     auto contentDispositionIt = generalHeaders.find("Content-Disposition");
@@ -196,13 +206,12 @@ void HttpRequest::parse(void)
     // Percentage decode URI string
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
+    // Loops over location blocks and checks for match between location block and request path
     bool isLocationFound{false};
-    for (auto &location : m_serverconfig.getLocationsConfig()) // loop over location blocks
+    for (const auto &location : m_serverconfig.getLocationsConfig())
     {
-        if (m_methodPathVersion[1] == location.getRequestURI()) // als location URI matched met request path
+        if (m_methodPathVersion[1] == location.getRequestURI())
         {
-            spdlog::critical("_requestURI = {}", location.getRequestURI());
-
             m_locationconfig = location;
             isLocationFound = true;
             break;
@@ -210,20 +219,27 @@ void HttpRequest::parse(void)
     }
     if (!isLocationFound) // there's no matching URI
     {
-        throw StatusCodeException(404, "Error: ifstream1");
+        throw StatusCodeException(404, "Error: no matching location/path found");
     }
 
-    bool isMethodFound{false};
-    for (auto &httpmethods : m_locationconfig.getHttpMethods())
+    // For a certain location block, check if the request method is allowed
+    auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
+    if (it == m_locationconfig.getHttpMethods().end())
+        throw StatusCodeException(405, "Warning: method not allowed");
+
+    // For a certain location block, loops over index files, and checks if one exists
+    bool isIndexFileFound{false};
+    for (const auto &index : m_locationconfig.getIndexFile())
     {
-        if (m_methodPathVersion[0] == httpmethods)
+        if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
         {
-            isMethodFound = true;
+            m_response.m_path = m_locationconfig.getRootPath() + index;
+            isIndexFileFound = true;
             break;
         }
     }
-    if (!isMethodFound)
-        throw StatusCodeException(405, "Warning: method not allowed");
+    if (!isIndexFileFound)
+        throw StatusCodeException(404, "Error: ifstream3");
 
     if (m_methodPathVersion[0] == "POST")
     {
@@ -235,4 +251,7 @@ void HttpRequest::parse(void)
         fileNameSet();
         bodySet();
     }
+
+    m_response.bodySet(m_response.m_path);
+    m_response.m_statusCode = 200;
 }

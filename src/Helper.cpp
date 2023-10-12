@@ -25,8 +25,7 @@ std::string Helper::decodePercentEncoding(const std::string &encoded)
         else
             decoded += encoded[i];
     }
-    spdlog::critical("encoded = {}", encoded);
-    spdlog::critical("decoded = {}", decoded);
+
     return decoded;
 }
 
@@ -45,4 +44,30 @@ std::vector<std::string> Helper::split(const std::string &str)
         methodPathVersion.push_back(keyword);
 
     return methodPathVersion;
+}
+
+std::string Helper::fileToStr(const std::string &path)
+{
+    std::ifstream inf(path);
+
+    if (!inf)
+        throw StatusCodeException(404, "Error: ifstream2");
+    std::ostringstream sstr;
+    sstr << inf.rdbuf();
+    return sstr.str();
+}
+
+std::string Helper::percentEncode(const std::string &input)
+{
+    std::ostringstream encoded;
+
+    for (char c : input)
+    {
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') // Unreserved characters in RFC 3986
+            encoded << c;
+        else
+            encoded << '%' << std::uppercase << std::hex << ((c >> 4) & 0x0F) << (c & 0x0F);
+    }
+
+    return encoded.str();
 }
