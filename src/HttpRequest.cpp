@@ -207,7 +207,7 @@ void HttpRequest::parse(void)
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
     // Nasty solution to redirect + get back upload
-    if (m_methodPathVersion[1].ends_with("jpg"))
+    if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
     {
         m_response.bodySet("./www" + m_methodPathVersion[1]);
         m_response.m_statusCode = 200;
@@ -239,6 +239,7 @@ void HttpRequest::parse(void)
     bool isIndexFileFound{false};
     for (const auto &index : m_locationconfig.getIndexFile())
     {
+        spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index);
         if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
         {
             m_response.m_path = m_locationconfig.getRootPath() + index;
@@ -247,7 +248,7 @@ void HttpRequest::parse(void)
         }
     }
     if (!isIndexFileFound)
-        throw StatusCodeException(404, "Error: ifstream3");
+        throw StatusCodeException(404, "Error: no matching index file found");
 
     if (m_methodPathVersion[0] == "POST")
     {
