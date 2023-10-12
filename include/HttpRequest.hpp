@@ -23,14 +23,12 @@ class HttpResponse;
 
 class HttpRequest : public HttpMessage
 {
-    friend class HttpResponse;
-
 public:
     ServerConfig m_serverconfig{};
     LocationConfig m_locationconfig{};
 
     // request
-    std::vector<std::string> m_methodPathVersion{3};
+    std::vector<std::string> m_methodPathVersion{3, ""};
     std::map<std::string, std::string> m_generalHeaders{};
     std::string m_boundaryCode{};
     std::string m_fileName{};

@@ -206,6 +206,14 @@ void HttpRequest::parse(void)
     // Percentage decode URI string
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
+    // Nasty solution to redirect + get back upload
+    if (m_methodPathVersion[1].ends_with("jpg"))
+    {
+        m_response.bodySet("./www" + m_methodPathVersion[1]);
+        m_response.m_statusCode = 200;
+        return;
+    }
+
     // Loops over location blocks and checks for match between location block and request path
     bool isLocationFound{false};
     for (const auto &location : m_serverconfig.getLocationsConfig())
@@ -250,6 +258,14 @@ void HttpRequest::parse(void)
         generalHeadersSet();
         fileNameSet();
         bodySet();
+
+        // Needs to be moved - Upload Post handeling
+        if (m_fileName.empty())
+            throw StatusCodeException(400, "Error: no fileName");
+        bodyToDisk("./www/" + m_fileName);
+        m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
+        m_response.m_statusCode = 303;
+        return;
     }
 
     m_response.bodySet(m_response.m_path);

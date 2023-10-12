@@ -98,11 +98,6 @@ void run(const Configuration &config)
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
-                    // HttpResponse response{client->m_request, client->m_server.m_serverconfig};
-                    // response.responseHandle();
-                    // response.bodySet(response.m_path);
-                    // spdlog::critical(response);
-
                     std::string s{client->m_request.m_response.responseBuild()};
                     send(client->m_socketFd, s.data(), s.length(), 0);
                     delete (client);

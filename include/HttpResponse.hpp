@@ -6,9 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <iomanip> // For std::setw
 #include <filesystem>
-#include <algorithm> // For std::max
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
