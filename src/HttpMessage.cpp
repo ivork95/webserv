@@ -43,6 +43,10 @@ void HttpMessage::requestHeadersSet(void)
     std::string fieldLines = m_rawMessage.substr(requestLineEndPos + 2, (fieldLinesEndPos + 4) - (requestLineEndPos + 2));
 
     m_requestHeaders = fieldLinesToHeaders(fieldLines);
+	for (auto header: m_requestHeaders) {
+		spdlog::critical("header = {}", header.first);
+		spdlog::critical("header = {}", header.second);
+	}
 }
 
 void HttpMessage::contentLengthSet(void)

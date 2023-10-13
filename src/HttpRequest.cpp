@@ -155,7 +155,10 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
 
     m_rawMessage.append(buf, buf + nbytes);
 
+    spdlog::info("[before] m_rawMessage = \n|{}|", m_rawMessage);
+
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
+	spdlog::critical("fieldLinesEndPos = {}", fieldLinesEndPos);
     if (fieldLinesEndPos == std::string::npos)
     {
         spdlog::warn("message incomplete [...]");
@@ -176,9 +179,22 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
         }
         spdlog::info("Content-Length reached!");
     }
+	// Chunked requests
+	else if (m_requestHeaders.contains("Transfer-Encoding"))
+    {
+		if (!m_isChunked)
+			m_isChunked = true;
+		size_t chunkEndPos = m_rawMessage.find("\r\n0\r\n\r\n");
+		spdlog::critical("chunkEndPos = {}", chunkEndPos);
+		if (chunkEndPos == std::string::npos) {
+			spdlog::warn("Chunk EOF not reached [...]");
+            return 3;
+		}
+        spdlog::info("Chunk EOF reached!");
+    }
 
     spdlog::info("message complete!");
-    // spdlog::info("m_rawMessage = \n|{}|", m_rawMessage);
+    spdlog::info("[after] m_rawMessage = \n|{}|", m_rawMessage);
 
     return 0;
 }
@@ -186,6 +202,7 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
 void HttpRequest::parse(void)
 {
     methodPathVersionSet();
+	spdlog::critical("tokenized request = {}", *this);
     if (m_methodPathVersion.size() != 3)
         throw StatusCodeException(400, "Error: not 3 elements in request-line");
     if (m_methodPathVersion[2] != "HTTP/1.1")
@@ -212,6 +229,7 @@ void HttpRequest::parse(void)
     {
         throw StatusCodeException(404, "Error: ifstream1");
     }
+	spdlog::critical("_methodPathVersion[1] = {}", m_methodPathVersion[1]);
 
     bool isMethodFound{false};
     for (auto &httpmethods : m_locationconfig.getHttpMethods())
@@ -227,12 +245,27 @@ void HttpRequest::parse(void)
 
     if (m_methodPathVersion[0] == "POST")
     {
-        if (m_contentLength > m_locationconfig.getClientMaxBodySize())
-            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+		// Parse chunked request
+		if (m_isChunked) {
 
-        boundaryCodeSet();
-        generalHeadersSet();
-        fileNameSet();
-        bodySet();
+			spdlog::critical("Chunky boi found!");
+
+			// Check for "chunked" directive
+			if (m_requestHeaders["Tranfer-Encoding"] != "chunked")
+				throw StatusCodeException(400, "Warning: Invalid TE form");
+
+			// Compare length with chunck
+
+			return ;
+
+		} else {
+			if (m_contentLength > m_locationconfig.getClientMaxBodySize())
+				throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+
+			boundaryCodeSet();
+			generalHeadersSet();
+			fileNameSet();
+			bodySet();
+		}
     }
 }

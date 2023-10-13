@@ -25,6 +25,9 @@ public:
     int m_client_max_body_size{999999};
     std::string m_boundaryCode{};
     std::string m_fileName{};
+	
+	// Chunked request
+	bool m_isChunked{false};
 
     int m_statusCode{};
     std::string m_body{};
