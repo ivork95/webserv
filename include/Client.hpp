@@ -28,7 +28,7 @@ public:
     {
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
-    Timer *timer{};
+    Timer *m_timer{};
 
     // default constructor
     Client(void) = delete;

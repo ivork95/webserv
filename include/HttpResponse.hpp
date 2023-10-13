@@ -24,13 +24,10 @@ public:
     std::map<std::string, std::string> m_headers{};
     std::string m_body{};
 
-    char *m_buf{};
+    std::string m_buf{};
     int m_len{};
     int m_total{0};
     int m_bytesleft{};
-    int m_n{};
-
-    std::string m_s{};
 
     // default constructor
     HttpResponse(void);
