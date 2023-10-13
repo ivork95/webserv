@@ -98,9 +98,67 @@ void run(const Configuration &config)
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
-                    std::string s{client->m_request.m_response.responseBuild()};
-                    send(client->m_socketFd, s.data(), s.length(), 0);
-                    delete (client);
+                    if (client->m_request.m_response.m_s.empty())
+                    {
+                        spdlog::critical("Never sent anything");
+
+                        client->m_request.m_response.m_s = client->m_request.m_response.responseBuild();
+                        client->m_request.m_response.m_len = client->m_request.m_response.m_s.size();
+                        client->m_request.m_response.m_bytesleft = client->m_request.m_response.m_len;
+                        spdlog::critical("s = {}", client->m_request.m_response.m_s);
+                        spdlog::critical("len = {}", client->m_request.m_response.m_len);
+                        spdlog::critical("bytesLeft = {}", client->m_request.m_response.m_bytesleft);
+                    }
+
+                    if (client->m_request.m_response.m_total < (client->m_request.m_response.m_len))
+                    {
+                        spdlog::critical("Trying to send");
+
+                        client->m_request.m_response.m_n = send(client->m_socketFd, client->m_request.m_response.m_s.data() + client->m_request.m_response.m_total, client->m_request.m_response.m_bytesleft, 0);
+                        spdlog::critical("m_n = {}", client->m_request.m_response.m_n);
+
+                        client->m_request.m_response.m_total += client->m_request.m_response.m_n;
+                        spdlog::critical("total = {}", client->m_request.m_response.m_total);
+
+                        client->m_request.m_response.m_bytesleft -= client->m_request.m_response.m_n;
+                        spdlog::critical("bytesLeft = {}", client->m_request.m_response.m_bytesleft);
+                    }
+
+                    if (!client->m_request.m_response.m_bytesleft)
+                    {
+                        delete (client);
+                    }
+
+                    // if (!client->m_request.m_response.m_buf) // At the start of proccessing a send
+                    // {
+                    //     std::string s{client->m_request.m_response.responseBuild()};
+                    //     client->m_request.m_response.m_buf = s.data();
+                    //     (client->m_request.m_response.m_len) = strlen(client->m_request.m_response.m_buf);
+                    //     client->m_request.m_response.m_bytesleft = (client->m_request.m_response.m_len);
+                    // }
+                    // if (client->m_request.m_response.m_total < (client->m_request.m_response.m_len))
+                    // {
+                    //     client->m_request.m_response.m_n = send(client->m_socketFd, client->m_request.m_response.m_buf + client->m_request.m_response.m_total, client->m_request.m_response.m_bytesleft, 0);
+                    //     if (client->m_request.m_response.m_n <= 0) // error handeling
+                    //         ;
+                    //     client->m_request.m_response.m_total += client->m_request.m_response.m_n;
+                    //     client->m_request.m_response.m_bytesleft -= client->m_request.m_response.m_n;
+                    //     continue;
+                    // }
+                    // (client->m_request.m_response.m_len) = client->m_request.m_response.m_total;
+                    // if (client->m_request.m_response.m_n <= 0) // error handeling
+                    //     ;
+                    // delete (client);
+
+                    // int n_bytes = send(client->m_socketFd, s.data(), s.length(), 0);
+                    // if (nbytes <= 0)
+                    // {
+                    //     if (nbytes == 0) // Other end has shut down the connection gracefully,
+                    //         spdlog::info("socket {} hung up", *client);
+                    //     else if (nbytes < 0) // Got error or connection closed by client
+                    //         spdlog::critical("Error: send() failed");
+                    // }
+                    // delete (client);
                 }
             }
         }

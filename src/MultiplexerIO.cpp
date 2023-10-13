@@ -1,8 +1,6 @@
 #include "MultiplexerIO.hpp"
 #include "HttpResponse.hpp"
 
-#define BUFSIZE 256
-
 // default constructor
 MultiplexerIO::MultiplexerIO(void)
 {
