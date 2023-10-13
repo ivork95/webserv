@@ -23,6 +23,7 @@ void handleConnectedClient(Client *client)
             spdlog::info("socket {} hung up", *client);
         else if (nbytes < 0) // Got error or connection closed by client
             spdlog::critical("Error: recv() failed");
+        delete client->m_timer;
         delete client;
         return;
     }
@@ -46,13 +47,16 @@ void handleConnectedClient(Client *client)
         {
             for (const auto &errorCode : errorPageConfig.getErrorCodes())
             {
-                if (std::atoi(errorCode.c_str()) == client->m_request.m_response.m_statusCode)
+                if (std::atoi(errorCode.c_str()) == client->m_request.m_response.m_statusCode) // can we do this in parsing?
                     client->m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getUriPath());
             }
         }
     }
     spdlog::critical(client->m_request);
-    client->isWriteReady = true;
+
+    delete client->m_timer;
+    MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
+    multiplexerio.modifyEpollEvents(client, EPOLLOUT);
 }
 
 void run(const Configuration &config)
@@ -78,65 +82,52 @@ void run(const Configuration &config)
         {
             Socket *ePollDataPtr{static_cast<Socket *>(multiplexerio.m_events.at(i).data.ptr)};
 
-            if ((multiplexerio.m_events.at(i).events & EPOLLIN) && ePollDataPtr->isReadReady) // If someone's ready to read
+            if (multiplexerio.m_events.at(i).events & EPOLLIN) // If someone's ready to read
             {
                 if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr)) // If listener is ready to read, handle new connection
                 {
                     Client *client = new Client{*server};
-                    multiplexerio.addSocketToEpollFd(client, EPOLLIN | EPOLLOUT | EPOLLRDHUP);
+                    multiplexerio.addSocketToEpollFd(client, EPOLLIN);
                     multiplexerio.addSocketToEpollFd(client->m_timer, EPOLLIN);
                 }
                 else if (Timer *m_timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
                     spdlog::warn("Timeout expired. Closing: {}", *(m_timer->m_client));
                     delete m_timer->m_client;
+                    delete m_timer;
                 }
                 else if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
                     handleConnectedClient(client);
             }
-            else if ((multiplexerio.m_events.at(i).events & EPOLLOUT) && ePollDataPtr->isWriteReady) // If someone's ready to write
+            if (multiplexerio.m_events.at(i).events & EPOLLOUT) // If someone's ready to write
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
                     if (client->m_request.m_response.m_buf.empty())
                     {
-                        spdlog::critical("Never sent anything");
-
                         client->m_request.m_response.m_buf = client->m_request.m_response.responseBuild();
                         client->m_request.m_response.m_len = client->m_request.m_response.m_buf.size();
                         client->m_request.m_response.m_bytesleft = client->m_request.m_response.m_len;
-                        spdlog::critical("buf = {}", client->m_request.m_response.m_buf);
-                        spdlog::critical("len = {}", client->m_request.m_response.m_len);
-                        spdlog::critical("bytesLeft = {}", client->m_request.m_response.m_bytesleft);
                     }
 
                     if (client->m_request.m_response.m_total < client->m_request.m_response.m_len)
                     {
-                        spdlog::critical("Trying to send");
-
                         int nbytes = send(client->m_socketFd, client->m_request.m_response.m_buf.data() + client->m_request.m_response.m_total, client->m_request.m_response.m_bytesleft, 0);
-                        spdlog::critical("nbytes = {}", nbytes);
-
                         if (nbytes <= 0)
                         {
                             if (nbytes == 0) // Other end has shut down the connection gracefully,
                                 spdlog::info("socket {} hung up", *client);
                             else if (nbytes < 0) // Got error or connection closed by client
                                 spdlog::critical("Error: send() failed");
-                            delete (client);
+                            delete client;
                             continue;
                         }
                         client->m_request.m_response.m_total += nbytes;
-                        spdlog::critical("total = {}", client->m_request.m_response.m_total);
-
                         client->m_request.m_response.m_bytesleft -= nbytes;
-                        spdlog::critical("bytesLeft = {}", client->m_request.m_response.m_bytesleft);
                     }
 
                     if (!client->m_request.m_response.m_bytesleft)
-                    {
-                        delete (client);
-                    }
+                        delete client;
                 }
             }
         }

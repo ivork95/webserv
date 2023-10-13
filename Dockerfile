@@ -2,6 +2,7 @@ FROM ubuntu:latest
 
 RUN apt-get update && \
     apt-get install vim \
+    siege \
     cmake \
     curl \
     telnet \

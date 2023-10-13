@@ -3,7 +3,7 @@
 // client constructor
 Timer::Timer(Client *client) : m_client(client)
 {
-    m_spec.it_value.tv_sec = 5;
+    m_spec.it_value.tv_sec = 300;
     m_spec.it_value.tv_nsec = 0;
     m_spec.it_interval.tv_sec = 0;
     m_spec.it_interval.tv_nsec = 0;

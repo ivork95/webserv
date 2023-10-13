@@ -44,7 +44,6 @@ Client::~Client(void)
     spdlog::debug("{0} destructor called", *this);
 
     close(m_socketFd);
-    delete m_timer;
 }
 
 // outstream operator overload

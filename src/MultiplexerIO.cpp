@@ -50,3 +50,15 @@ void MultiplexerIO::addSocketToEpollFd(Socket *ptr, int events)
         throw std::runtime_error("Error: epoll_ctl() failed\n");
     }
 }
+
+void MultiplexerIO::modifyEpollEvents(Socket *ptr, int events)
+{
+    struct epoll_event ev
+    {
+    };
+    ev.data.ptr = ptr;
+    ev.events = events;
+
+    if (epoll_ctl(m_epollfd, EPOLL_CTL_MOD, ptr->m_socketFd, &ev) == -1)
+        throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+}
