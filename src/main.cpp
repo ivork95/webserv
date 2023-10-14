@@ -80,9 +80,9 @@ void run(const Configuration &config)
 
         for (int i{0}; i < epollCount; i++) // Run through the existing connections looking for data to read
         {
-            Socket *ePollDataPtr{static_cast<Socket *>(multiplexerio.m_events.at(i).data.ptr)};
+            Socket *ePollDataPtr{static_cast<Socket *>(multiplexerio.m_events[i].data.ptr)};
 
-            if (multiplexerio.m_events.at(i).events & EPOLLIN) // If someone's ready to read
+            if (multiplexerio.m_events[i].events & EPOLLIN) // If someone's ready to read
             {
                 if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr)) // If listener is ready to read, handle new connection
                 {
@@ -99,7 +99,7 @@ void run(const Configuration &config)
                 else if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
                     handleConnectedClient(client);
             }
-            if (multiplexerio.m_events.at(i).events & EPOLLOUT) // If someone's ready to write
+            if (multiplexerio.m_events[i].events & EPOLLOUT) // If someone's ready to write
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
