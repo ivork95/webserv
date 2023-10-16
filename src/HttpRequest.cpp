@@ -247,18 +247,18 @@ void HttpRequest::parse(void)
 		// Parse chunked request
 		if (m_isChunked) {
 
-			spdlog::critical("TE found!");
+			// spdlog::critical("TE found!"); // ? debug
 
 			// Check for "chunked" directive
 			for (auto header: m_requestHeaders) {
-				spdlog::critical("header[0] = {}", header.first);
-				spdlog::critical("header[1] = {}", header.second);
+				// spdlog::critical("header[0] = {}", header.first); // ? debug
+				// spdlog::critical("header[1] = {}", header.second); // ? debug
 				if (header.first == "Transfer-Encoding") {
 					if (header.second != "chunked") {
 						throw StatusCodeException(400, "Warning: Invalid TE form");
 					}
 
-					spdlog::critical("Chunky boi found!");
+					// spdlog::critical("Chunky boi found!"); // ? debug
 				}
 			}
 			// spdlog::critical("rawMessage = {}", m_rawMessage); // ? debug
@@ -269,52 +269,37 @@ void HttpRequest::parse(void)
 			size_t requestHeadersEndPos = m_rawMessage.find(headersEnd); // ? debug
 			size_t generalHeadersEndPos = m_rawMessage.find(chunkEnd); // ? debug
 
-			// spdlog::critical("requestHeadersEndPos = {}", requestHeadersEndPos);
-			// spdlog::critical("generalHeadersEndPos = {}", generalHeadersEndPos);
+			// spdlog::critical("requestHeadersEndPos = {}", requestHeadersEndPos); // ? debug
+			// spdlog::critical("generalHeadersEndPos = {}", generalHeadersEndPos); // ? debug
 
 			std::string chunkedBody = m_rawMessage.substr(requestHeadersEndPos + 4, generalHeadersEndPos - requestHeadersEndPos);
 			
 			// spdlog::critical("chunkedBody = {}", chunkedBody); // ? debug
 
 			// Split lines
-			std::vector<std::string> chunkLines;
-			std::istringstream iss(chunkedBody);
-			std::string keyword;
-			while (std::getline(iss, keyword))
-				chunkLines.push_back(keyword);
+			std::vector<std::string>	chunkLines{};
+			std::istringstream			iss(chunkedBody);
+			std::string					token{};
+			while (std::getline(iss, token))
+				chunkLines.push_back(token);
 			
 			// for (auto line: chunkLines) {
 			// 	spdlog::critical("line = {}", line); // ? debug
 			// }
 
-			spdlog::critical("chunk size = {}", chunkLines.size());
+			spdlog::critical("nb chunks = {}", chunkLines.size()); // ? debug
 
 			// Loop over chunk lines
 			size_t i = 0;
 			int chunkSize{};
 			int	lineSize{};
 			while (i < chunkLines.size()) {
-				spdlog::critical("line = {}", chunkLines[i]); // ? debug
+				spdlog::critical("current line = {}", chunkLines[i]); // ? debug
+				std::string currentLine = chunkLines[i];
 
 				// Convert hex chunk size to int
-				try {
-					size_t pos;
-					int decimalValue = std::stoi(chunkLines[i].c_str(), &pos, 16);
-
-					if (pos < chunkLines[i].size()) {
-						// Not a valid conversion (e.g., trailing characters)
-						std::cerr << "Invalid hex string: " << chunkLines[i].c_str() << std::endl;
-					} else {
-						// Valid conversion
-						std::cout << "Decimal value: " << chunkLines[i].c_str() << std::endl;
-					}
-				} catch (const std::invalid_argument& e) {
-					// stoi throws std::invalid_argument if conversion fails
-					std::cerr << "Invalid hex string: " << chunkLines[i].c_str() << std::endl;
-				} catch (const std::out_of_range& e) {
-					// stoi throws std::out_of_range if the result is out of the representable range
-					std::cerr << "Hex value out of range: " << chunkLines[i].c_str() << std::endl;
-				}
+				chunkSize = Helper::hexToInt(currentLine);
+				spdlog::warn("hex chunkSize to int = {}", chunkSize); // ? debug
 
 				// Reached the end of chunk
 				if (chunkSize == 0) {
@@ -328,8 +313,8 @@ void HttpRequest::parse(void)
 				// Get the length of the following line
 				lineSize = chunkLines[i + 1].size() - 1;
 
-				spdlog::critical("chunkSize = {}" , chunkSize);
-				spdlog::critical("lineSize = {}" , lineSize);
+				spdlog::critical("comp chunkSize = {}" , chunkSize); // ? debug
+				spdlog::critical("comp lineSize = {}" , lineSize); // ? debug
 
 				// Compare chunk and line sizes
 				if (chunkSize != lineSize)
