@@ -155,10 +155,9 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
 
     m_rawMessage.append(buf, buf + nbytes);
 
-    spdlog::info("[before] m_rawMessage = \n|{}|", m_rawMessage);
+    // spdlog::info("[before] m_rawMessage = \n|{}|", m_rawMessage);
 
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
-	spdlog::critical("fieldLinesEndPos = {}", fieldLinesEndPos);
     if (fieldLinesEndPos == std::string::npos)
     {
         spdlog::warn("message incomplete [...]");
@@ -248,13 +247,98 @@ void HttpRequest::parse(void)
 		// Parse chunked request
 		if (m_isChunked) {
 
-			spdlog::critical("Chunky boi found!");
+			spdlog::critical("TE found!");
 
 			// Check for "chunked" directive
-			if (m_requestHeaders["Tranfer-Encoding"] != "chunked")
-				throw StatusCodeException(400, "Warning: Invalid TE form");
+			for (auto header: m_requestHeaders) {
+				spdlog::critical("header[0] = {}", header.first);
+				spdlog::critical("header[1] = {}", header.second);
+				if (header.first == "Transfer-Encoding") {
+					if (header.second != "chunked") {
+						throw StatusCodeException(400, "Warning: Invalid TE form");
+					}
 
-			// Compare length with chunck
+					spdlog::critical("Chunky boi found!");
+				}
+			}
+			// spdlog::critical("rawMessage = {}", m_rawMessage); // ? debug
+
+			// Extract chunk body
+			const std::string headersEnd = "\r\n\r\n";
+			const std::string chunkEnd = "\r\n0\r\n\r\n";
+			size_t requestHeadersEndPos = m_rawMessage.find(headersEnd); // ? debug
+			size_t generalHeadersEndPos = m_rawMessage.find(chunkEnd); // ? debug
+
+			// spdlog::critical("requestHeadersEndPos = {}", requestHeadersEndPos);
+			// spdlog::critical("generalHeadersEndPos = {}", generalHeadersEndPos);
+
+			std::string chunkedBody = m_rawMessage.substr(requestHeadersEndPos + 4, generalHeadersEndPos - requestHeadersEndPos);
+			
+			// spdlog::critical("chunkedBody = {}", chunkedBody); // ? debug
+
+			// Split lines
+			std::vector<std::string> chunkLines;
+			std::istringstream iss(chunkedBody);
+			std::string keyword;
+			while (std::getline(iss, keyword))
+				chunkLines.push_back(keyword);
+			
+			// for (auto line: chunkLines) {
+			// 	spdlog::critical("line = {}", line); // ? debug
+			// }
+
+			spdlog::critical("chunk size = {}", chunkLines.size());
+
+			// Loop over chunk lines
+			size_t i = 0;
+			int chunkSize{};
+			int	lineSize{};
+			while (i < chunkLines.size()) {
+				spdlog::critical("line = {}", chunkLines[i]); // ? debug
+
+				// Convert hex chunk size to int
+				try {
+					size_t pos;
+					int decimalValue = std::stoi(chunkLines[i].c_str(), &pos, 16);
+
+					if (pos < chunkLines[i].size()) {
+						// Not a valid conversion (e.g., trailing characters)
+						std::cerr << "Invalid hex string: " << chunkLines[i].c_str() << std::endl;
+					} else {
+						// Valid conversion
+						std::cout << "Decimal value: " << chunkLines[i].c_str() << std::endl;
+					}
+				} catch (const std::invalid_argument& e) {
+					// stoi throws std::invalid_argument if conversion fails
+					std::cerr << "Invalid hex string: " << chunkLines[i].c_str() << std::endl;
+				} catch (const std::out_of_range& e) {
+					// stoi throws std::out_of_range if the result is out of the representable range
+					std::cerr << "Hex value out of range: " << chunkLines[i].c_str() << std::endl;
+				}
+
+				// Reached the end of chunk
+				if (chunkSize == 0) {
+					if (i != chunkLines.size() - 1) {
+						throw StatusCodeException(400, "Warning: chunk body not entirely read");
+					}
+					spdlog::critical("i = {}", i);
+					break ;
+				}
+
+				// Get the length of the following line
+				lineSize = chunkLines[i + 1].size() - 1;
+
+				spdlog::critical("chunkSize = {}" , chunkSize);
+				spdlog::critical("lineSize = {}" , lineSize);
+
+				// Compare chunk and line sizes
+				if (chunkSize != lineSize)
+					throw StatusCodeException(400, "Warning: chunk size is different from the chunk line length");
+				i += 2;
+			}
+
+			// Set body
+			m_body = chunkedBody;
 
 			return ;
 
@@ -268,4 +352,5 @@ void HttpRequest::parse(void)
 			bodySet();
 		}
     }
+	spdlog::critical("parsed request = {}", *this);
 }
