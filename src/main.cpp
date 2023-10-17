@@ -16,19 +16,17 @@
 void handleConnectedClient(Client *client, std::vector<Socket *> &toBeDeleted)
 {
     char buf[BUFSIZE + 1]{}; // Buffer for client data
-    int nbytes = recv(client->m_socketFd, buf, BUFSIZE, 0);
+    int nbytes{static_cast<int>(recv(client->m_socketFd, buf, BUFSIZE, 0))};
     if (nbytes <= 0)
     {
-        if (nbytes == 0) // Connection closed
-            spdlog::info("socket {} hung up", *client);
-        else if (nbytes < 0) // Got error or connection closed by client
-            spdlog::critical("Error: recv() failed");
         close(client->m_timer->m_socketFd);
         client->m_timer->m_socketFd = -1;
         toBeDeleted.push_back(client->m_timer);
+
         close(client->m_socketFd);
         client->m_socketFd = -1;
         toBeDeleted.push_back(client);
+
         return;
     }
 
@@ -70,6 +68,7 @@ void handleConnectedClient(Client *client, std::vector<Socket *> &toBeDeleted)
     close(client->m_timer->m_socketFd);
     client->m_timer->m_socketFd = -1;
     toBeDeleted.push_back(client->m_timer);
+
     MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
     multiplexerio.modifyEpollEvents(client, EPOLLOUT);
 }
@@ -77,29 +76,31 @@ void handleConnectedClient(Client *client, std::vector<Socket *> &toBeDeleted)
 void run(const Configuration &config)
 {
     std::vector<TcpServer *> servers{};
+
     for (auto &serverConfig : config.serversConfig)
         servers.push_back(new TcpServer{serverConfig});
 
     MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
     for (auto &server : servers)
-        multiplexerio.addSocketToEpollFd(server, EPOLLIN);
+        multiplexerio.addSocketToEpollFd(server, EPOLLIN | EPOLLRDHUP);
 
     while (true)
     {
         std::vector<Socket *> toBeDeleted{};
+
         for (auto &s : toBeDeleted)
             delete s;
 
-        int epollCount{epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, -1)};
+        int epollCount = epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, -1);
         if (epollCount < 0)
         {
             std::perror("epoll_wait() failed");
             throw std::runtime_error("Error: epoll_wait() failed\n");
         }
 
-        for (int i{0}; i < epollCount; i++) // Run through the existing connections looking for data to read
+        for (int i = 0; i < epollCount; i++) // Run through the existing connections looking for data to read
         {
-            Socket *ePollDataPtr{static_cast<Socket *>(multiplexerio.m_events[i].data.ptr)};
+            Socket *ePollDataPtr = static_cast<Socket *>(multiplexerio.m_events[i].data.ptr);
 
             if (ePollDataPtr->m_socketFd == -1)
                 continue;
@@ -109,23 +110,25 @@ void run(const Configuration &config)
                 if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr)) // If listener is ready to read, handle new connection
                 {
                     Client *client = new Client{*server};
-                    multiplexerio.addSocketToEpollFd(client, EPOLLIN);
-                    multiplexerio.addSocketToEpollFd(client->m_timer, EPOLLIN);
+                    multiplexerio.addSocketToEpollFd(client, EPOLLIN | EPOLLRDHUP);
+                    multiplexerio.addSocketToEpollFd(client->m_timer, EPOLLIN | EPOLLRDHUP);
                 }
+                else if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
+                    handleConnectedClient(client, toBeDeleted);
                 else if (Timer *m_timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
                     spdlog::warn("Timeout expired. Closing: {}", *(m_timer->m_client));
+
                     close(m_timer->m_client->m_socketFd);
                     m_timer->m_client->m_socketFd = -1;
                     toBeDeleted.push_back(m_timer->m_client);
+
                     close(m_timer->m_socketFd);
                     m_timer->m_socketFd = -1;
                     toBeDeleted.push_back(m_timer);
                 }
-                else if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
-                    handleConnectedClient(client, toBeDeleted);
             }
-            if (multiplexerio.m_events[i].events & EPOLLOUT) // If someone's ready to write
+            else if (multiplexerio.m_events[i].events & EPOLLOUT) // If someone's ready to write
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
@@ -138,16 +141,13 @@ void run(const Configuration &config)
 
                     if (client->m_request.m_response.m_total < client->m_request.m_response.m_len)
                     {
-                        int nbytes = send(client->m_socketFd, client->m_request.m_response.m_buf.data() + client->m_request.m_response.m_total, client->m_request.m_response.m_bytesleft, 0);
+                        int nbytes{static_cast<int>(send(client->m_socketFd, client->m_request.m_response.m_buf.data() + client->m_request.m_response.m_total, client->m_request.m_response.m_bytesleft, 0))};
                         if (nbytes <= 0)
                         {
-                            if (nbytes == 0) // Other end has shut down the connection gracefully,
-                                spdlog::info("socket {} hung up", *client);
-                            else if (nbytes < 0) // Got error or connection closed by client
-                                spdlog::critical("Error: send() failed");
                             close(client->m_socketFd);
                             client->m_socketFd = -1;
                             toBeDeleted.push_back(client);
+
                             continue;
                         }
                         client->m_request.m_response.m_total += nbytes;
@@ -161,6 +161,16 @@ void run(const Configuration &config)
                         toBeDeleted.push_back(client);
                     }
                 }
+            }
+            else
+            {
+                spdlog::critical("Unexpected");
+            }
+            if (multiplexerio.m_events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+            {
+                close(ePollDataPtr->m_socketFd);
+                ePollDataPtr->m_socketFd = -1;
+                toBeDeleted.push_back(ePollDataPtr);
             }
         }
     }

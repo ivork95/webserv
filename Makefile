@@ -106,6 +106,21 @@ docker-pwd:
 	-e LDFLAGS="-g -gdwarf-4 -gstrict-dwarf" \
 	$(IMAGE) sh -c "cd /pwd; bash"
 
+docker-clean:
+	docker run \
+	-p 8081:8081 \
+	--name $(CONTAINER) \
+	-it \
+	--rm \
+	--init \
+	-v "$$PWD:/pwd" \
+	--cap-add=SYS_PTRACE \
+	--security-opt seccomp=unconfined \
+	-e CXX="clang++" \
+	-e CXXFLAGS="-Wall -Wextra -std=c++20" \
+	-e LDFLAGS="" \
+	$(IMAGE) sh -c "cd /pwd; bash"
+
 docker-build:
 	docker build -t $(IMAGE) .
 

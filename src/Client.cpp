@@ -42,8 +42,6 @@ Client::Client(const TcpServer &server) : m_server(server)
 Client::~Client(void)
 {
     spdlog::debug("{0} destructor called", *this);
-
-    close(m_socketFd);
 }
 
 // outstream operator overload

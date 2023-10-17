@@ -28,8 +28,6 @@ Timer::Timer(Client *client) : m_client(client)
 Timer::~Timer(void)
 {
     spdlog::debug("{} destructor called", *this);
-
-    close(m_socketFd);
 }
 
 // outstream operator overload

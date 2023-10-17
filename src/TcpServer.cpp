@@ -30,6 +30,11 @@ TcpServer::TcpServer(const ServerConfig &serverconfig) : m_serverconfig(serverco
         // Lose the pesky "address already in use" error message
         setsockopt(m_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
+        // struct timeval timeout;
+        // timeout.tv_sec = 30; // 30 seconds timeout
+        // timeout.tv_usec = 0; // 0 microseconds
+        // setsockopt(m_socketFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
         if (bind(m_socketFd, p->ai_addr, p->ai_addrlen) < 0)
         {
             close(m_socketFd);
