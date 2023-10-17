@@ -13,7 +13,7 @@
 #define BUFSIZE 256
 #define PARSTER false // change this
 
-void handleConnectedClient(Client *client)
+void handleConnectedClient(Client *client, std::vector<Socket *> &toBeDeleted)
 {
     char buf[BUFSIZE + 1]{}; // Buffer for client data
     int nbytes = recv(client->m_socketFd, buf, BUFSIZE, 0);
@@ -23,8 +23,12 @@ void handleConnectedClient(Client *client)
             spdlog::info("socket {} hung up", *client);
         else if (nbytes < 0) // Got error or connection closed by client
             spdlog::critical("Error: recv() failed");
-        delete client->m_timer;
-        delete client;
+        close(client->m_timer->m_socketFd);
+        client->m_timer->m_socketFd = -1;
+        toBeDeleted.push_back(client->m_timer);
+        close(client->m_socketFd);
+        client->m_socketFd = -1;
+        toBeDeleted.push_back(client);
         return;
     }
 
@@ -47,14 +51,25 @@ void handleConnectedClient(Client *client)
         {
             for (const auto &errorCode : errorPageConfig.getErrorCodes())
             {
-                if (std::atoi(errorCode.c_str()) == client->m_request.m_response.m_statusCode) // can we do this in parsing?
-                    client->m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getUriPath());
+                if (std::atoi(errorCode.c_str()) == client->m_request.m_response.m_statusCode)
+                {
+                    try // try catch in case error page doesnt exist. Is it possible to check all files during parsing?
+                    {
+                        client->m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getUriPath());
+                    }
+                    catch (const std::exception &e)
+                    {
+                        std::cerr << e.what() << '\n';
+                    }
+                }
             }
         }
     }
     spdlog::critical(client->m_request);
 
-    delete client->m_timer;
+    close(client->m_timer->m_socketFd);
+    client->m_timer->m_socketFd = -1;
+    toBeDeleted.push_back(client->m_timer);
     MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
     multiplexerio.modifyEpollEvents(client, EPOLLOUT);
 }
@@ -71,6 +86,10 @@ void run(const Configuration &config)
 
     while (true)
     {
+        std::vector<Socket *> toBeDeleted{};
+        for (auto &s : toBeDeleted)
+            delete s;
+
         int epollCount{epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, -1)};
         if (epollCount < 0)
         {
@@ -81,6 +100,9 @@ void run(const Configuration &config)
         for (int i{0}; i < epollCount; i++) // Run through the existing connections looking for data to read
         {
             Socket *ePollDataPtr{static_cast<Socket *>(multiplexerio.m_events[i].data.ptr)};
+
+            if (ePollDataPtr->m_socketFd == -1)
+                continue;
 
             if (multiplexerio.m_events[i].events & EPOLLIN) // If someone's ready to read
             {
@@ -93,11 +115,15 @@ void run(const Configuration &config)
                 else if (Timer *m_timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
                     spdlog::warn("Timeout expired. Closing: {}", *(m_timer->m_client));
-                    delete m_timer->m_client;
-                    delete m_timer;
+                    close(m_timer->m_client->m_socketFd);
+                    m_timer->m_client->m_socketFd = -1;
+                    toBeDeleted.push_back(m_timer->m_client);
+                    close(m_timer->m_socketFd);
+                    m_timer->m_socketFd = -1;
+                    toBeDeleted.push_back(m_timer);
                 }
                 else if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
-                    handleConnectedClient(client);
+                    handleConnectedClient(client, toBeDeleted);
             }
             if (multiplexerio.m_events[i].events & EPOLLOUT) // If someone's ready to write
             {
@@ -119,7 +145,9 @@ void run(const Configuration &config)
                                 spdlog::info("socket {} hung up", *client);
                             else if (nbytes < 0) // Got error or connection closed by client
                                 spdlog::critical("Error: send() failed");
-                            delete client;
+                            close(client->m_socketFd);
+                            client->m_socketFd = -1;
+                            toBeDeleted.push_back(client);
                             continue;
                         }
                         client->m_request.m_response.m_total += nbytes;
@@ -127,7 +155,11 @@ void run(const Configuration &config)
                     }
 
                     if (!client->m_request.m_response.m_bytesleft)
-                        delete client;
+                    {
+                        close(client->m_socketFd);
+                        client->m_socketFd = -1;
+                        toBeDeleted.push_back(client);
+                    }
                 }
             }
         }
