@@ -184,7 +184,6 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
 		if (!m_isChunked)
 			m_isChunked = true;
 		size_t chunkEndPos = m_rawMessage.find("\r\n0\r\n\r\n");
-		spdlog::warn("chunkEndPos = {}", chunkEndPos); // ? debug
 		if (chunkEndPos == std::string::npos) {
 			spdlog::warn("Chunk EOF not reached [...]");
             return 3;
@@ -193,7 +192,6 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
     }
 
     spdlog::info("message complete!");
-    spdlog::info("[after] m_rawMessage = \n|{}|", m_rawMessage);
 
     return 0;
 }
@@ -201,7 +199,6 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
 void HttpRequest::parse(void)
 {
     methodPathVersionSet();
-	spdlog::warn("tokenized request = {}", *this); // ? debug
     if (m_methodPathVersion.size() != 3)
         throw StatusCodeException(400, "Error: not 3 elements in request-line");
     if (m_methodPathVersion[2] != "HTTP/1.1")
@@ -246,76 +243,21 @@ void HttpRequest::parse(void)
     {
 		// Parse chunked request
 		if (m_isChunked) {
-
-			// spdlog::critical("TE found!"); // ? debug
-
 			// Check for "chunked" directive
-			for (auto header: m_requestHeaders) {
-				// spdlog::warn("header[0] = {}", header.first); // ? debug
-				// spdlog::warn("header[1] = {}", header.second); // ? debug
-				if (header.first == "Transfer-Encoding") {
-					if (header.second != "chunked") {
-						throw StatusCodeException(404, "Error: Invalid Transfer-Encoding form");
-					}
-					// spdlog::warn("Chunky boi found!"); // ? debug
-				}
-			}
-			// spdlog::warn("rawMessage = {}", m_rawMessage); // ? debug
+			chunkHeadersParse();
 
 			// Extract chunk body
-			const std::string headersEnd = "\r\n\r\n";
-			const std::string chunkEnd = "\r\n0\r\n\r\n";
-			size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
-			size_t generalHeadersEndPos = m_rawMessage.find(chunkEnd);
+			chunkBodyExtract();
 
-			// spdlog::warn("requestHeadersEndPos = {}", requestHeadersEndPos); // ? debug
-			// spdlog::warn("generalHeadersEndPos = {}", generalHeadersEndPos); // ? debug
-
-			std::string chunkBody = m_rawMessage.substr(requestHeadersEndPos + 4, generalHeadersEndPos - requestHeadersEndPos);
-			
-			// spdlog::warn("chunkedBody = {}", chunkedBody); // ? debug
-
-			std::istringstream			iss(chunkBody);
-			std::string					token{};
-			std::vector<std::string> 	chunkLine{};
-			std::vector<size_t> 		chunkLength{};
-			size_t 						nbLines = 0;
-
-			// Split lines and save chunk len and actual chunk separately
-			while (std::getline(iss, token)) {
-				if (token.empty())
-					break ;
-				spdlog::warn("[{}] token = {}", nbLines, token); // ? debug
-				if (nbLines % 2 == 0) {
-					int intLen = Helper::hexToInt(token);
-					chunkLength.push_back(intLen);
-				} else {
-					chunkLine.push_back(token);
-				}
-				nbLines++;
-			}
-
-			size_t 						nbChunks = (nbLines - 1) / 2; // since 1 chunk = chunk size + actual chunk
-			spdlog::warn("nb lines | nb chunks = {} | {}", nbLines, nbChunks); // ? debug
-			
-			// Error check
-			if (chunkLine.empty())
-				throw StatusCodeException(404, "Error: Empty chunk request");
-
-			// Compare chunk length to actual chunk length
-			for (size_t n = 0; n < nbChunks; n++) {
-				spdlog::warn("[{}] chunkLen | lineSize = {} | {}", n, chunkLength[n], chunkLine[n].size() - 1); // ? debug
-				if (chunkLength[n] != chunkLine[n].size() - 1)
-						throw StatusCodeException(400, "Warning: chunk size is different from the chunk line length");
-			}
+			// Tokenize body to separate len and actual chunk
+			chunkBodyTokenize();
 
 			// Set body
-			spdlog::warn("chunkedBody = \n|{}|", chunkBody); // ? debug
-			m_body = chunkBody;
-			spdlog::warn("m_body = \n|{}|", m_body); // ? debug
+			chunkBodySet();
+			spdlog::warn("m_chunkBody = {}", m_chunkBody);
 
-			return ;
-
+			// ! To change I guess
+			m_body = m_chunkBody;
 		} else {
 			if (m_contentLength > m_locationconfig.getClientMaxBodySize())
 				throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
@@ -326,5 +268,4 @@ void HttpRequest::parse(void)
 			bodySet();
 		}
     }
-	spdlog::warn("parsed request = {}", *this);
 }

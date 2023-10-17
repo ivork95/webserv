@@ -33,7 +33,8 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidPortNumber.o \
 				obj/utils/config/isValidServerName.o \
 				obj/utils/config/isValidUri.o \
-				obj/logger/Logger.o
+				obj/logger/Logger.o \
+				obj/ChunkRequest.o 
 HEADERS		:=	include/Client.hpp \
 				include/Helper.hpp \
 				include/HttpMessage.hpp \
