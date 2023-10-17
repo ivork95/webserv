@@ -7,8 +7,10 @@
 #include <fstream>
 #include <filesystem>
 #include <sys/stat.h>
+
 #include "TcpServer.hpp"
 #include "StatusCodes.hpp"
+#include "Socket.hpp"
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
 
