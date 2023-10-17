@@ -47,7 +47,7 @@ std::vector<std::string> Helper::split(const std::string &str)
     return methodPathVersion;
 }
 
-char Helper::hexToInt(const std::string &hex)
+int Helper::hexToInt(const std::string &hex)
 {
     int value{};
     std::stringstream ss{};

@@ -14,7 +14,7 @@ public:
     Helper(void) = delete;
 
     static char hexToChar(const std::string &hex);
-    static char hexToInt(const std::string &hex);
+    static int hexToInt(const std::string &hex);
     static std::string decodePercentEncoding(const std::string &encoded);
     static void strip(std::string &str);
     static std::vector<std::string> split(const std::string &str);

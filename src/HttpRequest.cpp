@@ -184,7 +184,7 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
 		if (!m_isChunked)
 			m_isChunked = true;
 		size_t chunkEndPos = m_rawMessage.find("\r\n0\r\n\r\n");
-		spdlog::critical("chunkEndPos = {}", chunkEndPos);
+		spdlog::warn("chunkEndPos = {}", chunkEndPos); // ? debug
 		if (chunkEndPos == std::string::npos) {
 			spdlog::warn("Chunk EOF not reached [...]");
             return 3;
@@ -201,7 +201,7 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
 void HttpRequest::parse(void)
 {
     methodPathVersionSet();
-	spdlog::critical("tokenized request = {}", *this);
+	spdlog::warn("tokenized request = {}", *this); // ? debug
     if (m_methodPathVersion.size() != 3)
         throw StatusCodeException(400, "Error: not 3 elements in request-line");
     if (m_methodPathVersion[2] != "HTTP/1.1")
@@ -251,79 +251,68 @@ void HttpRequest::parse(void)
 
 			// Check for "chunked" directive
 			for (auto header: m_requestHeaders) {
-				// spdlog::critical("header[0] = {}", header.first); // ? debug
-				// spdlog::critical("header[1] = {}", header.second); // ? debug
+				// spdlog::warn("header[0] = {}", header.first); // ? debug
+				// spdlog::warn("header[1] = {}", header.second); // ? debug
 				if (header.first == "Transfer-Encoding") {
 					if (header.second != "chunked") {
-						throw StatusCodeException(400, "Warning: Invalid TE form");
+						throw StatusCodeException(404, "Error: Invalid Transfer-Encoding form");
 					}
-
-					// spdlog::critical("Chunky boi found!"); // ? debug
+					// spdlog::warn("Chunky boi found!"); // ? debug
 				}
 			}
-			// spdlog::critical("rawMessage = {}", m_rawMessage); // ? debug
+			// spdlog::warn("rawMessage = {}", m_rawMessage); // ? debug
 
 			// Extract chunk body
 			const std::string headersEnd = "\r\n\r\n";
 			const std::string chunkEnd = "\r\n0\r\n\r\n";
-			size_t requestHeadersEndPos = m_rawMessage.find(headersEnd); // ? debug
-			size_t generalHeadersEndPos = m_rawMessage.find(chunkEnd); // ? debug
+			size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
+			size_t generalHeadersEndPos = m_rawMessage.find(chunkEnd);
 
-			// spdlog::critical("requestHeadersEndPos = {}", requestHeadersEndPos); // ? debug
-			// spdlog::critical("generalHeadersEndPos = {}", generalHeadersEndPos); // ? debug
+			// spdlog::warn("requestHeadersEndPos = {}", requestHeadersEndPos); // ? debug
+			// spdlog::warn("generalHeadersEndPos = {}", generalHeadersEndPos); // ? debug
 
-			std::string chunkedBody = m_rawMessage.substr(requestHeadersEndPos + 4, generalHeadersEndPos - requestHeadersEndPos);
+			std::string chunkBody = m_rawMessage.substr(requestHeadersEndPos + 4, generalHeadersEndPos - requestHeadersEndPos);
 			
-			// spdlog::critical("chunkedBody = {}", chunkedBody); // ? debug
+			// spdlog::warn("chunkedBody = {}", chunkedBody); // ? debug
 
-			// Split lines
-			std::vector<std::string>	chunkLines{};
-			std::istringstream			iss(chunkedBody);
+			std::istringstream			iss(chunkBody);
 			std::string					token{};
-			while (std::getline(iss, token))
-				chunkLines.push_back(token);
-			
-			// for (auto line: chunkLines) {
-			// 	spdlog::critical("line = {}", line); // ? debug
-			// }
+			std::vector<std::string> 	chunkLine{};
+			std::vector<size_t> 		chunkLength{};
+			size_t 						nbLines = 0;
 
-			spdlog::critical("nb chunks = {}", chunkLines.size()); // ? debug
-
-			// Loop over chunk lines
-			size_t i = 0;
-			int chunkSize{};
-			int	lineSize{};
-			while (i < chunkLines.size()) {
-				spdlog::critical("current line = {}", chunkLines[i]); // ? debug
-				std::string currentLine = chunkLines[i];
-
-				// Convert hex chunk size to int
-				chunkSize = Helper::hexToInt(currentLine);
-				spdlog::warn("hex chunkSize to int = {}", chunkSize); // ? debug
-
-				// Reached the end of chunk
-				if (chunkSize == 0) {
-					if (i != chunkLines.size() - 1) {
-						throw StatusCodeException(400, "Warning: chunk body not entirely read");
-					}
-					spdlog::critical("i = {}", i);
+			// Split lines and save chunk len and actual chunk separately
+			while (std::getline(iss, token)) {
+				if (token.empty())
 					break ;
+				spdlog::warn("[{}] token = {}", nbLines, token); // ? debug
+				if (nbLines % 2 == 0) {
+					int intLen = Helper::hexToInt(token);
+					chunkLength.push_back(intLen);
+				} else {
+					chunkLine.push_back(token);
 				}
+				nbLines++;
+			}
 
-				// Get the length of the following line
-				lineSize = chunkLines[i + 1].size() - 1;
+			size_t 						nbChunks = (nbLines - 1) / 2; // since 1 chunk = chunk size + actual chunk
+			spdlog::warn("nb lines | nb chunks = {} | {}", nbLines, nbChunks); // ? debug
+			
+			// Error check
+			if (chunkLine.empty())
+				throw StatusCodeException(404, "Error: Empty chunk request");
 
-				spdlog::critical("comp chunkSize = {}" , chunkSize); // ? debug
-				spdlog::critical("comp lineSize = {}" , lineSize); // ? debug
-
-				// Compare chunk and line sizes
-				if (chunkSize != lineSize)
-					throw StatusCodeException(400, "Warning: chunk size is different from the chunk line length");
-				i += 2;
+			// Compare chunk length to actual chunk length
+			for (size_t n = 0; n < nbChunks; n++) {
+				spdlog::warn("[{}] chunkLen | lineSize = {} | {}", n, chunkLength[n], chunkLine[n].size() - 1); // ? debug
+				if (chunkLength[n] != chunkLine[n].size() - 1)
+						throw StatusCodeException(400, "Warning: chunk size is different from the chunk line length");
 			}
 
 			// Set body
-			m_body = chunkedBody;
+			spdlog::warn("chunkedBody = \n|{}|", chunkBody); // ? debug
+			m_body = chunkBody;
+			spdlog::warn("m_body = \n|{}|", m_body); // ? debug
 
 			return ;
 
@@ -337,5 +326,5 @@ void HttpRequest::parse(void)
 			bodySet();
 		}
     }
-	spdlog::critical("parsed request = {}", *this);
+	spdlog::warn("parsed request = {}", *this);
 }
