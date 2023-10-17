@@ -71,3 +71,13 @@ std::string Helper::percentEncode(const std::string &input)
 
     return encoded.str();
 }
+
+int Helper::hexToInt(const std::string &hex)
+{
+    int value{};
+    std::stringstream ss{};
+
+    ss << std::hex << hex;
+    ss >> value;
+    return static_cast<int>(value);
+}

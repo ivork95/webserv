@@ -165,6 +165,8 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
 
     m_rawMessage.append(buf, buf + nbytes);
 
+    // spdlog::info("[before] m_rawMessage = \n|{}|", m_rawMessage);
+
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
     if (fieldLinesEndPos == std::string::npos)
     {
@@ -186,9 +188,21 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
         }
         spdlog::info("Content-Length reached!");
     }
+    // Chunked requests
+    else if (m_requestHeaders.contains("Transfer-Encoding"))
+    {
+        if (!m_isChunked)
+            m_isChunked = true;
+        size_t chunkEndPos = m_rawMessage.find("\r\n0\r\n\r\n");
+        if (chunkEndPos == std::string::npos)
+        {
+            spdlog::warn("Chunk EOF not reached [...]");
+            return 3;
+        }
+        spdlog::info("Chunk EOF reached!");
+    }
 
     spdlog::info("message complete!");
-    // spdlog::info("m_rawMessage = \n|{}|", m_rawMessage);
 
     return 0;
 }
@@ -252,23 +266,44 @@ void HttpRequest::parse(void)
 
     if (m_methodPathVersion[0] == "POST")
     {
-        if (m_contentLength > m_locationconfig.getClientMaxBodySize())
-            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+        // Parse chunked request
+        if (m_isChunked)
+        {
+            // Check for "chunked" directive
+            chunkHeadersParse();
 
-        boundaryCodeSet();
-        generalHeadersSet();
-        fileNameSet();
-        bodySet();
+            // Extract chunk body
+            chunkBodyExtract();
 
-        // Needs to be moved - Upload Post handeling
-        if (m_fileName.empty())
-            throw StatusCodeException(400, "Error: no fileName");
-        bodyToDisk("./www/" + m_fileName);
-        m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
-        m_response.m_statusCode = 303;
-        return;
+            // Tokenize body to separate len and actual chunk
+            chunkBodyTokenize();
+
+            // Set body
+            chunkBodySet();
+            spdlog::warn("m_chunkBody = {}", m_chunkBody);
+
+            // ! To change I guess
+            m_body = m_chunkBody;
+        }
+        else
+        {
+            if (m_contentLength > m_locationconfig.getClientMaxBodySize())
+                throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+
+            boundaryCodeSet();
+            generalHeadersSet();
+            fileNameSet();
+            bodySet();
+
+            // Needs to be moved - Upload Post handeling
+            if (m_fileName.empty())
+                throw StatusCodeException(400, "Error: no fileName");
+            bodyToDisk("./www/" + m_fileName);
+            m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
+            m_response.m_statusCode = 303;
+            return;
+        }
     }
-
     m_response.bodySet(m_response.m_path);
     m_response.m_statusCode = 200;
 }
