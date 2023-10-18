@@ -49,7 +49,7 @@ void handleConnectedClient(Client *client, std::vector<Socket *> &toBeDeleted)
         {
             for (const auto &errorCode : errorPageConfig.getErrorCodes())
             {
-                if (std::atoi(errorCode.c_str()) == client->m_request.m_response.m_statusCode)
+                if (errorCode == client->m_request.m_response.m_statusCode)
                 {
                     try // try catch in case error page doesnt exist. Is it possible to check all files during parsing?
                     {

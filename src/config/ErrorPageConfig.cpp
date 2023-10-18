@@ -8,7 +8,7 @@ ErrorPageConfig::ErrorPageConfig(void) : _errorCodes{}, _uriPath{} {
 	// std::cout << "ErrorPageConfig default constructor called\n";
 }
 
-ErrorPageConfig::ErrorPageConfig(const std::vector<std::string> &errorCode, const std::string &uriPath) : \
+ErrorPageConfig::ErrorPageConfig(const std::vector<int> &errorCode, const std::string &uriPath) : \
 	_errorCodes(errorCode), _uriPath(uriPath) {
 	// std::cout << "ErrorPageConfig parametric constructor called\n";
 }
@@ -20,7 +20,7 @@ ErrorPageConfig::~ErrorPageConfig(void) {
 /**
  * GETTERS / SETTERS
 */
-const std::vector<std::string>	&ErrorPageConfig::getErrorCodes(void) const {
+const std::vector<int>	&ErrorPageConfig::getErrorCodes(void) const {
 	return (_errorCodes);
 }
 

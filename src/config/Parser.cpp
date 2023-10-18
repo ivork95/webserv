@@ -249,12 +249,12 @@ void	Parser::_parseServerClientMaxBodySize(ServerConfig *server, std::vector<Tok
 */
 void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing error_page directive\n"; // ? debug
-	size_t						j = *i;
-	std::vector<std::string>	errorCodes;
+	size_t				j = *i;
+	std::vector<int>	errorCodes;
 	while (tokens.at(j).getType() == Token::WORD && isNumber(tokens.at(j).getWord())) {
-		const std::string	errorCode = tokens.at(j).getWord();
+		std::string	errorCode = tokens.at(j).getWord();
 		if (isValidErrorCode(errorCode)) {
-			errorCodes.push_back(tokens.at(j).getWord());
+			errorCodes.push_back(std::atoi(errorCode.c_str()));
 		} else {
 			throw ErrorCodeException(errorCode);
 		}
