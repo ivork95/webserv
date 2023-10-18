@@ -268,7 +268,7 @@ void HttpRequest::parse(void)
 
     if (m_methodPathVersion[0] == "POST")
     {
-        //  cgi code
+        // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
         MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
         Pipe *p = new Pipe;
         pipe(p->pipefd);

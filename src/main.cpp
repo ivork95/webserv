@@ -127,40 +127,6 @@ void run(const Configuration &config)
                     close(ap->pipefd[0]);
                     continue;
                 }
-                else if (Pipe *p = dynamic_cast<Pipe *>(ePollDataPtr))
-                {
-                    // Vergeet niet: hier zit nu iets in stdin, dat moet naar execve
-                    spdlog::critical("Pipe p->pipefd[0]");
-
-                    AnotherPipe *ap = new AnotherPipe;
-                    pipe(ap->pipefd);
-                    struct epoll_event ev
-                    {
-                    };
-                    ev.data.ptr = ap;
-                    ev.events = EPOLLIN;
-                    epoll_ctl(multiplexerio.m_epollfd, EPOLL_CTL_ADD, ap->pipefd[0], &ev);
-
-                    char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
-                    char *scriptPath = "./hello.py";       // Path to the Python script
-                    char *argv[] = {
-                        pythonPath,
-                        scriptPath,
-                        NULL // The last element must be NULL to indicate the end of the array
-                    };
-                    pid_t cpid;
-                    cpid = fork();
-                    if (cpid == 0)
-                    { /* Child reads from pipe */
-                        dup2(ap->pipefd[1], STDOUT_FILENO);
-                        close(ap->pipefd[1]);
-                        execve(pythonPath, argv, NULL);
-                    }
-                    else
-                    {               /* Parent writes argv[1] to pipe */
-                        wait(NULL); /* Wait for child */
-                    }
-                }
                 else if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
                     handleConnectedClient(client, toBeDeleted);
                 else if (Timer *m_timer = dynamic_cast<Timer *>(ePollDataPtr))
@@ -209,45 +175,52 @@ void run(const Configuration &config)
                         toBeDeleted.push_back(client);
                     }
                 }
-                else if (Pipe *pipe = dynamic_cast<Pipe *>(ePollDataPtr))
+                else if (Pipe *p = dynamic_cast<Pipe *>(ePollDataPtr))
                 {
-                    spdlog::critical("Pipe pipe->pipefd[1]");
+                    spdlog::critical("Event van de WRITE kant van Pipe1");
 
+                    dup2(p->pipefd[0], STDIN_FILENO); // Dup de READ kant van Pipe1 naar stdin
+                    close(p->pipefd[0]);
+                    write(p->pipefd[1], "Marco", 5); // Write "Marco" naar stdin
+                    close(p->pipefd[1]);
+
+                    // Hier voegen we de READ kant van Pipe1 toe aan Epoll
+                    AnotherPipe *ap = new AnotherPipe;
+                    pipe(ap->pipefd);
                     struct epoll_event ev
                     {
                     };
-                    ev.data.ptr = pipe;
+                    ev.data.ptr = ap;
                     ev.events = EPOLLIN;
-                    epoll_ctl(multiplexerio.m_epollfd, EPOLL_CTL_ADD, pipe->pipefd[0], &ev);
+                    epoll_ctl(multiplexerio.m_epollfd, EPOLL_CTL_ADD, ap->pipefd[0], &ev);
 
-                    dup2(pipe->pipefd[0], STDIN_FILENO);
-                    close(pipe->pipefd[0]);
-                    write(pipe->pipefd[1], "Marco", 5);
-                    close(pipe->pipefd[1]);
+                    // execve ish
+                    char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
+                    char *scriptPath = "./hello.py";       // Path to the Python script
+                    char *argv[] = {
+                        pythonPath,
+                        scriptPath,
+                        NULL};
+                    pid_t cpid;
+                    cpid = fork();
+                    if (cpid == 0)
+                    {
+                        dup2(ap->pipefd[1], STDOUT_FILENO); // Dup de Write kant van Pipe1 naar stdout
+                        close(ap->pipefd[1]);
+
+                        // Debugging ish
+                        char buf;
+                        while (read(STDIN_FILENO, &buf, 1) > 0)
+                            write(STDOUT_FILENO, &buf, 1);
+                        write(STDOUT_FILENO, "\n", 1);
+                        close(p->pipefd[0]);
+
+                        execve(pythonPath, argv, NULL);
+                    }
+                    else
+                        wait(NULL); /* Wait for child */
 
                     continue;
-
-                    // char buf;
-                    // pid_t cpid;
-                    // cpid = fork();
-                    // if (cpid == 0)
-                    // { /* Child reads from pipe */
-                    //     dup2(pipe->pipefd[0], STDIN_FILENO);
-                    //     close(pipe->pipefd[1]);
-                    //     while (read(STDIN_FILENO, &buf, 1) > 0)
-                    //         write(STDOUT_FILENO, &buf, 1);
-                    //     write(STDOUT_FILENO, "\n", 1);
-                    //     close(pipe->pipefd[0]);
-                    //     continue;
-                    // }
-                    // else
-                    // { /* Parent writes argv[1] to pipe */
-                    //     close(pipe->pipefd[0]);
-                    //     write(pipe->pipefd[1], "Marco", 5);
-                    //     close(pipe->pipefd[1]);
-                    //     wait(NULL); /* Wait for child */
-                    //     continue;
-                    // }
                 }
             }
             else
