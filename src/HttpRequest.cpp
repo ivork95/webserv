@@ -278,12 +278,9 @@ void HttpRequest::parse(void)
 
             // Set body
             chunkBodySet();
-            // spdlog::warn("m_chunkBody = {}", m_chunkBody); // ? debug
-
-			requestHeadersPrint(m_requestHeaders); // ? debug
 
 			// Replace Transfer-Encoding header with Content-Length 
-			// header to total length of chunk content
+			// header and set to total length of chunk content
 			chunkHeaderReplace();
 
 			requestHeadersPrint(m_requestHeaders); // ? debug
@@ -293,7 +290,8 @@ void HttpRequest::parse(void)
 			if (m_contentLength > m_locationconfig.getClientMaxBodySize())
 				throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
-            // ! To change I guess
+            // the chunk body is unchunked at this stage
+			// so it's basically a normal body
             m_body = m_chunkBody;
         }
         else
