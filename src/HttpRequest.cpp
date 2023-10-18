@@ -165,8 +165,6 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
 
     m_rawMessage.append(buf, buf + nbytes);
 
-    // spdlog::info("[before] m_rawMessage = \n|{}|", m_rawMessage);
-
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
     if (fieldLinesEndPos == std::string::npos)
     {
@@ -280,7 +278,20 @@ void HttpRequest::parse(void)
 
             // Set body
             chunkBodySet();
-            spdlog::warn("m_chunkBody = {}", m_chunkBody);
+            // spdlog::warn("m_chunkBody = {}", m_chunkBody); // ? debug
+
+			requestHeadersPrint(m_requestHeaders); // ? debug
+
+			// Replace Transfer-Encoding header with Content-Length 
+			// header to total length of chunk content
+			chunkHeaderReplace();
+
+			requestHeadersPrint(m_requestHeaders); // ? debug
+
+			m_contentLength = m_totalChunkLength;
+
+			if (m_contentLength > m_locationconfig.getClientMaxBodySize())
+				throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
             // ! To change I guess
             m_body = m_chunkBody;
