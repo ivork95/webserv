@@ -7,8 +7,10 @@
 #include <fstream>
 #include <filesystem>
 #include <sys/stat.h>
+
 #include "TcpServer.hpp"
 #include "StatusCodes.hpp"
+#include "Socket.hpp"
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
 
@@ -34,9 +36,11 @@ public:
     // member functions
     static MultiplexerIO &getInstance(void);
     void addSocketToEpollFd(Socket *ptr, int events);
+    void modifyEpollEvents(Socket *ptr, int events);
 
     // outstream operator overload
-    friend std::ostream &operator<<(std::ostream &out, const MultiplexerIO &multiplexerio);
+    friend std::ostream &
+    operator<<(std::ostream &out, const MultiplexerIO &multiplexerio);
 };
 
 #endif

@@ -1,10 +1,11 @@
 #include "HttpResponse.hpp"
-#include <filesystem>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 // request constructor
-HttpResponse::HttpResponse(const HttpRequest &request) : m_request(request), m_statusCode(request.m_statusCode)
+HttpResponse::HttpResponse(void)
 {
-    spdlog::debug("HttpResponseconstructor called");
+    spdlog::debug("HttpResponse constructor called");
 }
 
 // copy constructor
@@ -20,34 +21,19 @@ HttpResponse::~HttpResponse(void)
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
 {
-    out << "HttpResponse(\n";
+    out << "HttpResponse {\n";
     out << "m_statusCode = |" << httpresponse.m_statusCode << "|\n";
     out << "m_statusLine = |" << httpresponse.m_statusLine << "|\n";
-    out << ")";
+    out << "m_path = |" << httpresponse.m_path << "|\n";
+    out << "}";
 
     return out;
-}
-
-std::string HttpResponse::percentEncode(const std::string &input) const
-{
-    std::ostringstream encoded;
-
-    for (char c : input)
-    {
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') // Unreserved characters in RFC 3986
-            encoded << c;
-        else
-            encoded << '%' << std::uppercase << std::hex << ((c >> 4) & 0x0F)
-                    << (c & 0x0F);
-    }
-
-    return encoded.str();
 }
 
 // getters/setters
 void HttpResponse::bodySet(const std::string &path)
 {
-    m_body = resourceToStr(path);
+    m_body = Helper::fileToStr(path);
 }
 
 void HttpResponse::statusLineSet(void)
@@ -72,32 +58,26 @@ std::string HttpResponse::responseBuild(void)
     return httpResponse;
 }
 
-int HttpResponse::targetRead(const std::string &requestTarget)
+int sendall(int s, char *buf, int *len)
 {
-    int n{};
-    std::ifstream inf{requestTarget};
+    int total = 0;        // how many bytes we've sent
+    int bytesleft = *len; // how many we have left to send
+    int n;
 
-    if (!inf)
-        throw std::runtime_error("404 NOT FOUND\n");
-    while (inf)
+    while (total < *len)
     {
-        std::string strInput;
-        std::getline(inf, strInput);
-        m_body.append(strInput);
-        n = n + strInput.length();
+        n = send(s, buf + total, bytesleft, 0);
+        if (n == -1)
+        {
+            break;
+        }
+        total += n;
+        bytesleft -= n;
     }
 
-    return n;
-}
+    *len = total; // return number actually sent here
 
-std::string HttpResponse::resourceToStr(const std::string &path)
-{
-    std::ifstream inf(path);
-    if (!inf)
-        throw StatusCodeException(404, "Error: ifstream");
-    std::ostringstream sstr;
-    sstr << inf.rdbuf();
-    return sstr.str();
+    return n == -1 ? -1 : 0; // return -1 on failure, 0 on success
 }
 
 std::string generateHtmlString(const std::string &path)
@@ -153,82 +133,82 @@ bool isDirectory(std::string path)
 
 void HttpResponse::getHandle(void)
 {
-    std::string path{m_request.m_methodPathVersion[1]};
+    // spdlog::critical("m_serverconfig = {}", m_serverconfig);
 
-    if (path == "/")
-    {
-        path = "./www/index.html";
-        bodySet(path);
-    }
-    else if (std::filesystem::exists("./www" + path)) // i.e. /image.jpeg
-    {
-        path = "./www" + path;
-        bodySet(path);
-    }
-    else if (path.find('.' != std::string::npos)) // i.e. /upload
-    {
-        path = "./www" + m_request.m_methodPathVersion[1] + ".html";
-        bodySet(path);
-    }
-    m_statusCode = 200;
-}
-
-void HttpResponse::bodyToDisk(const std::string &path)
-{
-    std::ofstream outf{path};
-    if (!outf)
-        throw StatusCodeException(400, "Error: ofstream");
-    outf << m_request.m_body;
+    // if (m_request.m_methodPathVersion[1] == m_request.m_locationconfig.getRequestURI())
+    // {
+    //     spdlog::critical("_requestURI = {}", m_request.m_locationconfig.getRequestURI());
+    //     bool isIndexFileFound{false};
+    //     for (auto &b : m_request.m_locationconfig.getIndexFile()) // loop over index files
+    //     {
+    //         spdlog::critical("actual path = {}", m_request.m_locationconfig.getRootPath() + b);
+    //         try
+    //         {
+    //             bodySet(m_request.m_locationconfig.getRootPath() + b);
+    //             m_path = m_request.m_locationconfig.getRootPath() + b;
+    //             isIndexFileFound = true;
+    //             break;
+    //         }
+    //         catch (const StatusCodeException &e)
+    //         {
+    //             m_path = m_request.m_locationconfig.getRootPath() + b;
+    //             spdlog::warn(e.what());
+    //         }
+    //     }
+    //     if (!isIndexFileFound)
+    //         throw StatusCodeException(404, "Error: ifstream3");
+    // }
+    // m_statusCode = 200;
 }
 
 void HttpResponse::postHandle(void)
 {
-    if (m_request.m_fileName.empty())
-        throw StatusCodeException(400, "Error: no fileName");
-    bodyToDisk("./www/" + m_request.m_fileName);
-    m_headers.insert({"Location", "/" + percentEncode(m_request.m_fileName)});
-    m_statusCode = 303;
+    // if (m_request.m_fileName.empty())
+    //     throw StatusCodeException(400, "Error: no fileName");
+    // bodyToDisk("./www/" + m_request.m_fileName);
+    // m_headers.insert({"Location", "/" + percentEncode(m_request.m_fileName)});
+    // m_statusCode = 303;
 }
 
 void HttpResponse::deleteHandle(void)
 {
-    std::string path{m_request.m_methodPathVersion[1]};
-    std::string allowedPath = "/www/files";
+    // std::string path{m_request.m_methodPathVersion[1]};
+    // std::string allowedPath = "/www/files";
 
-    if (path.compare(0, allowedPath.length(), allowedPath) != 0)
-        throw StatusCodeException(410, "Error: compare()");
-    else if (std::remove("./www/hello.txt") == 0)
-        m_body = "Succes";
-    else
-        throw StatusCodeException(411, "Error: remove()");
+    // if (path.compare(0, allowedPath.length(), allowedPath) != 0)
+    //     throw StatusCodeException(410, "Error: compare()");
+    // else if (std::remove("./www/hello.txt") == 0)
+    //     m_body = "Succes";
+    // else
+    //     throw StatusCodeException(411, "Error: remove()");
 }
 
 void HttpResponse::responseHandle(void)
 {
-    if (m_statusCode)
-        return;
+    // if (m_statusCode)
+    //     return;
 
-    try
-    {
-        if (m_request.m_methodPathVersion[0] == "GET")
-        {
-            spdlog::debug("GET method");
-            getHandle();
-        }
-        else if (m_request.m_methodPathVersion[0] == "POST")
-        {
-            spdlog::info("POST method");
-            postHandle();
-        }
-        else if (m_request.m_methodPathVersion[0] == "DELETE")
-        {
-            spdlog::debug("DELETE method");
-            deleteHandle();
-        }
-    }
-    catch (const StatusCodeException &e)
-    {
-        m_statusCode = e.getStatusCode();
-        spdlog::warn(e.what());
-    }
+    // try
+    // {
+    //     if (m_request.m_methodPathVersion[0] == "GET")
+    //     {
+    //         spdlog::debug("GET method");
+    //         getHandle();
+    //     }
+    //     else if (m_request.m_methodPathVersion[0] == "POST")
+    //     {
+    //         spdlog::info("POST method");
+    //         postHandle();
+    //     }
+    //     else if (m_request.m_methodPathVersion[0] == "DELETE")
+    //     {
+    //         spdlog::debug("DELETE method");
+    //         deleteHandle();
+    //     }
+    // }
+    // catch (const StatusCodeException &e)
+    // {
+    //     m_statusCode = e.getStatusCode();
+    //     spdlog::warn(e.what());
+    // }
 }

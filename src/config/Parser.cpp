@@ -15,7 +15,11 @@ Parser::~Parser(void) {
 /**
  * STATIC FUNCTIONS
 */
-static std::string convertToBytes(const std::string &rawValue) {
+
+/**
+ * TODO MAX_INT >
+*/
+static int convertToBytes(const std::string &rawValue) {
 	std::string convertedValue;
 	for (size_t j = 0; j < rawValue.size() - 1; j++) {
 		if (!isdigit(rawValue[j]))
@@ -30,12 +34,17 @@ static std::string convertToBytes(const std::string &rawValue) {
 		convertedValue += "000000";
 	else if (rawValue[lastCharIndex] == 'g' || rawValue[lastCharIndex] == 'G')
 		convertedValue += "000000000";
-	return (convertedValue);
+	int nb;
+	std::stringstream as;
+	as.str(convertedValue);
+	if (!(as >> nb))
+		throw ClientMaxBodySizeException(rawValue);
+	return (std::stoi(convertedValue));
 }
 
-static const std::string parseClientMaxBodySize(const std::string &rawValue) {
+static int parseClientMaxBodySize(const std::string &rawValue) {
 	if (rawValue == "0")
-		return rawValue;
+		return 0;
 	else if (!hasConversionUnit(rawValue))
 		throw ConversionUnitException(rawValue);
 	else

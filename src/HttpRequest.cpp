@@ -3,7 +3,12 @@
 // constructor
 HttpRequest::HttpRequest(void)
 {
-    spdlog::debug("HttpRequest constructor called");
+    spdlog::debug("HttpRequest default constructor called");
+}
+
+HttpRequest::HttpRequest(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
+{
+    spdlog::debug("HttpRequest serverconfig constructor called");
 }
 
 // copy constructor
@@ -21,7 +26,7 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
 {
     int i{};
 
-    out << "HttpRequest (\n";
+    out << "HttpRequest {\n";
 
     for (auto item : httprequest.m_methodPathVersion)
     {
@@ -33,14 +38,16 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
     out << "m_boundaryCode = |" << httprequest.m_boundaryCode << "|\n";
     out << "m_fileName = |" << httprequest.m_fileName << "|\n";
     out << "m_statusCode = |" << httprequest.m_statusCode << "|\n";
-    out << "m_generalHeaders = {\n";
+    out << "m_generalHeaders = [\n";
     for (const auto &elem : httprequest.m_generalHeaders)
     {
         out << "[" << i << "] = (" << elem.first << ", " << elem.second << ")\n";
         i++;
     }
+    out << "]\n";
     out << "}\n";
-    out << ")";
+
+    out << "m_response = " << httprequest.m_response;
 
     return out;
 }
@@ -123,6 +130,14 @@ void HttpRequest::bodySet(void)
     m_body = bodyParse(m_boundaryCode);
 }
 
+void HttpRequest::bodyToDisk(const std::string &path)
+{
+    std::ofstream outf{path};
+    if (!outf)
+        throw StatusCodeException(400, "Error: ofstream");
+    outf << m_body;
+}
+
 std::string HttpRequest::fileNameParse(const std::map<std::string, std::string> &generalHeaders)
 {
     auto contentDispositionIt = generalHeaders.find("Content-Disposition");
@@ -171,9 +186,21 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
         }
         spdlog::info("Content-Length reached!");
     }
+    // Chunked requests
+    else if (m_requestHeaders.contains("Transfer-Encoding"))
+    {
+        if (!m_isChunked)
+            m_isChunked = true;
+        size_t chunkEndPos = m_rawMessage.find("\r\n0\r\n\r\n");
+        if (chunkEndPos == std::string::npos)
+        {
+            spdlog::warn("Chunk EOF not reached [...]");
+            return 3;
+        }
+        spdlog::info("Chunk EOF reached!");
+    }
 
     spdlog::info("message complete!");
-    // spdlog::info("m_rawMessage = \n|{}|", m_rawMessage);
 
     return 0;
 }
@@ -185,20 +212,107 @@ void HttpRequest::parse(void)
         throw StatusCodeException(400, "Error: not 3 elements in request-line");
     if (m_methodPathVersion[2] != "HTTP/1.1")
         throw StatusCodeException(505, "Warning: http version not allowed");
-    if ((m_methodPathVersion[0] != "GET") && (m_methodPathVersion[0] != "POST") && (m_methodPathVersion[0] != "DELETE"))
+    if ((m_methodPathVersion[0] != "GET") && (m_methodPathVersion[0] != "POST") && (m_methodPathVersion[0] != "DELETE")) // Maybe this can be removed
         throw StatusCodeException(405, "Warning: method not allowed");
 
     // Percentage decode URI string
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
+    // Nasty solution to redirect + get back upload
+    if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
+    {
+        m_response.bodySet("./www" + m_methodPathVersion[1]);
+        m_response.m_statusCode = 200;
+        return;
+    }
+
+    // Loops over location blocks and checks for match between location block and request path
+    bool isLocationFound{false};
+    for (const auto &location : m_serverconfig.getLocationsConfig())
+    {
+        if (m_methodPathVersion[1] == location.getRequestURI())
+        {
+            m_locationconfig = location;
+            isLocationFound = true;
+            break;
+        }
+    }
+    if (!isLocationFound) // there's no matching URI
+    {
+        throw StatusCodeException(404, "Error: no matching location/path found");
+    }
+
+    // For a certain location block, check if the request method is allowed
+    auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
+    if (it == m_locationconfig.getHttpMethods().end())
+        throw StatusCodeException(405, "Warning: method not allowed");
+
+    // For a certain location block, loops over index files, and checks if one exists
+    bool isIndexFileFound{false};
+    for (const auto &index : m_locationconfig.getIndexFile())
+    {
+        spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index);
+        if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
+        {
+            m_response.m_path = m_locationconfig.getRootPath() + index;
+            isIndexFileFound = true;
+            break;
+        }
+    }
+    if (!isIndexFileFound)
+        throw StatusCodeException(404, "Error: no matching index file found");
+
     if (m_methodPathVersion[0] == "POST")
     {
-        if (m_contentLength > m_client_max_body_size)
-            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+        // Parse chunked request
+        if (m_isChunked)
+        {
+            // Check for "chunked" directive
+            chunkHeadersParse();
 
-        boundaryCodeSet();
-        generalHeadersSet();
-        fileNameSet();
-        bodySet();
+            // Extract chunk body
+            chunkBodyExtract();
+
+            // Tokenize body to separate len and actual chunk
+            chunkBodyTokenize();
+
+            // Set body
+            chunkBodySet();
+
+			// Replace Transfer-Encoding header with Content-Length 
+			// header and set to total length of chunk content
+			chunkHeaderReplace();
+
+			requestHeadersPrint(m_requestHeaders); // ? debug
+
+			m_contentLength = m_totalChunkLength;
+
+			if (m_contentLength > m_locationconfig.getClientMaxBodySize())
+				throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+
+            // the chunk body is unchunked at this stage
+			// so it's basically a normal body
+            m_body = m_chunkBody;
+        }
+        else
+        {
+            if (m_contentLength > m_locationconfig.getClientMaxBodySize())
+                throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+
+            boundaryCodeSet();
+            generalHeadersSet();
+            fileNameSet();
+            bodySet();
+
+            // Needs to be moved - Upload Post handeling
+            if (m_fileName.empty())
+                throw StatusCodeException(400, "Error: no fileName");
+            bodyToDisk("./www/" + m_fileName);
+            m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
+            m_response.m_statusCode = 303;
+            return;
+        }
     }
+    m_response.bodySet(m_response.m_path);
+    m_response.m_statusCode = 200;
 }

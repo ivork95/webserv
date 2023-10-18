@@ -41,7 +41,7 @@ const std::string &LocationConfig::getRootPath(void) const {
 	return (_rootPath);
 }
 
-const std::string &LocationConfig::getClientMaxBodySize(void) const {
+const int &LocationConfig::getClientMaxBodySize(void) const {
 	return (_clientMaxBodySize);
 }
 
@@ -75,7 +75,7 @@ void LocationConfig::setRootPath(const std::string &rootPath) {
 	_hasRootPath = true;
 }
 
-void LocationConfig::setClientMaxBodySize(const std::string &clientMaxBodySize) {
+void LocationConfig::setClientMaxBodySize(const int &clientMaxBodySize) {
 	if (_hasClientMaxBodySize)
 		throw AlreadySetException("client max body size");
 	_clientMaxBodySize = clientMaxBodySize;
@@ -179,7 +179,7 @@ void	LocationConfig::checkMissingDirective(void) {
 	}
 	if (!hasClientMaxBodySize()) {
 		// std::cout << "No client max body size (setting to default)\n"; // ? debug
-		setClientMaxBodySize("1000000");
+		setClientMaxBodySize(1000000);
 	}
 	if (!hasAutoIndex()) {
 		// std::cout << "No auto index (setting to default)\n"; // ? debug

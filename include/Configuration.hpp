@@ -7,13 +7,14 @@
 #include "ServerConfig.hpp"
 #include "UtilsConfig.hpp"
 
-class Configuration {
-	public:
-		Configuration(void);
-		~Configuration(void);
+class Configuration
+{
+public:
+    Configuration(void);
+    ~Configuration(void);
 
-		std::vector<ServerConfig>	serversConfig;
-		std::vector<std::string>	serverSections;
+    std::vector<ServerConfig> serversConfig;
+    std::vector<std::string> serverSections;
 };
 
 int initConfig(const std::string &filePath, Configuration &config);

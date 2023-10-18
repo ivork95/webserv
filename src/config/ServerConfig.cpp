@@ -47,7 +47,7 @@ const std::vector<std::string> &ServerConfig::getServerName(void) const {
 	return (_serverName);
 }
 
-const std::string &ServerConfig::getClientMaxBodySize(void) const {
+const int &ServerConfig::getClientMaxBodySize(void) const {
 	return (_clientMaxBodySize);
 }
 
@@ -85,7 +85,7 @@ void ServerConfig::setServerName(const std::vector<std::string> &serverName) {
 	_hasServerName = true;
 }
 
-void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize) {
+void ServerConfig::setClientMaxBodySize(const int &clientMaxBodySize) {
 	if (_hasClientMaxBodySize)
 		throw AlreadySetException("client max body size");
 	_clientMaxBodySize = clientMaxBodySize;
@@ -187,7 +187,7 @@ void	ServerConfig::checkMissingDirective(void) {
 	}
 	if (!hasClientMaxBodySize()) {
 		// std::cout << "No client max body size (setting to default)\n"; // ? debug
-		setClientMaxBodySize("1000000");
+		setClientMaxBodySize(1000000);
 	}
 	if (!hasErrorPagesConfig()) {
 		// default value: -
