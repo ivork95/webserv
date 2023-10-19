@@ -1,6 +1,8 @@
 
 #include "Parser.hpp"
 
+#include <filesystem>
+
 /**
  * CONSTRUCTORS / DESTRUCTORS
 */
@@ -15,6 +17,52 @@ Parser::~Parser(void) {
 /**
  * STATIC FUNCTIONS
 */
+static std::string	parsePath(const std::string &rawPath, const bool &isDirectory) {
+
+	// Empty
+	if (rawPath.empty())
+		throw PathException(rawPath);
+
+	// Root path
+	if (isDirectory && rawPath == "/")
+		return "www";
+	
+	// Remove leading / 
+	std::string inputPath = rawPath;
+	// std::cout << "Before leading /: " + inputPath << std::endl; // ? debug
+	if (inputPath[0] == '/') {
+		inputPath = inputPath.substr(1, inputPath.size());
+		// std::cout << "Removed leading /: " + inputPath << std::endl; // ? debug
+	}
+
+	// std::cout << "Before checks: " + inputPath << std::endl; // ? debug
+
+	if (isDirectory) {
+
+		// Remove trailing /
+		// std::cout << "Before trailing /: " + inputPath << std::endl; // ? debug
+		if (inputPath[inputPath.size() - 1] == '/') {
+			inputPath = inputPath.substr(0, inputPath.size() - 1);
+			// std::cout << "Removed trailing /: " + inputPath << std::endl; // ? debug
+		}
+		
+		if (std::filesystem::is_directory(inputPath)) {
+			return inputPath;
+		}
+
+		if (std::filesystem::is_directory("www/" + inputPath)) {
+			return "www/" + inputPath;
+		}
+
+		throw PathException(rawPath);
+
+	} else {
+		if (std::filesystem::is_regular_file(inputPath))
+			return inputPath;
+		throw PathException(rawPath);
+	}
+}
+
 // TODO MAX_INT >
 static int convertToBytes(const std::string &rawValue) {
 	std::string convertedValue{};
@@ -160,11 +208,16 @@ void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &ro
 	// std::cout << "\tParsing root directive\n"; // ? debug
 
 	const std::string	rootPath = tokens.at(*i).getWord();
-	if (!isValidPath(rootPath, true)) { // TODO wip
-		throw PathException(rootPath);
-	}
+	const std::string	parsedPath = parsePath(rootPath, true);
+	// if (rootPath == "/") {
+	// 	route.setRootPath(tokens.at(*i).getWord());
+	// 	return ;
+	// }
 
-	route.setRootPath(tokens.at(*i).getWord());
+	if (!isValidPath(parsedPath, true)) // TODO wip
+		throw PathException(rootPath);
+
+	route.setRootPath(parsedPath);
 }
 
 
@@ -178,12 +231,7 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
 	if (requestUri[0] != '/')
 		throw UriException(requestUri);
 
-	// if (requestUri != "/") {
-	// 	if (!isValidPath(requestUri.substr(1)))
-	// 		throw UriException(requestUri);
-	// }
-
-	if (!isValidUri(requestUri))
+	if (!isValidPath(parsePath(requestUri, true), true))
 		throw UriException(requestUri);
 
 	LocationConfig	route(requestUri);
@@ -236,7 +284,6 @@ void	Parser::_parseServerClientMaxBodySize(ServerConfig *server, std::vector<Tok
 	server->setClientMaxBodySize(parseClientMaxBodySize(rawValue));
 }
 
-// TODO check URI
 void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing error_page directive\n"; // ? debug
 
@@ -256,11 +303,13 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 	if (errorCodes.empty())
 		throw ErrorCodeException(tokens.at(j).getWord());
 
-	const std::string			uriPath = tokens.at(j).getWord();
-	if (!isValidUri(uriPath))
-		throw PathException(uriPath);
+	const std::string			filePath = tokens.at(j).getWord();
+	const std::string			parsedPath = parsePath(filePath, false);
+	if (!isValidPath(parsedPath, false))
+		throw PathException(parsedPath);
 
-	ErrorPageConfig	errorPage(errorCodes, uriPath);
+	ErrorPageConfig	errorPage(errorCodes, parsedPath);
+
 	server->setErrorPagesConfig(errorPage);
 	(*i) = j;
 }

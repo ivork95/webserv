@@ -53,7 +53,7 @@ void handleConnectedClient(Client *client, std::vector<Socket *> &toBeDeleted)
                 {
                     try // try catch in case error page doesnt exist. Is it possible to check all files during parsing?
                     {
-                        client->m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getUriPath());
+                        client->m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getFilePath());
                     }
                     catch (const std::exception &e)
                     {
