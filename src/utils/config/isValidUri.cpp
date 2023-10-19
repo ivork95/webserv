@@ -8,11 +8,12 @@
  * TODO		- starts with '/' ?
  * TODO		- ends with '/' ?
  * TODO		- contains only valid characters ? ...
+ * TODO	is it a folder? file? none?
 */
-// ! a URI is not necessarly a file, it could be a redirect to another location block
 bool	isValidUri(const std::string &str) {
-	// std::cout << "isValidUri: " << str << std::endl; // ? debug
-	if (str.empty())
+	if (str.empty() || str.front() != '/')
 		return false;
+	if (str == "/")
+		return true;
 	return true;
 }
