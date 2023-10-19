@@ -1,16 +1,16 @@
-#include "HttpRequest.hpp"
-#include "MultiplexerIO.hpp"
-#include "Pipe.hpp"
+#include "Request.hpp"
+#include "Multiplexer.hpp"
+#include "CGIPipeIn.hpp"
 
 // constructor
-HttpRequest::HttpRequest(void)
+Request::Request(void)
 {
-    spdlog::debug("HttpRequest default constructor called");
+    spdlog::debug("Request default constructor called");
 }
 
-HttpRequest::HttpRequest(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
+Request::Request(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
 {
-    spdlog::debug("HttpRequest serverconfig constructor called");
+    spdlog::debug("Request serverconfig constructor called");
 }
 
 // copy constructor
@@ -18,30 +18,30 @@ HttpRequest::HttpRequest(const ServerConfig &serverconfig) : m_serverconfig(serv
 // copy assignment operator overload
 
 // destructor
-HttpRequest::~HttpRequest(void)
+Request::~Request(void)
 {
-    spdlog::debug("HttpRequest destructor called");
+    spdlog::debug("Request destructor called");
 }
 
 // outstream operator overload
-std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
+std::ostream &operator<<(std::ostream &out, const Request &request)
 {
     int i{};
 
-    out << "HttpRequest {\n";
+    out << "Request {\n";
 
-    for (auto item : httprequest.m_methodPathVersion)
+    for (auto item : request.m_methodPathVersion)
     {
         out << "m_methodPathVersion[" << i << "] = |" << item << "|\n";
         i++;
     }
-    // out << "m_body = |" << httprequest.m_body << "|\n";
+    // out << "m_body = |" << request.m_body << "|\n";
     out << "m_body = |We're not printing this!|\n";
-    out << "m_boundaryCode = |" << httprequest.m_boundaryCode << "|\n";
-    out << "m_fileName = |" << httprequest.m_fileName << "|\n";
-    out << "m_statusCode = |" << httprequest.m_statusCode << "|\n";
+    out << "m_boundaryCode = |" << request.m_boundaryCode << "|\n";
+    out << "m_fileName = |" << request.m_fileName << "|\n";
+    out << "m_statusCode = |" << request.m_statusCode << "|\n";
     out << "m_generalHeaders = [\n";
-    for (const auto &elem : httprequest.m_generalHeaders)
+    for (const auto &elem : request.m_generalHeaders)
     {
         out << "[" << i << "] = (" << elem.first << ", " << elem.second << ")\n";
         i++;
@@ -49,19 +49,19 @@ std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest)
     out << "]\n";
     out << "}\n";
 
-    out << "m_response = " << httprequest.m_response;
+    out << "m_response = " << request.m_response;
 
     return out;
 }
 
-void HttpRequest::methodPathVersionSet(void)
+void Request::methodPathVersionSet(void)
 {
     size_t requestLineEndPos = m_rawMessage.find("\r\n");
     std::string requestLine = m_rawMessage.substr(0, requestLineEndPos);
     m_methodPathVersion = Helper::split(requestLine);
 }
 
-std::string HttpRequest::boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders)
+std::string Request::boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders)
 {
     auto contentTypeIt = requestHeaders.find("Content-Type");
     if (contentTypeIt == requestHeaders.end())
@@ -77,12 +77,12 @@ std::string HttpRequest::boundaryCodeParse(const std::map<std::string, std::stri
     return contentType.substr(boundaryStartPos + boundary.length());
 }
 
-void HttpRequest::boundaryCodeSet(void)
+void Request::boundaryCodeSet(void)
 {
     m_boundaryCode = boundaryCodeParse(m_requestHeaders);
 }
 
-std::string HttpRequest::generalHeadersParse(const std::string &boundaryCode)
+std::string Request::generalHeadersParse(const std::string &boundaryCode)
 {
     const std::string boundaryStart = "--" + boundaryCode + "\r\n";
     const std::string generalHeadersEnd = "\r\n\r\n";
@@ -100,13 +100,13 @@ std::string HttpRequest::generalHeadersParse(const std::string &boundaryCode)
     return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
 }
 
-void HttpRequest::generalHeadersSet(void)
+void Request::generalHeadersSet(void)
 {
     std::string generalFieldLines = generalHeadersParse(m_boundaryCode);
     m_generalHeaders = fieldLinesToHeaders(generalFieldLines);
 }
 
-std::string HttpRequest::bodyParse(const std::string &boundaryCode)
+std::string Request::bodyParse(const std::string &boundaryCode)
 {
     const std::string headersEnd = "\r\n\r\n";
     size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
@@ -127,12 +127,12 @@ std::string HttpRequest::bodyParse(const std::string &boundaryCode)
     return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
 }
 
-void HttpRequest::bodySet(void)
+void Request::bodySet(void)
 {
     m_body = bodyParse(m_boundaryCode);
 }
 
-void HttpRequest::bodyToDisk(const std::string &path)
+void Request::bodyToDisk(const std::string &path)
 {
     std::ofstream outf{path};
     if (!outf)
@@ -140,7 +140,7 @@ void HttpRequest::bodyToDisk(const std::string &path)
     outf << m_body;
 }
 
-std::string HttpRequest::fileNameParse(const std::map<std::string, std::string> &generalHeaders)
+std::string Request::fileNameParse(const std::map<std::string, std::string> &generalHeaders)
 {
     auto contentDispositionIt = generalHeaders.find("Content-Disposition");
     if (contentDispositionIt == generalHeaders.end())
@@ -154,13 +154,13 @@ std::string HttpRequest::fileNameParse(const std::map<std::string, std::string> 
     return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
 }
 
-void HttpRequest::fileNameSet(void)
+void Request::fileNameSet(void)
 {
     m_fileName = fileNameParse(m_generalHeaders);
     Helper::strip(m_fileName);
 }
 
-int HttpRequest::tokenize(const char *buf, int nbytes)
+int Request::tokenize(const char *buf, int nbytes)
 {
     // We got some good data from a client
     spdlog::info("nbytes = {}", nbytes);
@@ -209,7 +209,7 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
     return 0;
 }
 
-void HttpRequest::parse(void)
+void Request::parse(void)
 {
     methodPathVersionSet();
     if (m_methodPathVersion.size() != 3)
@@ -269,16 +269,16 @@ void HttpRequest::parse(void)
     if (m_methodPathVersion[0] == "POST")
     {
         // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
-        // MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
-        // Pipe *p = new Pipe;
-        // pipe(p->pipefd);
-        // struct epoll_event ev
-        // {
-        // };
-        // ev.data.ptr = p;
-        // ev.events = EPOLLOUT;
-        // epoll_ctl(multiplexerio.m_epollfd, EPOLL_CTL_ADD, p->pipefd[1], &ev);
-        // return;
+        Multiplexer &multiplexer = Multiplexer::getInstance();
+        CGIPipeIn *p = new CGIPipeIn;
+        pipe(p->m_pipeFd);
+        struct epoll_event ev
+        {
+        };
+        ev.data.ptr = p;
+        ev.events = EPOLLOUT;
+        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_ADD, p->m_pipeFd[1], &ev);
+        return;
 
         // Parse chunked request
         if (m_isChunked)

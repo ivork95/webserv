@@ -1,8 +1,8 @@
-#include "MultiplexerIO.hpp"
-#include "HttpResponse.hpp"
+#include "Multiplexer.hpp"
+#include "Response.hpp"
 
 // default constructor
-MultiplexerIO::MultiplexerIO(void)
+Multiplexer::Multiplexer(void)
 {
     m_epollfd = epoll_create(1);
     if (m_epollfd == -1)
@@ -14,7 +14,7 @@ MultiplexerIO::MultiplexerIO(void)
 }
 
 // destructor
-MultiplexerIO::~MultiplexerIO(void)
+Multiplexer::~Multiplexer(void)
 {
     spdlog::debug("{} destructor called", *this);
 
@@ -22,21 +22,21 @@ MultiplexerIO::~MultiplexerIO(void)
 }
 
 // outstream operator overload
-std::ostream &operator<<(std::ostream &out, const MultiplexerIO &multiplexerio)
+std::ostream &operator<<(std::ostream &out, const Multiplexer &multiplexer)
 {
-    out << "MultiplexerIO(" << multiplexerio.m_epollfd << ")";
+    out << "Multiplexer(" << multiplexer.m_epollfd << ")";
 
     return out;
 }
 
 // member functions
-MultiplexerIO &MultiplexerIO::getInstance(void)
+Multiplexer &Multiplexer::getInstance(void)
 {
-    static MultiplexerIO instance;
+    static Multiplexer instance;
     return instance;
 }
 
-void MultiplexerIO::addSocketToEpollFd(Socket *ptr, int events)
+void Multiplexer::addSocketToEpollFd(Socket *ptr, int events)
 {
     struct epoll_event ev
     {
@@ -45,13 +45,10 @@ void MultiplexerIO::addSocketToEpollFd(Socket *ptr, int events)
     ev.events = events;
 
     if (epoll_ctl(m_epollfd, EPOLL_CTL_ADD, ptr->m_socketFd, &ev) == -1)
-    {
-        std::perror("epoll_ctl() failed");
         throw std::runtime_error("Error: epoll_ctl() failed\n");
-    }
 }
 
-void MultiplexerIO::modifyEpollEvents(Socket *ptr, int events)
+void Multiplexer::modifyEpollEvents(Socket *ptr, int events)
 {
     struct epoll_event ev
     {

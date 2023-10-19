@@ -10,37 +10,43 @@
 #include <spdlog/fmt/ostr.h> // must be included
 #include <map>
 
-#include "TcpServer.hpp"
+#include "Server.hpp"
 #include "Timer.hpp"
 #include "Socket.hpp"
-#include "HttpRequest.hpp"
-#include "HttpMessage.hpp"
+#include "Request.hpp"
+#include "Message.hpp"
+#include "Multiplexer.hpp"
 
-class TcpServer;
+#define BUFSIZE 256
+
+class Server;
 class Timer;
 
 class Client : public Socket
 {
 public:
-    const TcpServer &m_server;
-    HttpRequest m_request{};
+    const Server &m_server;
+    Request m_request{};
+    Timer *m_timer{}; // Change to smart ptr
     struct sockaddr_storage m_remoteaddr
     {
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
-    Timer *m_timer{};
 
     // default constructor
     Client(void) = delete;
 
     // server constructor
-    Client(const TcpServer &server);
+    Client(const Server &server);
 
     // destructor
     ~Client(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Client &client);
+
+    // member functions
+    void handleConnectedClient(std::vector<Socket *> &toBeDeleted);
 };
 
 #endif

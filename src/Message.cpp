@@ -1,42 +1,42 @@
-#include "HttpMessage.hpp"
+#include "Message.hpp"
 
 // constructor
-HttpMessage::HttpMessage(void)
+Message::Message(void)
 {
-    spdlog::debug("HttpMessage constructor called");
+    spdlog::debug("Message constructor called");
 }
 
 // copy constructor
 
 // destructor
-HttpMessage::~HttpMessage(void)
+Message::~Message(void)
 {
-    spdlog::debug("HttpMessage destructor called");
+    spdlog::debug("Message destructor called");
 }
 
 // outstream operator overload
-std::ostream &operator<<(std::ostream &out, const HttpMessage &httpmessage)
+std::ostream &operator<<(std::ostream &out, const Message &message)
 {
     int i{};
 
-    out << "HttpMessage (\n";
-    out << "m_rawMessage = |" << httpmessage.m_rawMessage << "|\n";
+    out << "Message (\n";
+    out << "m_rawMessage = |" << message.m_rawMessage << "|\n";
     out << "m_requestHeaders = {\n";
-    for (const auto &elem : httpmessage.m_requestHeaders)
+    for (const auto &elem : message.m_requestHeaders)
     {
         out << "[" << i << "] = (" << elem.first << ", " << elem.second << ")\n";
         i++;
     }
     out << "}\n";
-    out << "m_contentLength = " << httpmessage.m_contentLength << '\n';
-    out << "m_isContentLengthConverted = " << httpmessage.m_isContentLengthConverted << '\n';
+    out << "m_contentLength = " << message.m_contentLength << '\n';
+    out << "m_isContentLengthConverted = " << message.m_isContentLengthConverted << '\n';
     out << ")";
 
     return out;
 }
 
 // getters/setters
-void HttpMessage::requestHeadersSet(void)
+void Message::requestHeadersSet(void)
 {
     size_t requestLineEndPos = m_rawMessage.find("\r\n");
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
@@ -45,7 +45,7 @@ void HttpMessage::requestHeadersSet(void)
     m_requestHeaders = fieldLinesToHeaders(fieldLines);
 }
 
-void HttpMessage::contentLengthSet(void)
+void Message::contentLengthSet(void)
 {
     try
     {
@@ -59,7 +59,7 @@ void HttpMessage::contentLengthSet(void)
 }
 
 // methods
-std::pair<std::string, std::string> HttpMessage::fieldLineParse(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const
+std::pair<std::string, std::string> Message::fieldLineParse(const std::string &fieldLine, const std::string &keyDelim, size_t keyDelimPos) const
 {
     std::string key = fieldLine.substr(0, keyDelimPos);
     std::string value = fieldLine.substr(keyDelimPos + keyDelim.length());
@@ -67,7 +67,7 @@ std::pair<std::string, std::string> HttpMessage::fieldLineParse(const std::strin
     return std::pair<std::string, std::string>(key, value);
 }
 
-std::map<std::string, std::string> HttpMessage::fieldLinesToHeaders(std::string &fieldLines)
+std::map<std::string, std::string> Message::fieldLinesToHeaders(std::string &fieldLines)
 {
     std::map<std::string, std::string> headers{};
     std::string fieldLine{};
@@ -87,7 +87,7 @@ std::map<std::string, std::string> HttpMessage::fieldLinesToHeaders(std::string 
     return headers;
 }
 
-void HttpMessage::requestHeadersPrint(const std::map<std::string, std::string> &headers) const
+void Message::requestHeadersPrint(const std::map<std::string, std::string> &headers) const
 {
     int i{};
 

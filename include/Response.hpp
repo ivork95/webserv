@@ -1,5 +1,5 @@
-#ifndef HTTPRESPONSE_HPP
-#define HTTPRESPONSE_HPP
+#ifndef RESPONSE_HPP
+#define RESPONSE_HPP
 
 #include <map>
 #include <string>
@@ -14,7 +14,7 @@
 #include "ServerConfig.hpp"
 #include "Helper.hpp"
 
-class HttpResponse
+class Response
 {
 public:
     int m_statusCode{};
@@ -30,7 +30,7 @@ public:
     int m_bytesleft{};
 
     // default constructor
-    HttpResponse(void);
+    Response(void);
 
     // request constrcuctor
 
@@ -39,10 +39,10 @@ public:
     // copy assignment operator overload
 
     // destructor
-    ~HttpResponse(void);
+    ~Response(void);
 
     // outstream operator overload
-    friend std::ostream &operator<<(std::ostream &out, const HttpResponse &HttpResponse);
+    friend std::ostream &operator<<(std::ostream &out, const Response &Response);
 
     // getters/setters
     void bodySet(const std::string &path);

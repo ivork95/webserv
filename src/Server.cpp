@@ -1,7 +1,7 @@
-#include "TcpServer.hpp"
+#include "Server.hpp"
 
 // serverConfig constructor
-TcpServer::TcpServer(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
+Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
 {
     int yes{1}; // For setsockopt() SO_REUSEADDR, below
     int rv{};
@@ -85,7 +85,7 @@ TcpServer::TcpServer(const ServerConfig &serverconfig) : m_serverconfig(serverco
 }
 
 // destructor
-TcpServer::~TcpServer(void)
+Server::~Server(void)
 {
     spdlog::debug("{0} destructor called", *this);
 
@@ -93,9 +93,9 @@ TcpServer::~TcpServer(void)
 }
 
 // outstream operator overload
-std::ostream &operator<<(std::ostream &out, const TcpServer &tcpserver)
+std::ostream &operator<<(std::ostream &out, const Server &server)
 {
-    out << "TcpServer(" << tcpserver.m_socketFd << ": " << tcpserver.m_ipver << ": " << tcpserver.m_ipstr << ": " << tcpserver.m_port << ")";
+    out << "Server(" << server.m_socketFd << ": " << server.m_ipver << ": " << server.m_ipstr << ": " << server.m_port << ")";
 
     return out;
 }

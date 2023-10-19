@@ -1,5 +1,5 @@
-#ifndef HTTPREQUEST_HPP
-#define HTTPREQUEST_HPP
+#ifndef REQUEST_HPP
+#define REQUEST_HPP
 
 #include <iostream>
 #include <unistd.h>
@@ -13,45 +13,43 @@
 #include <sstream>
 #include <filesystem>
 
-#include "HttpMessage.hpp"
+#include "Message.hpp"
 #include "StatusCodes.hpp"
 #include "Helper.hpp"
 #include "ServerConfig.hpp"
-#include "HttpResponse.hpp"
+#include "Response.hpp"
 
-class HttpResponse;
+class Response;
 
-class HttpRequest : public HttpMessage
+class Request : public Message
 {
 public:
     ServerConfig m_serverconfig{};
     LocationConfig m_locationconfig{};
+    Response m_response{};
 
     // request
     std::vector<std::string> m_methodPathVersion{3, ""};
     std::map<std::string, std::string> m_generalHeaders{};
     std::string m_boundaryCode{};
     std::string m_fileName{};
+    std::string m_body{};
+    int m_statusCode{};
 
     // Chunked request
     bool m_isChunked{false};
 
-    int m_statusCode{};
-    std::string m_body{};
-
-    HttpResponse m_response{};
-
     // constructor
-    HttpRequest(void);
+    Request(void);
 
-    HttpRequest(const ServerConfig &serverconfig);
+    Request(const ServerConfig &serverconfig);
 
     // copy constructor
 
     // copy assignment operator overload
 
     // destructor
-    ~HttpRequest(void);
+    ~Request(void);
 
     // getters/setters
     void methodPathVersionSet(void);
@@ -73,8 +71,7 @@ public:
     void chunkHeadersParse(void);
     void chunkBodyExtract(void);
     void chunkBodyTokenize(void);
-    void chunkBodyParse(size_t nbChunks,
-                        std::vector<size_t> chunkLength, std::vector<std::string> chunkLine);
+    void chunkBodyParse(size_t nbChunks, std::vector<size_t> chunkLength, std::vector<std::string> chunkLine);
     void chunkBodySet(void);
 
     std::string m_rawChunkBody{};
@@ -82,7 +79,7 @@ public:
     std::vector<std::string> m_chunkLine{};
 
     // outstream operator overload
-    friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);
+    friend std::ostream &operator<<(std::ostream &out, const Request &request);
 };
 
 #endif

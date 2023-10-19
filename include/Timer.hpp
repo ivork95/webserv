@@ -13,7 +13,7 @@ class Client;
 class Timer : public Socket
 {
 public:
-    Client *m_client{};
+    Client *m_client{}; // change into weak ptr
     struct itimerspec m_spec
     {
     };

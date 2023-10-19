@@ -1,6 +1,6 @@
-#include "HttpRequest.hpp"
+#include "Request.hpp"
 
-void	HttpRequest::chunkBodySet() {
+void	Request::chunkBodySet() {
 	std::string finalChunkBody{};
 	std::string tmp{};
 	for (size_t n = 0; n < m_chunkLine.size(); n++) {
@@ -11,7 +11,7 @@ void	HttpRequest::chunkBodySet() {
 }
 
 // ! can be static
-void	HttpRequest::chunkBodyParse(size_t nbChunks, std::vector<size_t> chunkLength, std::vector<std::string> chunkLine) {
+void	Request::chunkBodyParse(size_t nbChunks, std::vector<size_t> chunkLength, std::vector<std::string> chunkLine) {
 	// Error check
 	if (chunkLine.empty())
 		throw StatusCodeException(404, "Error: Empty chunk request");
@@ -23,7 +23,7 @@ void	HttpRequest::chunkBodyParse(size_t nbChunks, std::vector<size_t> chunkLengt
 	}
 }
 
-void	HttpRequest::chunkBodyTokenize(void) {
+void	Request::chunkBodyTokenize(void) {
 	std::istringstream			iss(m_rawChunkBody);
 	std::string					token{};
 	std::vector<std::string> 	chunkLine{};
@@ -49,7 +49,7 @@ void	HttpRequest::chunkBodyTokenize(void) {
 	m_chunkLine = chunkLine;
 }
 
-void	HttpRequest::chunkBodyExtract(void) {
+void	Request::chunkBodyExtract(void) {
 	const std::string headersEnd = "\r\n\r\n";
 	const std::string chunkEnd = "\r\n0\r\n\r\n";
 	size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
@@ -58,7 +58,7 @@ void	HttpRequest::chunkBodyExtract(void) {
 	m_rawChunkBody = m_rawMessage.substr(requestHeadersEndPos + 4, generalHeadersEndPos - requestHeadersEndPos);
 }
 
-void	HttpRequest::chunkHeadersParse(void) {
+void	Request::chunkHeadersParse(void) {
 	for (auto header: m_requestHeaders) {
 		if (header.first == "Transfer-Encoding") {
 			if (header.second != "chunked") {
