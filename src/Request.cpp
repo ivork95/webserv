@@ -9,6 +9,7 @@ Request::Request(void)
 }
 
 Request::Request(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
+
 {
     spdlog::debug("Request serverconfig constructor called");
 }
@@ -270,14 +271,16 @@ void Request::parse(void)
     {
         // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
         Multiplexer &multiplexer = Multiplexer::getInstance();
-        CGIPipeIn *p = new CGIPipeIn;
-        pipe(p->m_pipeFd);
+        CGIPipeIn *pipein = new CGIPipeIn;
+        if (pipe(pipein->m_pipeFd))
+            throw StatusCodeException(500, "Error: pipe()");
         struct epoll_event ev
         {
         };
-        ev.data.ptr = p;
+        ev.data.ptr = pipein;
         ev.events = EPOLLOUT;
-        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_ADD, p->m_pipeFd[1], &ev);
+        if (epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_ADD, pipein->m_pipeFd[1], &ev) == -1)
+            throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
         return;
 
         // Parse chunked request

@@ -59,15 +59,13 @@ void run(const Configuration &config)
                 }
                 else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
                 {
-                    spdlog::critical("pipeout->m_pipeFd[0]");
+                    spdlog::critical("cgi out READ ready!");
 
-                    char buf;
-                    while (read(pipeout->m_pipeFd[READ], &buf, 1) > 0)
-                        write(STDOUT_FILENO, &buf, 1);
-                    write(STDOUT_FILENO, "\n", 1);
+                    // char buf;
+                    // while (read(pipeout->m_pipeFd[READ], &buf, 1) > 0)
+                    //     write(STDOUT_FILENO, &buf, 1);
+                    // write(STDOUT_FILENO, "\n", 1);
                     close(pipeout->m_pipeFd[READ]);
-
-                    continue;
                 }
                 else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
@@ -84,7 +82,6 @@ void run(const Configuration &config)
             }
             else if (multiplexer.m_events[i].events & EPOLLOUT) // If someone's ready to write
             {
-
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
                     if (client->m_request.m_response.sendAll(client->m_socketFd) <= 0)
@@ -93,18 +90,17 @@ void run(const Configuration &config)
                         client->m_socketFd = -1;
                         toBeDeleted.push_back(client);
                     }
-                    continue;
                 }
                 else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
                 {
-                    spdlog::critical("Event van de WRITE kant van Pipe1");
+                    spdlog::critical("cgi in WRITE ready!");
 
                     dup2(pipein->m_pipeFd[READ], STDIN_FILENO); // Dup de READ kant van Pipe1 naar stdin
                     close(pipein->m_pipeFd[READ]);
                     write(pipein->m_pipeFd[WRITE], "Marco", 5); // Write "Marco" naar stdin
                     close(pipein->m_pipeFd[WRITE]);
 
-                    // Hier voegen we de READ kant van Pipe1 toe aan Epoll
+                    // Hier voegen we de READ kant van Pipe2 toe aan Epoll
                     CGIPipeOut *pipeout = new CGIPipeOut;
                     pipe(pipeout->m_pipeFd);
                     struct epoll_event ev
@@ -127,20 +123,10 @@ void run(const Configuration &config)
                     {
                         dup2(pipeout->m_pipeFd[WRITE], STDOUT_FILENO); // Dup de Write kant van Pipe2 naar stdout
                         close(pipeout->m_pipeFd[WRITE]);
-
-                        // Debugging ish
-                        char buf;
-                        while (read(STDIN_FILENO, &buf, 1) > 0)
-                            write(STDOUT_FILENO, &buf, 1);
-                        write(STDOUT_FILENO, "\n", 1);
-                        close(pipein->m_pipeFd[READ]);
-
                         execve(pythonPath, argv, NULL);
                     }
                     else
                         wait(NULL); /* Wait for child */
-
-                    continue;
                 }
             }
             else
