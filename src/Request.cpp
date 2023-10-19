@@ -3,13 +3,12 @@
 #include "CGIPipeIn.hpp"
 
 // constructor
-Request::Request(void)
-{
-    spdlog::debug("Request default constructor called");
-}
+// Request::Request(void)
+// {
+//     spdlog::debug("Request default constructor called");
+// }
 
-Request::Request(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
-
+Request::Request(const Client &client) : m_client(client)
 {
     spdlog::debug("Request serverconfig constructor called");
 }
@@ -233,7 +232,7 @@ void Request::parse(void)
 
     // Loops over location blocks and checks for match between location block and request path
     bool isLocationFound{false};
-    for (const auto &location : m_serverconfig.getLocationsConfig())
+    for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
     {
         if (m_methodPathVersion[1] == location.getRequestURI())
         {

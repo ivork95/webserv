@@ -26,7 +26,7 @@ class Client : public Socket
 {
 public:
     const Server &m_server;
-    Request m_request{};
+    Request m_request;
     Timer *m_timer{}; // Change to smart ptr
     struct sockaddr_storage m_remoteaddr
     {

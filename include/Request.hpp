@@ -20,11 +20,11 @@
 #include "Response.hpp"
 
 class Response;
-
+class Client;
 class Request : public Message
 {
 public:
-    ServerConfig m_serverconfig{};
+    const Client &m_client;
     LocationConfig m_locationconfig{};
     Response m_response{};
 
@@ -40,9 +40,9 @@ public:
     bool m_isChunked{false};
 
     // constructor
-    Request(void);
+    Request(void) = delete;
 
-    Request(const ServerConfig &serverconfig);
+    Request(const Client &client);
 
     // copy constructor
 

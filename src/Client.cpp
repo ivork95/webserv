@@ -1,7 +1,7 @@
 #include "Client.hpp"
 
 // server constructor
-Client::Client(const Server &server) : m_server(server)
+Client::Client(const Server &server) : m_server(server), m_request(*this)
 {
     m_socketFd = accept(m_server.m_socketFd, (struct sockaddr *)&m_remoteaddr, &m_addrlen);
     if (m_socketFd == -1)
@@ -33,9 +33,6 @@ Client::Client(const Server &server) : m_server(server)
     m_timer = new Timer{this};
 
     spdlog::debug("{0} constructor called", *this);
-
-    // heel goor
-    m_request = Request{m_server.m_serverconfig};
 }
 
 // destructor
@@ -84,7 +81,7 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
         m_request.m_response.m_statusCode = e.getStatusCode();
         spdlog::warn(e.what());
 
-        for (const auto &errorPageConfig : m_request.m_serverconfig.getErrorPagesConfig())
+        for (const auto &errorPageConfig : m_server.m_serverconfig.getErrorPagesConfig())
         {
             for (const auto &errorCode : errorPageConfig.getErrorCodes())
             {
