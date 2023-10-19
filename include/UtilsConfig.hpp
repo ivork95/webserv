@@ -13,7 +13,7 @@ bool	hasConversionUnit(const std::string &str);
 
 bool	isValidHttpMethod(const std::string &str);
 
-bool	isValidErrorCode(const std::string &str);
+bool	isValidErrorCode(const int &errorCode);
 
 bool	isValidPortNumber(const std::string &str);
 

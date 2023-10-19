@@ -24,10 +24,15 @@ run_webserv() {
 	config_file="$1"
 	result_file="$TMP_DIR/$(basename "$config_file").result"
 	$WEBSERV_EXEC "$config_file" > "$result_file" 2>&1
-	if [ $? -eq 0 ]; then
+
+	exit_status="${PIPESTATUS[0]}"
+
+	if [ $exit_status -eq 0 ]; then
 		actual_output="${GREEN}OK${RESET}"
-	else
+	elif [ $exit_status -eq 1 ]; then
 		actual_output="${RED}KO${RESET}"
+	else
+		actual_output="${RED}CRASH${RESET}"
 	fi
 	# printf "%-45s %-30s %-10s\n" "$(basename "$config_file")" "$actual_output" "$result_file"
 	printf "%-45s %-30s %-10s\n" "$(basename "$config_file")" "$actual_output" "$(basename "$result_file")"
