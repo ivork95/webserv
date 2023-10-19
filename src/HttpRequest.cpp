@@ -269,16 +269,16 @@ void HttpRequest::parse(void)
     if (m_methodPathVersion[0] == "POST")
     {
         // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
-        MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
-        Pipe *p = new Pipe;
-        pipe(p->pipefd);
-        struct epoll_event ev
-        {
-        };
-        ev.data.ptr = p;
-        ev.events = EPOLLOUT;
-        epoll_ctl(multiplexerio.m_epollfd, EPOLL_CTL_ADD, p->pipefd[1], &ev);
-        return;
+        // MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
+        // Pipe *p = new Pipe;
+        // pipe(p->pipefd);
+        // struct epoll_event ev
+        // {
+        // };
+        // ev.data.ptr = p;
+        // ev.events = EPOLLOUT;
+        // epoll_ctl(multiplexerio.m_epollfd, EPOLL_CTL_ADD, p->pipefd[1], &ev);
+        // return;
 
         // Parse chunked request
         if (m_isChunked)
