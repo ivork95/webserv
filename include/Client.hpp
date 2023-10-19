@@ -20,14 +20,14 @@
 #define BUFSIZE 256
 
 class Server;
-class Timer;
 
 class Client : public Socket
 {
 public:
     const Server &m_server;
     Request m_request;
-    Timer *m_timer{}; // Change to smart ptr
+    Timer m_timer;
+
     struct sockaddr_storage m_remoteaddr
     {
     };

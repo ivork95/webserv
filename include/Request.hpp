@@ -21,6 +21,7 @@
 
 class Response;
 class Client;
+
 class Request : public Message
 {
 public:

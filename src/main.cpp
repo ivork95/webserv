@@ -55,7 +55,7 @@ void run(const Configuration &config)
                 {
                     Client *client = new Client{*server};
                     multiplexer.addSocketToEpollFd(client, EPOLLIN | EPOLLRDHUP);
-                    multiplexer.addSocketToEpollFd(client->m_timer, EPOLLIN | EPOLLRDHUP);
+                    multiplexer.addSocketToEpollFd(&(client->m_timer), EPOLLIN | EPOLLRDHUP);
                 }
                 else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
                 {
@@ -69,15 +69,14 @@ void run(const Configuration &config)
                 }
                 else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
-                    spdlog::warn("Timeout expired. Closing: {}", *(timer->m_client));
+                    spdlog::warn("Timeout expired. Closing: {}", timer->m_client);
 
-                    close(timer->m_client->m_socketFd);
-                    timer->m_client->m_socketFd = -1;
-                    toBeDeleted.push_back(timer->m_client);
+                    close(timer->m_client.m_socketFd);
+                    timer->m_client.m_socketFd = -1;
+                    toBeDeleted.push_back(&(timer->m_client));
 
                     close(timer->m_socketFd);
                     timer->m_socketFd = -1;
-                    toBeDeleted.push_back(timer);
                 }
             }
             else if (multiplexer.m_events[i].events & EPOLLOUT) // If someone's ready to write

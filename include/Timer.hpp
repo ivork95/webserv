@@ -6,14 +6,13 @@
 #include <spdlog/fmt/ostr.h> // must be included
 
 #include "Socket.hpp"
-#include "Client.hpp"
 
 class Client;
 
 class Timer : public Socket
 {
 public:
-    Client *m_client{}; // change into weak ptr
+    Client &m_client;
     struct itimerspec m_spec
     {
     };
@@ -22,7 +21,7 @@ public:
     Timer(void) = delete;
 
     // client constructor
-    Timer(Client *client);
+    Timer(Client &client);
 
     // destructor
     ~Timer(void);
