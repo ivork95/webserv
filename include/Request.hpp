@@ -25,7 +25,7 @@ class Client;
 class Request : public Message
 {
 public:
-    const Client &m_client;
+    Client &m_client;
     LocationConfig m_locationconfig{};
     Response m_response{};
 
@@ -43,7 +43,7 @@ public:
     // constructor
     Request(void) = delete;
 
-    Request(const Client &client);
+    Request(Client &client);
 
     // copy constructor
 

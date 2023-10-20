@@ -49,8 +49,10 @@ std::ostream &operator<<(std::ostream &out, const Client &client)
 
 void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
 {
-    char buf[BUFSIZE + 1]{}; // Buffer for client data
-    int nbytes{static_cast<int>(recv(m_socketFd, buf, BUFSIZE, 0))};
+    Multiplexer &multiplexer = Multiplexer::getInstance();
+
+    char buf[BUFSIZ]{}; // Buffer for client data
+    int nbytes{static_cast<int>(recv(m_socketFd, buf, BUFSIZ - 1, 0))};
     if (nbytes <= 0)
     {
         close(m_timer.m_socketFd);
@@ -96,13 +98,11 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
                 }
             }
         }
+        multiplexer.modifyEpollEvents(this, EPOLLOUT);
     }
     spdlog::critical(m_request);
 
     close(m_timer.m_socketFd);
     m_timer.m_socketFd = -1;
     toBeDeleted.push_back(&m_timer);
-
-    Multiplexer &multiplexer = Multiplexer::getInstance();
-    multiplexer.modifyEpollEvents(this, EPOLLOUT);
 }

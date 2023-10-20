@@ -213,6 +213,23 @@ void Response::responseHandle(void)
     // }
 }
 
+int sendAll(int sockFd, char *buf, int *len, int *total, int *bytesleft)
+{
+    if (*total < *len)
+    {
+        int nbytes{static_cast<int>(send(sockFd, buf + *total, *bytesleft, 0))};
+        if (nbytes == -1)
+            return -1;
+        *total += nbytes;
+        *bytesleft -= nbytes;
+    }
+
+    if (*bytesleft)
+        return 1;
+
+    return 0;
+}
+
 int Response::sendAll(int sockFd)
 {
     if (m_buf.empty())
@@ -234,7 +251,7 @@ int Response::sendAll(int sockFd)
 
         int nbytes{static_cast<int>(send(sockFd, m_buf.data() + m_total, m_bytesleft, 0))};
         spdlog::critical("nbytes = {}", nbytes);
-        if (nbytes <= 0)
+        if (nbytes == -1)
             return -1;
         m_total += nbytes;
         spdlog::critical("total = {}", m_total);

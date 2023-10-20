@@ -13,7 +13,6 @@
 #include <sys/wait.h>
 #include "CGIPipeOut.hpp"
 
-#define BUFSIZE 256
 #define PARSTER false // change this
 #define READ 0
 #define WRITE 1
@@ -61,11 +60,15 @@ void run(const Configuration &config)
                 {
                     spdlog::critical("cgi out READ ready!");
 
-                    // char buf;
-                    // while (read(pipeout->m_pipeFd[READ], &buf, 1) > 0)
-                    //     write(STDOUT_FILENO, &buf, 1);
-                    // write(STDOUT_FILENO, "\n", 1);
-                    close(pipeout->m_pipeFd[READ]);
+                    char buf[BUFSIZ]{};
+                    int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
+                    if (nbytes <= 0)
+                    {
+                        // error handeling
+                    }
+                    pipeout->m_response.m_body = buf;
+                    pipeout->m_response.m_statusCode = 200;
+                    multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT);
                 }
                 else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
@@ -94,20 +97,27 @@ void run(const Configuration &config)
                 {
                     spdlog::critical("cgi in WRITE ready!");
 
-                    dup2(pipein->m_pipeFd[READ], STDIN_FILENO); // Dup de READ kant van Pipe1 naar stdin
-                    close(pipein->m_pipeFd[READ]);
-                    write(pipein->m_pipeFd[WRITE], "Marco", 5); // Write "Marco" naar stdin
-                    close(pipein->m_pipeFd[WRITE]);
+                    if (dup2(pipein->m_pipeFd[READ], STDIN_FILENO) == -1) // Dup de READ kant van Pipe1 naar stdin
+                        throw StatusCodeException(500, "Error: dup2()");
+                    if (close(pipein->m_pipeFd[READ]) == -1)
+                        throw StatusCodeException(500, "Error: close()");
+                    int nbytes{static_cast<int>(write(pipein->m_pipeFd[WRITE], "Marco", 5))}; // Write "Marco" naar stdin
+                    if (nbytes == -1)
+                        throw StatusCodeException(500, "Error: write()");
+                    if (close(pipein->m_pipeFd[WRITE]) == -1)
+                        throw StatusCodeException(500, "Error: close()");
 
                     // Hier voegen we de READ kant van Pipe2 toe aan Epoll
-                    CGIPipeOut *pipeout = new CGIPipeOut;
-                    pipe(pipeout->m_pipeFd);
+                    CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
+                    if (pipe(pipeout->m_pipeFd) == -1)
+                        throw StatusCodeException(500, "Error: pipe()");
                     struct epoll_event ev
                     {
                     };
                     ev.data.ptr = pipeout;
                     ev.events = EPOLLIN;
-                    epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_ADD, pipeout->m_pipeFd[READ], &ev);
+                    if (epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_ADD, pipeout->m_pipeFd[READ], &ev) == -1)
+                        throw StatusCodeException(500, "Error: epoll_ctl()");
 
                     // execve ish
                     char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
@@ -118,14 +128,29 @@ void run(const Configuration &config)
                         NULL};
                     pid_t cpid;
                     cpid = fork();
-                    if (cpid == 0)
+                    if (cpid == -1)
+                        throw StatusCodeException(500, "Error: fork())");
+                    else if (cpid == 0)
                     {
-                        dup2(pipeout->m_pipeFd[WRITE], STDOUT_FILENO); // Dup de Write kant van Pipe2 naar stdout
-                        close(pipeout->m_pipeFd[WRITE]);
+                        if (close(pipeout->m_pipeFd[READ]) == -1)
+                            throw StatusCodeException(500, "Error: close())");
+                        if (dup2(pipeout->m_pipeFd[WRITE], STDOUT_FILENO) == -1) // Dup de Write kant van Pipe2 naar stdout
+                            throw StatusCodeException(500, "Error: dup2()");
+                        if (close(pipeout->m_pipeFd[WRITE]) == -1)
+                            throw StatusCodeException(500, "Error: close()");
                         execve(pythonPath, argv, NULL);
+                        throw StatusCodeException(500, "Error: execve()");
                     }
                     else
-                        wait(NULL); /* Wait for child */
+                    {
+                        int wstatus{};
+                        if (wait(&wstatus) == -1) /* Wait for child */
+                            throw StatusCodeException(500, "Error: wait()");
+                        if (wstatus)
+                            throw StatusCodeException(500, "Error: wstatus");
+                        if (close(pipeout->m_pipeFd[WRITE]) == -1)
+                            throw StatusCodeException(500, "Error: close()");
+                    }
                 }
             }
             else

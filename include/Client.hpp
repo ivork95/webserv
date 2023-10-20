@@ -17,8 +17,6 @@
 #include "Message.hpp"
 #include "Multiplexer.hpp"
 
-#define BUFSIZE 256
-
 class Server;
 
 class Client : public Socket

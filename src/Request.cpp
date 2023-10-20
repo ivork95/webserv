@@ -8,7 +8,7 @@
 //     spdlog::debug("Request default constructor called");
 // }
 
-Request::Request(const Client &client) : m_client(client)
+Request::Request(Client &client) : m_client(client)
 {
     spdlog::debug("Request serverconfig constructor called");
 }
@@ -211,6 +211,8 @@ int Request::tokenize(const char *buf, int nbytes)
 
 void Request::parse(void)
 {
+    Multiplexer &multiplexer = Multiplexer::getInstance();
+
     methodPathVersionSet();
     if (m_methodPathVersion.size() != 3)
         throw StatusCodeException(400, "Error: not 3 elements in request-line");
@@ -227,6 +229,7 @@ void Request::parse(void)
     {
         m_response.bodySet("./www" + m_methodPathVersion[1]);
         m_response.m_statusCode = 200;
+        multiplexer.modifyEpollEvents(&m_client, EPOLLOUT);
         return;
     }
 
@@ -269,9 +272,8 @@ void Request::parse(void)
     if (m_methodPathVersion[0] == "POST")
     {
         // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
-        Multiplexer &multiplexer = Multiplexer::getInstance();
-        CGIPipeIn *pipein = new CGIPipeIn;
-        if (pipe(pipein->m_pipeFd))
+        CGIPipeIn *pipein = new CGIPipeIn(m_client);
+        if (pipe(pipein->m_pipeFd) == -1)
             throw StatusCodeException(500, "Error: pipe()");
         struct epoll_event ev
         {
@@ -317,9 +319,11 @@ void Request::parse(void)
             bodyToDisk("./www/" + m_fileName);
             m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
             m_response.m_statusCode = 303;
+            multiplexer.modifyEpollEvents(&m_client, EPOLLOUT);
             return;
         }
     }
     m_response.bodySet(m_response.m_path);
     m_response.m_statusCode = 200;
+    multiplexer.modifyEpollEvents(&m_client, EPOLLOUT);
 }
