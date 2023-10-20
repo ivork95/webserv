@@ -89,7 +89,7 @@ void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationCon
  * cgi .php cgi-bin
  * cgi <file_extension> <path_to_cgi>
 */
-// TODO cgi?
+// TODO cgi ??
 void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing cgi directive\n"; // ? debug
 
@@ -115,11 +115,7 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 	}
 }
 
-/**
- * index index.html index.php
- * index <file_name> (<file_name> ...)
- * ! we are looking for these files in the root directory
-*/
+// TODO valid index file/extension ??
 void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing index directive\n"; // ? debug
 

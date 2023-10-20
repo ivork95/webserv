@@ -3,35 +3,13 @@
 
 #include <filesystem>
 
-// ! not used anymore
-bool isHtmlExtension(const std::string &str) {
-	std::string htmlExtension = ".html";
-    if (str.length() >= htmlExtension.length()) {
-        return (0 == str.compare(str.length() - htmlExtension.length(), htmlExtension.length(), htmlExtension));
-    }
-    return (false);
-}
-
-// ! not used anymore
-bool isPhpExtension(const std::string &str) {
-	std::string phpExtension = ".php";
-	if (str.length() >= phpExtension.length()) {
-		return (0 == str.compare(str.length() - phpExtension.length(), phpExtension.length(), phpExtension));
-	}
-	return (false);
-}
-
-/**
- * TODO valid index extension? html, php, txt, ... ?
- * ! eval sheet tries .bla extension
- */
 bool	isValidIndexExtension(const std::string &str) {
-	const std::string inputFileExtension = std::filesystem::path(str).extension(); // TODO what if .php.php ?
+	const std::string inputFileExtension = std::filesystem::path(str).extension();
 	// std::cout << inputFileExtension << std::endl; // ? debug
 
 	if (inputFileExtension.size() > 0)
 		return true;
-	if (inputFileExtension != ".html" && inputFileExtension != ".php")
+	if (inputFileExtension != ".html")
 		return false;
 	return true;
 }
