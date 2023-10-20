@@ -3,6 +3,18 @@
 
 #include <filesystem>
 
+#define OWREAD std::filesystem::perms::owner_read
+#define OWWRITE std::filesystem::perms::owner_write
+#define OWEXEC std::filesystem::perms::owner_exec
+
+#define OTREAD std::filesystem::perms::others_read
+#define OTWRITE std::filesystem::perms::others_write
+#define OTEXEC std::filesystem::perms::others_exec
+
+#define GRREAD std::filesystem::perms::group_read
+#define GRWRITE std::filesystem::perms::group_write
+#define GREXEC std::filesystem::perms::group_exec
+
 /**
  * CONSTRUCTORS / DESTRUCTORS
 */
@@ -85,24 +97,25 @@ void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationCon
 	(*i) = j;
 }
 
-/**
- * cgi .php cgi-bin
- * cgi <file_extension> <path_to_cgi>
-*/
-// TODO cgi ??
 void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing cgi directive\n"; // ? debug
 
 	if (tokens.at(*i).getWord()[0] == '.') {
 		const std::string cgiExtension = tokens.at(*i).getWord();
-		if (!isValidCgiExtension(cgiExtension)) // TODO wip
+		if (!isValidCgiExtension(cgiExtension))
 			throw CgiExtensionException(cgiExtension);
 
 		if (tokens.at(*i + 1).getType() == Token::WORD) {
 			(*i)++;
+
 			const std::string					cgiPath = tokens.at(*i).getWord();
-			if (!isValidPath(cgiPath, true))
+			if (!isValidPath(cgiPath, false) || !std::filesystem::exists(cgiPath))
 				throw PathException(cgiPath);
+
+			// TODO permissions? x r w ?
+			std::filesystem::perms requiredPermissions = OWREAD | OWWRITE | OWEXEC | OTREAD | OTEXEC | GRREAD | GREXEC;
+			if (!hasRequiredPermissions(cgiPath, requiredPermissions))
+				throw MissingPermissionsException(cgiPath);
 
 			std::map<std::string, std::string>	cgiHandler;
 			cgiHandler[cgiExtension] = cgiPath;
@@ -115,7 +128,6 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 	}
 }
 
-// TODO valid index file/extension ??
 void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing index directive\n"; // ? debug
 
@@ -123,7 +135,7 @@ void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &r
 	std::vector<std::string>	indexFile;
 
 	while (tokens.at(j).getType() == Token::WORD) {
-		if (isValidIndexExtension(tokens.at(j).getWord())) { // TODO wip
+		if (isValidIndexExtension(tokens.at(j).getWord())) {
 			indexFile.push_back(tokens.at(j).getWord());
 			j++;
 		} else {
@@ -163,7 +175,6 @@ void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &ro
 	route.setRootPath(rootPath);
 }
 
-// TODO check URI
 void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing location block\n"; // ? debug
 
@@ -245,6 +256,10 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 	const std::string			filePath = tokens.at(j).getWord();
 	if (!isValidPath(filePath, false))
 		throw PathException(filePath);
+
+	std::filesystem::perms requiredPermissions = OWREAD | OTREAD | GRREAD;
+	if (!hasRequiredPermissions(filePath, requiredPermissions))
+		throw MissingPermissionsException(filePath + " (READ required)");
 
 	ErrorPageConfig	errorPage(errorCodes, filePath);
 

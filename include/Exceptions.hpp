@@ -37,7 +37,7 @@ class PortNumberException : public InvalidTokenException
 {
 public:
     PortNumberException(const std::string &input)
-        : InvalidTokenException("Port number: " + input + " (only from 0 to 65535)") {}
+        : InvalidTokenException("Port number: " + input + " (only 0 to 65535)") {}
 };
 
 class ServerNameException : public InvalidTokenException
@@ -51,7 +51,7 @@ class ErrorCodeException : public InvalidTokenException
 {
 public:
     ErrorCodeException(const std::string &input)
-        : InvalidTokenException("Error code: " + input) {}
+        : InvalidTokenException("Error code: " + input + " (only 300 to 599)") {}
 };
 
 class ClientMaxBodySizeException : public InvalidTokenException
@@ -100,7 +100,7 @@ class CgiExtensionException : public InvalidTokenException
 {
 public:
     CgiExtensionException(const std::string &input)
-        : InvalidTokenException("CGI extension: " + input + " (only .py, .php or .c)") {}
+        : InvalidTokenException("CGI extension: " + input + " (only .py)") {}
 };
 
 class HttpMethodException : public InvalidTokenException
@@ -165,6 +165,35 @@ class DuplicateServerNameException : public InvalidDirectiveException
 public:
     DuplicateServerNameException(const std::string &input)
         : InvalidDirectiveException("Duplicate server name: " + input) {}
+};
+
+/**
+ * GENERAL EXCEPTIONS
+ */
+class ParserException : public std::exception
+{
+public:
+    ParserException(const std::string &derivedMsg)
+        : derivedErrorMessage(derivedMsg)
+    {
+        fullErrorMessage = "Parser error: " + derivedErrorMessage;
+    }
+
+    const char *what() const noexcept override
+    {
+        return fullErrorMessage.c_str();
+    }
+
+private:
+    std::string derivedErrorMessage;
+    std::string fullErrorMessage;
+};
+
+class MissingPermissionsException : public ParserException
+{
+public:
+    MissingPermissionsException(const std::string &input)
+        : ParserException("Missing permission: " + input) {}
 };
 
 #endif
