@@ -26,7 +26,10 @@ void run(const Configuration &config)
 
     Multiplexer &multiplexer = Multiplexer::getInstance();
     for (auto &server : servers)
-        multiplexer.addSocketToEpollFd(server, EPOLLIN | EPOLLRDHUP);
+    {
+        if (multiplexer.addToEpoll(server, EPOLLIN | EPOLLRDHUP, server->m_socketFd))
+            throw std::runtime_error("Error: addToEpoll() failed\n");
+    }
 
     while (true)
     {
@@ -53,8 +56,10 @@ void run(const Configuration &config)
                 else if (Server *server = dynamic_cast<Server *>(ePollDataPtr)) // If listener is ready to read, handle new connection
                 {
                     Client *client = new Client{*server};
-                    multiplexer.addSocketToEpollFd(client, EPOLLIN | EPOLLRDHUP);
-                    multiplexer.addSocketToEpollFd(&(client->m_timer), EPOLLIN | EPOLLRDHUP);
+                    if (multiplexer.addToEpoll(client, EPOLLIN | EPOLLRDHUP, client->m_socketFd))
+                        throw std::runtime_error("Error: addToEpoll() failed\n");
+                    if (multiplexer.addToEpoll(&(client->m_timer), EPOLLIN | EPOLLRDHUP, client->m_timer.m_socketFd))
+                        throw std::runtime_error("Error: addToEpoll() failed\n");
                 }
                 else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
                 {
@@ -98,7 +103,11 @@ void run(const Configuration &config)
                     spdlog::critical("cgi in WRITE ready!");
 
                     if (dup2(pipein->m_pipeFd[READ], STDIN_FILENO) == -1) // Dup de READ kant van Pipe1 naar stdin
-                        throw StatusCodeException(500, "Error: dup2()");
+                    {
+                        perror("Error: dup2()");
+                        throw StatusCodeException(500, "Error: dup2() 2");
+                    }
+
                     if (close(pipein->m_pipeFd[READ]) == -1)
                         throw StatusCodeException(500, "Error: close()");
                     int nbytes{static_cast<int>(write(pipein->m_pipeFd[WRITE], "Marco", 5))}; // Write "Marco" naar stdin
@@ -130,12 +139,12 @@ void run(const Configuration &config)
                     cpid = fork();
                     if (cpid == -1)
                         throw StatusCodeException(500, "Error: fork())");
-                    else if (cpid == 0)
+                    if (cpid == 0)
                     {
                         if (close(pipeout->m_pipeFd[READ]) == -1)
                             throw StatusCodeException(500, "Error: close())");
                         if (dup2(pipeout->m_pipeFd[WRITE], STDOUT_FILENO) == -1) // Dup de Write kant van Pipe2 naar stdout
-                            throw StatusCodeException(500, "Error: dup2()");
+                            throw StatusCodeException(500, "Error: dup2() 1");
                         if (close(pipeout->m_pipeFd[WRITE]) == -1)
                             throw StatusCodeException(500, "Error: close()");
                         execve(pythonPath, argv, NULL);

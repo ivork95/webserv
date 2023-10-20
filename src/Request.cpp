@@ -245,9 +245,7 @@ void Request::parse(void)
         }
     }
     if (!isLocationFound) // there's no matching URI
-    {
         throw StatusCodeException(404, "Error: no matching location/path found");
-    }
 
     // For a certain location block, check if the request method is allowed
     auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
@@ -275,12 +273,7 @@ void Request::parse(void)
         CGIPipeIn *pipein = new CGIPipeIn(m_client);
         if (pipe(pipein->m_pipeFd) == -1)
             throw StatusCodeException(500, "Error: pipe()");
-        struct epoll_event ev
-        {
-        };
-        ev.data.ptr = pipein;
-        ev.events = EPOLLOUT;
-        if (epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_ADD, pipein->m_pipeFd[1], &ev) == -1)
+        if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
             throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
         return;
 
