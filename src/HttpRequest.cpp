@@ -286,7 +286,7 @@ void HttpRequest::parse(void)
 		dirPath = m_locationconfig.getRootPath() + requestUri;
 		const bool autoIndex = m_locationconfig.getAutoIndex();
 
-		spdlog::warn("dirPath = {} | autoindex = {}", dirPath, autoIndex); // ? debug
+		// spdlog::warn("dirPath = {} | autoindex = {}", dirPath, autoIndex); // ? debug
 
 		// Check URI is dir
 		if (std::filesystem::is_directory(dirPath)) {
@@ -301,7 +301,7 @@ void HttpRequest::parse(void)
 				// m_response.bodySet(directoryListing);
 				m_response.m_body = directoryListing;
 				m_response.m_statusCode = 200;
-				m_response.m_headers.insert({"Content-Type", "text/html"}); // You may want to adjust the Content-Type header
+				m_response.m_headers.insert({"Content-Type", "text/html"});
 
 				return ;
 			} else {
