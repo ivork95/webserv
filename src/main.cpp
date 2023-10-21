@@ -11,7 +11,7 @@
 #include "HttpResponse.hpp"
 
 #define BUFSIZE 256
-#define PARSTER true // change this
+#define PARSTER false // change this
 
 void handleConnectedClient(Client *client, std::vector<Socket *> &toBeDeleted)
 {

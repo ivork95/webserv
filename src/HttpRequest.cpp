@@ -205,6 +205,20 @@ int HttpRequest::tokenize(const char *buf, int nbytes)
     return 0;
 }
 
+std::string HttpRequest::generateDirectoryListing(const std::string &dirPath)
+{
+    std::string listing = "<html><body><h1>Directory Listing</h1><ul>";
+
+    for (const auto &entry : std::filesystem::directory_iterator(dirPath))
+    {
+        listing += "<li>" + entry.path().filename().string() + "</li>";
+    }
+
+    listing += "</ul></body></html>";
+
+    return listing;
+}
+
 void HttpRequest::parse(void)
 {
     methodPathVersionSet();
@@ -259,8 +273,43 @@ void HttpRequest::parse(void)
             break;
         }
     }
-    if (!isIndexFileFound)
+
+	// Can't find an index file, check if directory listing
+    if (!isIndexFileFound) {
+		std::string requestUri = m_methodPathVersion[1];
+		std::string dirPath{};
+
+		// Remove leading /
+		if (requestUri[0] == '/')
+			requestUri = requestUri.substr(1, requestUri.size());
+
+		dirPath = m_locationconfig.getRootPath() + requestUri;
+		const bool autoIndex = m_locationconfig.getAutoIndex();
+
+		spdlog::warn("dirPath = {} | autoindex = {}", dirPath, autoIndex); // ? debug
+
+		// Check URI is dir
+		if (std::filesystem::is_directory(dirPath)) {
+
+			// Check if autoindex is on
+			if (autoIndex) {
+				
+				// Generate directory listing
+				std::string directoryListing = generateDirectoryListing(dirPath);
+
+				// Set response body to directory listing
+				// m_response.bodySet(directoryListing);
+				m_response.m_body = directoryListing;
+				m_response.m_statusCode = 200;
+				m_response.m_headers.insert({"Content-Type", "text/html"}); // You may want to adjust the Content-Type header
+
+				return ;
+			} else {
+				throw StatusCodeException(403, "Forbidden: Directory listing is disabled.");
+			}
+		}
         throw StatusCodeException(404, "Error: no matching index file found");
+	}
 
     if (m_methodPathVersion[0] == "POST")
     {
