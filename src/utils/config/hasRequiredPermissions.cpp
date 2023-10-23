@@ -13,7 +13,7 @@ bool hasRequiredPermissions(const std::string &str, std::filesystem::perms &requ
 
 	std::filesystem::file_status status = std::filesystem::status(filePath);
 
-	if (std::filesystem::status_known(status) && (status.permissions() & requiredPermissions) == requiredPermissions)
-		return true;
-	return false;
+	if (!std::filesystem::status_known(status) || (status.permissions() & requiredPermissions) != requiredPermissions)
+		return false;
+	return true;
 }

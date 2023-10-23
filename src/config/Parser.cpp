@@ -3,18 +3,6 @@
 
 #include <filesystem>
 
-#define OWREAD std::filesystem::perms::owner_read
-#define OWWRITE std::filesystem::perms::owner_write
-#define OWEXEC std::filesystem::perms::owner_exec
-
-#define OTREAD std::filesystem::perms::others_read
-#define OTWRITE std::filesystem::perms::others_write
-#define OTEXEC std::filesystem::perms::others_exec
-
-#define GRREAD std::filesystem::perms::group_read
-#define GRWRITE std::filesystem::perms::group_write
-#define GREXEC std::filesystem::perms::group_exec
-
 /**
  * CONSTRUCTORS / DESTRUCTORS
 */
@@ -115,13 +103,13 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 			// TODO permissions? x r w ?
 			std::filesystem::perms requiredPermissions = OWREAD | OWWRITE | OWEXEC | OTREAD | OTEXEC | GRREAD | GREXEC;
 			if (!hasRequiredPermissions(cgiPath, requiredPermissions))
-				throw MissingPermissionsException(cgiPath);
+				throw MissingPermissionsException(cgiPath + " (r-w-x required)");
 
 			std::map<std::string, std::string>	cgiHandler;
 			cgiHandler[cgiExtension] = cgiPath;
 			route.setCgiHandler(cgiExtension, cgiPath);
 		} else {
-			throw InvalidTokenException("Missing file path");
+			throw InvalidTokenException("Missing interpreter path");
 		}
 	} else {
 		throw InvalidTokenException("Expected file extension: " + tokens.at(*i).getWord());
@@ -259,7 +247,7 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 
 	std::filesystem::perms requiredPermissions = OWREAD | OTREAD | GRREAD;
 	if (!hasRequiredPermissions(filePath, requiredPermissions))
-		throw MissingPermissionsException(filePath + " (READ required)");
+		throw MissingPermissionsException(filePath + " (r required)");
 
 	ErrorPageConfig	errorPage(errorCodes, filePath);
 
@@ -350,8 +338,6 @@ ServerConfig Parser::parseTokens(ServerConfig server) {
 			throw DuplicateRequestUriException(requestUri);
 		}
 	}
-
-	// TODO check index files?
 
 	return (server);
 }

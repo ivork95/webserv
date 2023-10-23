@@ -14,13 +14,11 @@ static std::string directoryListingGenerate(const std::string &dirPath) {
 }
 
 void	HttpRequest::directoryListingBodySet(const std::string &dirPath) {
-	// Generate directory listing
-	std::string directoryListing = directoryListingGenerate(dirPath);
+	const std::string directoryListing = directoryListingGenerate(dirPath);
 	if (directoryListing.empty())
 		throw StatusCodeException(400, "Error: directoryListingBodySet");
 
-	// Set response body to directory listing
-	// m_response.bodySet(directoryListing);
+	// m_response.bodySet(directoryListing); // to change I guess
 	m_response.m_body = directoryListing;
 	m_response.m_statusCode = 200;
 	m_response.m_headers.insert({"Content-Type", "text/html"});
@@ -30,7 +28,7 @@ std::string	HttpRequest::directoryListingParse(void) {
 	std::string requestUri = m_methodPathVersion[1];
 	std::string dirPath{};
 
-	// Remove leading /
+	// Remove leading '/' before appending root
 	if (requestUri[0] == '/')
 		requestUri = requestUri.substr(1, requestUri.size());
 

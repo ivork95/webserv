@@ -266,12 +266,11 @@ void HttpRequest::parse(void)
 		if (dirPath.empty())
 			throw StatusCodeException(400, "Error: directoryListingParse");
 
-		// Check URI is dir
+		// Check if URI + root is dir
 		if (std::filesystem::is_directory(dirPath)) {
-			const bool autoIndex = m_locationconfig.getAutoIndex();
 
 			// Check if autoindex is on
-			if (!autoIndex)
+			if (!m_locationconfig.getAutoIndex())
 				throw StatusCodeException(403, "Forbidden: Directory listing is disabled.");
 			
 			directoryListingBodySet(dirPath);
