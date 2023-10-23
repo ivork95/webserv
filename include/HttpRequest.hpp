@@ -81,9 +81,9 @@ public:
     std::vector<std::string> m_chunkLine{};
 	int	m_totalChunkLength{};
 
-	// autoindex
-	std::string generateDirectoryListing(const std::string &dirPath);
-
+	// autoindex related
+	void	directoryListingBodySet(const std::string &dirPath);
+	std::string	directoryListingParse(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const HttpRequest &httprequest);

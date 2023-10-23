@@ -34,7 +34,8 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidUri.o \
 				obj/utils/config/hasRequiredPermissions.o \
 				obj/logger/Logger.o \
-				obj/ChunkRequest.o 
+				obj/ChunkRequest.o \
+				obj/DirectoryListing.o
 HEADERS		:=	include/Client.hpp \
 				include/Helper.hpp \
 				include/HttpMessage.hpp \
