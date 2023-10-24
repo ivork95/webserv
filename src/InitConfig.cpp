@@ -3,8 +3,6 @@
 #include "Parser.hpp"
 #include "Configuration.hpp"
 
-#include <filesystem> // ? only used for checking the config file extension => include somewhere else?
-
 static int	checkDuplicatePortNumbers(std::vector<std::string> &usedPorts, const std::string &portNb) {
 	if (std::find(usedPorts.begin(), usedPorts.end(), portNb) != usedPorts.end()) {
 		return 1;

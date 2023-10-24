@@ -69,15 +69,21 @@ public:
     void parse(void);
 
     // chunk related
+	void chunkHeaderReplace();
     void chunkHeadersParse(void);
     void chunkBodyExtract(void);
     void chunkBodyTokenize(void);
-    void chunkBodyParse(size_t nbChunks, std::vector<size_t> chunkLength, std::vector<std::string> chunkLine);
+    // void chunkBodyParse(size_t nbChunks, std::vector<size_t> chunkLength, std::vector<std::string> chunkLine);
     void chunkBodySet(void);
 
     std::string m_rawChunkBody{};
     std::string m_chunkBody{};
     std::vector<std::string> m_chunkLine{};
+	int m_totalChunkLength{};
+
+	// directory listing related
+	void	directoryListingBodySet(const std::string &dirPath);
+	std::string	directoryListingParse(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Request &request);

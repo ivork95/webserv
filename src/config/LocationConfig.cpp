@@ -175,7 +175,7 @@ void	LocationConfig::checkMissingDirective(void) {
 	}
 	if (!hasRootPath()) {
 		// std::cout << "No root path (setting to default)\n"; // ? debug
-		setRootPath("html");
+		setRootPath("www");
 	}
 	if (!hasClientMaxBodySize()) {
 		// std::cout << "No client max body size (setting to default)\n"; // ? debug

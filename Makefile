@@ -26,7 +26,6 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isAlphaNum.o \
 				obj/utils/config/isNumber.o \
 				obj/utils/config/isValidCgiExtension.o \
-				obj/utils/config/isValidConfigExtension.o \
 				obj/utils/config/isValidErrorCode.o \
 				obj/utils/config/isValidHttpMethod.o \
 				obj/utils/config/isValidIndexExtension.o \
@@ -35,8 +34,10 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidPortNumber.o \
 				obj/utils/config/isValidServerName.o \
 				obj/utils/config/isValidUri.o \
+				obj/utils/config/hasRequiredPermissions.o \
 				obj/logger/Logger.o \
-				obj/ChunkRequest.o 
+				obj/ChunkRequest.o \
+				obj/DirectoryListing.o
 HEADERS		:=	include/CGIPipeIn.hpp \
 				include/CGIPipeOut.hpp \
 				include/Client.hpp \

@@ -67,11 +67,12 @@ void run(const Configuration &config)
                     char buf[BUFSIZ]{};
                     int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
                     if (nbytes <= 0)
+                        pipeout->m_response.m_statusCode = 500;
+                    else
                     {
-                        // error handeling
+                        pipeout->m_response.m_body = buf;
+                        pipeout->m_response.m_statusCode = 200;
                     }
-                    pipeout->m_response.m_body = buf;
-                    pipeout->m_response.m_statusCode = 200;
                     if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
                         throw std::runtime_error("Error: modifyEpollEvents()\n");
                 }

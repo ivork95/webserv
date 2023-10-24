@@ -1,6 +1,8 @@
 
 #include "Parser.hpp"
 
+#include <filesystem>
+
 /**
  * CONSTRUCTORS / DESTRUCTORS
 */
@@ -15,18 +17,18 @@ Parser::~Parser(void) {
 /**
  * STATIC FUNCTIONS
 */
-
-/**
- * TODO MAX_INT >
-*/
 static int convertToBytes(const std::string &rawValue) {
-	std::string convertedValue;
+	std::string convertedValue{};
 	for (size_t j = 0; j < rawValue.size() - 1; j++) {
 		if (!isdigit(rawValue[j]))
 			throw ClientMaxBodySizeException(rawValue);
 		else
 			convertedValue += rawValue[j];
 	}
+
+	if (convertedValue.empty())
+		throw ClientMaxBodySizeException(convertedValue);
+
 	const size_t lastCharIndex = rawValue.size() - 1;
 	if (rawValue[lastCharIndex] == 'k' || rawValue[lastCharIndex] == 'K')
 		convertedValue += "000";
@@ -34,12 +36,14 @@ static int convertToBytes(const std::string &rawValue) {
 		convertedValue += "000000";
 	else if (rawValue[lastCharIndex] == 'g' || rawValue[lastCharIndex] == 'G')
 		convertedValue += "000000000";
-	int nb;
+	
+	int nb{};
 	std::stringstream as;
 	as.str(convertedValue);
 	if (!(as >> nb))
 		throw ClientMaxBodySizeException(rawValue);
-	return (std::stoi(convertedValue));
+
+	return nb;
 }
 
 static int parseClientMaxBodySize(const std::string &rawValue) {
@@ -52,9 +56,9 @@ static int parseClientMaxBodySize(const std::string &rawValue) {
 }
 
 static int	checkDuplicateRequestUri(std::vector<std::string> &usedRequestUris, const std::string &requestUri) {
-	if (std::find(usedRequestUris.begin(), usedRequestUris.end(), requestUri) != usedRequestUris.end()) {
+	if (std::find(usedRequestUris.begin(), usedRequestUris.end(), requestUri) != usedRequestUris.end())
 		return 1;
-	}
+
 	usedRequestUris.push_back(requestUri);
 	return 0;
 }
@@ -62,14 +66,12 @@ static int	checkDuplicateRequestUri(std::vector<std::string> &usedRequestUris, c
 /**
  * MEMBER FUNCTIONS
 */
-/**
- * limit_except GET POST DELETE
- * limit_except <method> (<method> ...)
-*/
 void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing limit_except directive\n"; // ? debug
+
 	size_t						j = *i;
 	std::vector<std::string>	httpMethods;
+
 	while (tokens.at(j).getType() == Token::WORD) {
 		if (isValidHttpMethod(tokens.at(j).getWord())) {
 			httpMethods.push_back(tokens.at(j).getWord());
@@ -78,63 +80,64 @@ void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationCon
 			throw HttpMethodException(tokens.at(j).getWord());
 		}
 	}
+
 	route.setHttpMethods(httpMethods);
 	(*i) = j;
 }
 
-/**
- * cgi .php cgi-bin
- * cgi <file_extension> <path_to_cgi>
-*/
 void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing cgi directive\n"; // ? debug
+
 	if (tokens.at(*i).getWord()[0] == '.') {
 		const std::string cgiExtension = tokens.at(*i).getWord();
-		if (!isValidCgiExtension(cgiExtension)) // TODO wip
+		if (!isValidCgiExtension(cgiExtension))
 			throw CgiExtensionException(cgiExtension);
+
 		if (tokens.at(*i + 1).getType() == Token::WORD) {
 			(*i)++;
+
 			const std::string					cgiPath = tokens.at(*i).getWord();
-			if (!isValidPath(cgiPath, true))
+			if (!isValidPath(cgiPath, false) || !std::filesystem::exists(cgiPath))
 				throw PathException(cgiPath);
+
+			// TODO permissions? x r w ?
+			std::filesystem::perms requiredPermissions = OWREAD | OWWRITE | OWEXEC | OTREAD | OTEXEC | GRREAD | GREXEC;
+			if (!hasRequiredPermissions(cgiPath, requiredPermissions))
+				throw MissingPermissionsException(cgiPath + " (r-w-x required)");
+
 			std::map<std::string, std::string>	cgiHandler;
 			cgiHandler[cgiExtension] = cgiPath;
 			route.setCgiHandler(cgiExtension, cgiPath);
 		} else {
-			throw InvalidTokenException("Missing file path");
+			throw InvalidTokenException("Missing interpreter path");
 		}
 	} else {
 		throw InvalidTokenException("Expected file extension: " + tokens.at(*i).getWord());
 	}
 }
 
-/**
- * index index.html index.php
- * index <file_name> (<file_name> ...)
- * ! we are looking for these files in the root directory
-*/
 void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing index directive\n"; // ? debug
+
 	size_t						j = *i;
 	std::vector<std::string>	indexFile;
+
 	while (tokens.at(j).getType() == Token::WORD) {
-		if (isValidIndexExtension(tokens.at(j).getWord())) { // TODO wip
+		if (isValidIndexExtension(tokens.at(j).getWord())) {
 			indexFile.push_back(tokens.at(j).getWord());
 			j++;
 		} else {
 			throw IndexException(tokens.at(j).getWord());
 		}
 	}
+
 	route.setIndexFile(indexFile);
 	(*i) = j;
 }
 
-/**
- * autoindex on
- * autoindex <on/off>
-*/
 void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing autoindex directive\n"; // ? debug
+
 	if (tokens.at(*i).getWord() == "off")
 		route.setAutoIndex(false);
 	else if (tokens.at(*i).getWord() == "on")
@@ -143,50 +146,29 @@ void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, LocationConfi
 		throw AutoIndexException(tokens.at(*i).getWord());
 }
 
-/**
- * client_max_body_size 1m
- * client_max_body_size <size> (where size is a number followed by k, m, or g)
-*/
 void	Parser::_parseLocationClientMaxBodySize(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing client_max_body_size directive\n"; // ? debug
 	const std::string rawValue = tokens.at(*i).getWord();
 	route.setClientMaxBodySize(parseClientMaxBodySize(rawValue));
 }
 
-/**
- * root /var/www/html
- * root <path_to_root_dir>
-*/
 void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing root directive\n"; // ? debug
+
 	const std::string	rootPath = tokens.at(*i).getWord();
-	if (!isValidPath(rootPath, true)) // TODO wip
+
+	if (!isValidPath(rootPath, true))
 		throw PathException(rootPath);
-	route.setRootPath(tokens.at(*i).getWord());
+
+	route.setRootPath(rootPath);
 }
 
-/**
- * location / {
- *     root /var/www/html;
- *     index index.html index.php;
- *     autoindex on;
- *     cgi .php cgi-bin;
- *     limit_except GET POST;
- * }
- * location <requestUri> { ... }
-*/
 void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing location block\n"; // ? debug
+
 	size_t				j = *i;
 	const std::string	requestUri = tokens.at(j).getWord();
 
-	// TODO check valid request URI
-	if (requestUri[0] != '/')
-		throw UriException(requestUri);
-	// if (requestUri != "/") {
-	// 	if (!isValidPath(requestUri.substr(1)))
-	// 		throw UriException(requestUri);
-	// }
 	if (!isValidUri(requestUri))
 		throw UriException(requestUri);
 
@@ -233,79 +215,80 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
 	(*i) = j;
 }
 
-/**
- * client_max_body_size 1m
- * client_max_body_size <size>
-*/
 void	Parser::_parseServerClientMaxBodySize(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing client_max_body_size directive\n"; // ? debug
+
 	const std::string rawValue = tokens.at(*i).getWord();
 	server->setClientMaxBodySize(parseClientMaxBodySize(rawValue));
 }
 
-/**
- * error_page 404 www/html/error/404.html
- * error_page <error_code (error_code ...)> <URI_path>
-*/
 void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing error_page directive\n"; // ? debug
-	size_t						j = *i;
-	std::vector<std::string>	errorCodes;
+
+	size_t				j = *i;
+	std::vector<int>	errorCodes;
+
 	while (tokens.at(j).getType() == Token::WORD && isNumber(tokens.at(j).getWord())) {
-		const std::string	errorCode = tokens.at(j).getWord();
+		int	errorCode = std::atoi(tokens.at(j).getWord().c_str());
 		if (isValidErrorCode(errorCode)) {
-			errorCodes.push_back(tokens.at(j).getWord());
+			errorCodes.push_back(errorCode);
 		} else {
-			throw ErrorCodeException(errorCode);
+			throw ErrorCodeException(tokens.at(j).getWord());
 		}
 		j++;
 	}
-	const std::string			uriPath = tokens.at(j).getWord();
-	if (!isValidUri(uriPath))
-		throw PathException(uriPath);
-	ErrorPageConfig	errorPage(errorCodes, uriPath);
+
+	if (errorCodes.empty())
+		throw ErrorCodeException(tokens.at(j).getWord());
+
+	const std::string			filePath = tokens.at(j).getWord();
+	if (!isValidPath(filePath, false))
+		throw PathException(filePath);
+
+	std::filesystem::perms requiredPermissions = OWREAD | OTREAD | GRREAD;
+	if (!hasRequiredPermissions(filePath, requiredPermissions))
+		throw MissingPermissionsException(filePath + " (r required)");
+
+	ErrorPageConfig	errorPage(errorCodes, filePath);
+
 	server->setErrorPagesConfig(errorPage);
 	(*i) = j;
 }
 
-/**
- * server_name localhost
- * server_name <server_name>
- * server_name <server_name> (<server_name> ...)
-*/
+// TODO valid server_name??
 void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing server_name directive\n"; // ? debug
+
 	size_t						j = *i;
 	std::vector<std::string>	serverNames;
+
 	while (tokens.at(j).getType() == Token::WORD) {
 		const std::string	serverName = tokens.at(j).getWord();
+		
 		if (!isValidServerName(serverName)) {
 			throw ServerNameException(serverName);
 		}
+
 		if (std::find(serverNames.begin(), serverNames.end(), serverName) != serverNames.end()) {
 			throw DuplicateServerNameException(serverName);
 		}
+
 		serverNames.push_back(serverName);
 		j++;
 	}
 	server->setServerName(serverNames);
 }
 
-/**
- * listen 8080
- * listen <port_number>
-*/
 void	Parser::_parseListen(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	// std::cout << "Parsing listen directive\n"; // ? debug
+
 	const std::string	portNumber = tokens.at(*i).getWord();
 	if (!isValidPortNumber(portNumber))
 		throw PortNumberException(portNumber);
+
 	server->setPortNb(portNumber);
 }
 
-/**
- * Given the current token, loop over the directives and call the appropriate function
-*/
 void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
 	void (Parser::*pf_serverContextDirectives[5])(ServerConfig *server, std::vector<Token> tokens, size_t *i) = {
 		&Parser::_parseListen, 
@@ -322,6 +305,7 @@ void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens
 		"location"
 	};
 
+	// Given the current token, loop over the directives and call the appropriate function
 	for (size_t n = 0; n < 5; n++) {
 		if (tokens.at(*i).getWord() == serverContextDirectives[n]) {
 			(*i)++;
@@ -335,10 +319,6 @@ void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens
 	}
 }
 
-/**
- * Loop over tokens and parse server context 
- * 		(listen, server_name, error_page, client_max_body_size, location)
-*/
 ServerConfig Parser::parseTokens(ServerConfig server) {
 	Parser parser;
 

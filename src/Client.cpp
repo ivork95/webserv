@@ -55,13 +55,12 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
     int nbytes{static_cast<int>(recv(m_socketFd, buf, BUFSIZ - 1, 0))};
     if (nbytes <= 0)
     {
-        close(m_timer.m_socketFd);
-        m_timer.m_socketFd = -1;
-        toBeDeleted.push_back(&m_timer);
-
         close(m_socketFd);
         m_socketFd = -1;
         toBeDeleted.push_back(this);
+
+        close(m_timer.m_socketFd);
+        m_timer.m_socketFd = -1;
 
         return;
     }
@@ -78,18 +77,18 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
     }
     catch (const StatusCodeException &e)
     {
-        m_request.m_response.m_statusCode = e.getStatusCode();
         spdlog::warn(e.what());
+        m_request.m_response.m_statusCode = e.getStatusCode();
 
         for (const auto &errorPageConfig : m_server.m_serverconfig.getErrorPagesConfig())
         {
             for (const auto &errorCode : errorPageConfig.getErrorCodes())
             {
-                if (std::atoi(errorCode.c_str()) == m_request.m_response.m_statusCode)
+                if (errorCode == m_request.m_response.m_statusCode)
                 {
                     try // try catch in case error page doesnt exist. Is it possible to check all files during parsing?
                     {
-                        m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getUriPath());
+                        m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getFilePath());
                     }
                     catch (const std::exception &e)
                     {
