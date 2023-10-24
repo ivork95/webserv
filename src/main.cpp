@@ -12,7 +12,6 @@
 #include "CGIPipeIn.hpp"
 #include <sys/wait.h>
 #include "CGIPipeOut.hpp"
-#include <cstring>
 
 #define PARSTER false // change this
 #define READ 0
@@ -108,8 +107,7 @@ void run(const Configuration &config)
                         throw StatusCodeException(500, "Error: dup2() 2");
                     if (close(pipein->m_pipeFd[READ]) == -1)
                         throw StatusCodeException(500, "Error: close()");
-                    static char input[] = "<html>\r\n<head><title>hello.py</title></head>\r\n<body>\r\n<center><h1>Whohoo! CGI works...</h1></center>\r\n";
-                    int nbytes{static_cast<int>(write(pipein->m_pipeFd[WRITE], input, std::strlen(input)))}; // Write to stdin
+                    int nbytes{static_cast<int>(write(pipein->m_pipeFd[WRITE], pipein->m_input, std::strlen(pipein->m_input)))}; // Write to stdin
                     if (nbytes == -1)
                         throw StatusCodeException(500, "Error: write()");
                     if (close(pipein->m_pipeFd[WRITE]) == -1)
