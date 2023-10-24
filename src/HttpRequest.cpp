@@ -218,6 +218,71 @@ void HttpRequest::parse(void)
     // Percentage decode URI string
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
+	if (m_methodPathVersion[0] == "DELETE")
+	{
+		spdlog::warn("DELETE"); // ? debug
+
+		std::string path = m_methodPathVersion[1];
+		spdlog::warn("path : {}", path); // ? debug
+
+		if (m_methodPathVersion[1][0] == '/')
+			path = m_methodPathVersion[1].substr(1, m_methodPathVersion[1].size());
+
+		spdlog::warn("path : {}", path); // ? debug
+
+		// Find location blocks with DELETE method
+		std::vector<LocationConfig> allowedLocations{};
+		for (const auto &location : m_serverconfig.getLocationsConfig())
+		{
+			for (const auto &method : location.getHttpMethods())
+			{
+				if (method == "DELETE")
+				{
+					spdlog::info("Found location block: {}", location.getRequestURI());
+					allowedLocations.push_back(location);
+				}
+			}
+		}
+
+		// Compare requested path with DELETE enabled location blocks
+		for (const auto &location : allowedLocations)
+		{
+			// Remove leading '/' to append both paths
+			std::string testPath{};
+			if (location.getRequestURI()[0] == '/')
+				testPath = location.getRootPath() + location.getRequestURI().substr(1, location.getRequestURI().size());
+			else
+				testPath = location.getRootPath() + location.getRequestURI();
+
+
+			spdlog::warn("testPath: {}", testPath);
+			spdlog::warn("path: {}", path);
+
+			// Found
+			if (path.compare(0, testPath.length(), testPath) == 0)
+				break ;
+		}
+
+		std::error_code ec;  // To capture error information
+		if (std::filesystem::remove(path, ec))
+		{
+			m_body = "Success: File deleted";
+			m_response.m_statusCode = 200;
+		}
+		else
+		{
+			if (ec == std::errc::no_such_file_or_directory)
+			{
+				throw StatusCodeException(404, "Error: File not found for DELETE request");
+			}
+			else
+			{
+				throw StatusCodeException(500, "Error: Failed to delete file");
+			}
+		}
+		return ;
+	}
+
     // Nasty solution to redirect + get back upload
     if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
     {
@@ -333,6 +398,7 @@ void HttpRequest::parse(void)
             return;
         }
     }
+
     m_response.bodySet(m_response.m_path);
     m_response.m_statusCode = 200;
 }
