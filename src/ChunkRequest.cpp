@@ -1,6 +1,6 @@
-#include "HttpRequest.hpp"
+#include "Request.hpp"
 
-void	HttpRequest::chunkHeaderReplace() {
+void	Request::chunkHeaderReplace() {
 	std::string key = "Content-Length";
 	std::string value = std::to_string(m_totalChunkLength);
 	
@@ -13,7 +13,7 @@ void	HttpRequest::chunkHeaderReplace() {
 	}
 }
 
-void	HttpRequest::chunkBodySet() {
+void	Request::chunkBodySet() {
 	std::string finalChunkBody{};
 	std::string tmp{};
 
@@ -49,7 +49,7 @@ static void	chunkBodyParse(size_t nbLines, std::vector<size_t> chunkLength, std:
 	}
 }
 
-void	HttpRequest::chunkBodyTokenize(void) {
+void	Request::chunkBodyTokenize(void) {
 	std::istringstream			iss(m_rawChunkBody);
 	std::string					token{};
 	std::vector<std::string> 	chunkLine{};
@@ -78,7 +78,7 @@ void	HttpRequest::chunkBodyTokenize(void) {
 	m_chunkLine = chunkLine;
 }
 
-void	HttpRequest::chunkBodyExtract(void) {
+void	Request::chunkBodyExtract(void) {
 	const std::string headersEnd = "\r\n\r\n";
 	size_t headersEndPos = m_rawMessage.find(headersEnd);
 	const std::string chunkEnd = "\r\n0\r\n\r\n";
@@ -91,7 +91,7 @@ void	HttpRequest::chunkBodyExtract(void) {
 	}
 }
 
-void	HttpRequest::chunkHeadersParse(void) {
+void	Request::chunkHeadersParse(void) {
 	auto it = m_requestHeaders.find("Transfer-Encoding");
 	if (it != m_requestHeaders.end()) {
 		if (it->second != "chunked") {

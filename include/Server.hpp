@@ -1,5 +1,5 @@
-#ifndef TCPSERVER_HPP
-#define TCPSERVER_HPP
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -19,7 +19,7 @@
 #include "Socket.hpp"
 #include "ServerConfig.hpp"
 
-class TcpServer : public Socket
+class Server : public Socket
 {
 public:
     struct addrinfo m_hints
@@ -29,22 +29,22 @@ public:
     const ServerConfig &m_serverconfig;
 
     // default constructor
-    TcpServer(void) = delete;
+    Server(void) = delete;
 
     // serverConfig constructor
-    TcpServer(const ServerConfig &serverconfig);
+    Server(const ServerConfig &serverconfig);
 
     // copy constructor
-    TcpServer(const TcpServer &source) = delete;
+    Server(const Server &source) = delete;
 
     // copy assignment operator overload
-    TcpServer &operator=(const TcpServer &source) = delete;
+    Server &operator=(const Server &source) = delete;
 
     // destructor
-    ~TcpServer(void);
+    ~Server(void);
 
     // outstream operator overload
-    friend std::ostream &operator<<(std::ostream &out, const TcpServer &tcpserver);
+    friend std::ostream &operator<<(std::ostream &out, const Server &server);
 };
 
 #endif

@@ -1,11 +1,11 @@
-#include "HttpResponse.hpp"
+#include "Response.hpp"
 #include <sys/types.h>
 #include <sys/socket.h>
 
 // request constructor
-HttpResponse::HttpResponse(void)
+Response::Response(void)
 {
-    spdlog::debug("HttpResponse constructor called");
+    spdlog::debug("Response constructor called");
 }
 
 // copy constructor
@@ -13,30 +13,30 @@ HttpResponse::HttpResponse(void)
 // copy assignment operator overload
 
 // destructor
-HttpResponse::~HttpResponse(void)
+Response::~Response(void)
 {
-    spdlog::debug("HttpResponse destructor called");
+    spdlog::debug("Response destructor called");
 }
 
 // outstream operator overload
-std::ostream &operator<<(std::ostream &out, const HttpResponse &httpresponse)
+std::ostream &operator<<(std::ostream &out, const Response &response)
 {
-    out << "HttpResponse {\n";
-    out << "m_statusCode = |" << httpresponse.m_statusCode << "|\n";
-    out << "m_statusLine = |" << httpresponse.m_statusLine << "|\n";
-    out << "m_path = |" << httpresponse.m_path << "|\n";
+    out << "Response {\n";
+    out << "m_statusCode = |" << response.m_statusCode << "|\n";
+    out << "m_statusLine = |" << response.m_statusLine << "|\n";
+    out << "m_path = |" << response.m_path << "|\n";
     out << "}";
 
     return out;
 }
 
 // getters/setters
-void HttpResponse::bodySet(const std::string &path)
+void Response::bodySet(const std::string &path)
 {
     m_body = Helper::fileToStr(path);
 }
 
-void HttpResponse::statusLineSet(void)
+void Response::statusLineSet(void)
 {
     auto it = m_statusCodes.find(m_statusCode);
     if (it == m_statusCodes.end())
@@ -46,7 +46,7 @@ void HttpResponse::statusLineSet(void)
 }
 
 // methods
-std::string HttpResponse::responseBuild(void)
+std::string Response::responseBuild(void)
 {
     statusLineSet();
     std::string httpResponse = m_statusLine + "\r\n";
@@ -107,7 +107,7 @@ std::string generateHtmlString(const std::string &path)
     htmlStream << "<script>\n";
     htmlStream << "function deleteFile(fileName) {\n";
     htmlStream << "    if (confirm('Are you sure you want to delete ' + fileName + '?')) {\n";
-    htmlStream << "        var xhr = new XMLHttpRequest();\n";
+    htmlStream << "        var xhr = new XMLRequest();\n";
     htmlStream << "        xhr.open('DELETE', fileName, true);\n";
     htmlStream << "        xhr.onreadystatechange = function() {\n";
     htmlStream << "            if (xhr.readyState === 4 && xhr.status === 200) {\n";
@@ -131,7 +131,7 @@ bool isDirectory(std::string path)
     return false;
 }
 
-void HttpResponse::getHandle(void)
+void Response::getHandle(void)
 {
     // spdlog::critical("m_serverconfig = {}", m_serverconfig);
 
@@ -161,7 +161,7 @@ void HttpResponse::getHandle(void)
     // m_statusCode = 200;
 }
 
-void HttpResponse::postHandle(void)
+void Response::postHandle(void)
 {
     // if (m_request.m_fileName.empty())
     //     throw StatusCodeException(400, "Error: no fileName");
@@ -170,7 +170,7 @@ void HttpResponse::postHandle(void)
     // m_statusCode = 303;
 }
 
-void HttpResponse::deleteHandle(void)
+void Response::deleteHandle(void)
 {
     // std::string path{m_request.m_methodPathVersion[1]};
     // std::string allowedPath = "/www/files";
@@ -183,7 +183,7 @@ void HttpResponse::deleteHandle(void)
     //     throw StatusCodeException(411, "Error: remove()");
 }
 
-void HttpResponse::responseHandle(void)
+void Response::responseHandle(void)
 {
     // if (m_statusCode)
     //     return;
@@ -213,7 +213,24 @@ void HttpResponse::responseHandle(void)
     // }
 }
 
-int HttpResponse::sendAll(int sockFd)
+int sendAll(int sockFd, char *buf, int *len, int *total, int *bytesleft)
+{
+    if (*total < *len)
+    {
+        int nbytes{static_cast<int>(send(sockFd, buf + *total, *bytesleft, 0))};
+        if (nbytes == -1)
+            return -1;
+        *total += nbytes;
+        *bytesleft -= nbytes;
+    }
+
+    if (*bytesleft)
+        return 1;
+
+    return 0;
+}
+
+int Response::sendAll(int sockFd)
 {
     if (m_buf.empty())
     {
@@ -234,7 +251,7 @@ int HttpResponse::sendAll(int sockFd)
 
         int nbytes{static_cast<int>(send(sockFd, m_buf.data() + m_total, m_bytesleft, 0))};
         spdlog::critical("nbytes = {}", nbytes);
-        if (nbytes <= 0)
+        if (nbytes == -1)
             return -1;
         m_total += nbytes;
         spdlog::critical("total = {}", m_total);

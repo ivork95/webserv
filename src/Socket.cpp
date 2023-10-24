@@ -9,9 +9,7 @@ Socket::~Socket(void)
 // member functions
 int Socket::setNonBlocking(void)
 {
-    int result{};
-
-    result = fcntl(m_socketFd, F_SETFL, O_NONBLOCK);
+    int result = fcntl(m_socketFd, F_SETFL, O_NONBLOCK);
     if (result == -1)
     {
         std::perror("fcntl() failed");

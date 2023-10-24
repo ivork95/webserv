@@ -3,15 +3,17 @@ NAME		:=	webserv
 CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	obj/main.o \
+				obj/CGIPipeIn.o \
+				obj/CGIPipeOut.o \
 				obj/Client.o \
 				obj/Helper.o \
-				obj/HttpMessage.o \
-				obj/HttpRequest.o \
-				obj/HttpResponse.o \
-				obj/MultiplexerIO.o \
+				obj/Message.o \
+				obj/Request.o \
+				obj/Response.o \
+				obj/Multiplexer.o \
 				obj/Socket.o \
 				obj/Timer.o \
-				obj/TcpServer.o \
+				obj/Server.o \
 				obj/InitConfig.o \
 				obj/config/Token.o \
 				obj/config/Lexer.o \
@@ -36,15 +38,17 @@ OBJECTS		:=	obj/main.o \
 				obj/logger/Logger.o \
 				obj/ChunkRequest.o \
 				obj/DirectoryListing.o
-HEADERS		:=	include/Client.hpp \
+HEADERS		:=	include/CGIPipeIn.hpp \
+				include/CGIPipeOut.hpp \
+				include/Client.hpp \
 				include/Helper.hpp \
-				include/HttpMessage.hpp \
-				include/HttpRequest.hpp \
-				include/HttpResponse.hpp \
-				include/MultiplexerIO.hpp \
+				include/Message.hpp \
+				include/Request.hpp \
+				include/Response.hpp \
+				include/Multiplexer.hpp \
 				include/Socket.hpp \
 				include/StatusCodes.hpp \
-				include/TcpServer.hpp \
+				include/Server.hpp \
 				include/Timer.hpp \
 				include/Token.hpp \
 				include/Lexer.hpp \

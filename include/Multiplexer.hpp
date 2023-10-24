@@ -1,5 +1,5 @@
-#ifndef MULTIPLEXERIO_HPP
-#define MULTIPLEXERIO_HPP
+#ifndef MULTIPLEXER_HPP
+#define MULTIPLEXER_HPP
 
 #include <sys/epoll.h>
 #include <array>
@@ -8,39 +8,39 @@
 #include <filesystem>
 #include <sys/stat.h>
 
-#include "TcpServer.hpp"
+#include "Server.hpp"
 #include "StatusCodes.hpp"
 #include "Socket.hpp"
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
 
-class MultiplexerIO
+class Multiplexer
 {
 private:
     // default constructor
-    MultiplexerIO(void);
+    Multiplexer(void);
 
 public:
     int m_epollfd{};
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
 
     // copy constructor
-    MultiplexerIO(const MultiplexerIO &) = delete;
+    Multiplexer(const Multiplexer &) = delete;
 
     // copy assignment operator overload
-    MultiplexerIO &operator=(const MultiplexerIO &) = delete;
+    Multiplexer &operator=(const Multiplexer &) = delete;
 
     // destructor
-    ~MultiplexerIO(void);
+    ~Multiplexer(void);
 
     // member functions
-    static MultiplexerIO &getInstance(void);
-    void addSocketToEpollFd(Socket *ptr, int events);
-    void modifyEpollEvents(Socket *ptr, int events);
+    static Multiplexer &getInstance(void);
+    int modifyEpollEvents(Socket *ptr, int events, int fd);
+    int addToEpoll(Socket *ptr, int events, int fd);
 
     // outstream operator overload
     friend std::ostream &
-    operator<<(std::ostream &out, const MultiplexerIO &multiplexerio);
+    operator<<(std::ostream &out, const Multiplexer &multiplexer);
 };
 
 #endif

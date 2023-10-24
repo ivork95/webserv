@@ -1,4 +1,4 @@
-#include "HttpRequest.hpp"
+#include "Request.hpp"
 
 static std::string directoryListingGenerate(const std::string &dirPath) {
     std::string listing = "<html><body><h1>" + dirPath + "</h1><ul>";
@@ -23,7 +23,7 @@ static std::string directoryListingGenerate(const std::string &dirPath) {
     return listing;
 }
 
-void	HttpRequest::directoryListingBodySet(const std::string &dirPath) {
+void	Request::directoryListingBodySet(const std::string &dirPath) {
 	const std::string directoryListing = directoryListingGenerate(dirPath);
 	if (directoryListing.empty())
 		throw StatusCodeException(500, "Error: directoryListingBodySet");
@@ -34,7 +34,7 @@ void	HttpRequest::directoryListingBodySet(const std::string &dirPath) {
 	m_response.m_headers.insert({"Content-Type", "text/html"});
 }
 
-std::string	HttpRequest::directoryListingParse(void) {
+std::string	Request::directoryListingParse(void) {
 	std::string requestUri = m_methodPathVersion[1];
 	std::string dirPath{};
 

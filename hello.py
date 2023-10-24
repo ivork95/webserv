@@ -1,1 +1,4 @@
-print("Polo!")
+import fileinput
+
+for line in fileinput.input():
+    print(line.rstrip())

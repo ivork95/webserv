@@ -2,90 +2,33 @@
 #include <fstream>
 #include <filesystem>
 #include <sys/stat.h>
-#include "TcpServer.hpp"
+#include "Server.hpp"
 #include "Configuration.hpp"
 #include "Client.hpp"
-#include "MultiplexerIO.hpp"
-#include "HttpRequest.hpp"
+#include "Multiplexer.hpp"
+#include "Request.hpp"
 #include "Timer.hpp"
-#include "HttpResponse.hpp"
-#include "Pipe.hpp"
-#include <sys/wait.h>
-#include "AnotherPipe.hpp"
+#include "Response.hpp"
+#include "CGIPipeIn.hpp"
+#include "CGIPipeOut.hpp"
 
-#define BUFSIZE 256
 #define PARSTER false // change this
-
-void handleConnectedClient(Client *client, std::vector<Socket *> &toBeDeleted)
-{
-    char buf[BUFSIZE + 1]{}; // Buffer for client data
-    int nbytes{static_cast<int>(recv(client->m_socketFd, buf, BUFSIZE, 0))};
-    if (nbytes <= 0)
-    {
-        close(client->m_timer->m_socketFd);
-        client->m_timer->m_socketFd = -1;
-        toBeDeleted.push_back(client->m_timer);
-
-        close(client->m_socketFd);
-        client->m_socketFd = -1;
-        toBeDeleted.push_back(client);
-
-        return;
-    }
-
-    try
-    {
-        if (client->m_request.tokenize(buf, nbytes))
-            return;
-
-        if (timerfd_settime(client->m_timer->m_socketFd, 0, &client->m_timer->m_spec, NULL) == -1)
-            throw StatusCodeException(500, "Error: timerfd_settime()");
-
-        client->m_request.parse();
-    }
-    catch (const StatusCodeException &e)
-    {
-        client->m_request.m_response.m_statusCode = e.getStatusCode();
-        spdlog::warn(e.what());
-
-        for (const auto &errorPageConfig : client->m_request.m_serverconfig.getErrorPagesConfig())
-        {
-            for (const auto &errorCode : errorPageConfig.getErrorCodes())
-            {
-                if (errorCode == client->m_request.m_response.m_statusCode)
-                {
-                    try // try catch in case error page doesnt exist. Is it possible to check all files during parsing?
-                    {
-                        client->m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getFilePath());
-                    }
-                    catch (const std::exception &e)
-                    {
-                        std::cerr << e.what() << '\n';
-                    }
-                }
-            }
-        }
-    }
-    spdlog::critical(client->m_request);
-
-    close(client->m_timer->m_socketFd);
-    client->m_timer->m_socketFd = -1;
-    toBeDeleted.push_back(client->m_timer);
-
-    MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
-    multiplexerio.modifyEpollEvents(client, EPOLLOUT);
-}
+#define READ 0
+#define WRITE 1
 
 void run(const Configuration &config)
 {
-    std::vector<TcpServer *> servers{};
+    std::vector<Server *> servers{};
 
     for (auto &serverConfig : config.serversConfig)
-        servers.push_back(new TcpServer{serverConfig});
+        servers.push_back(new Server{serverConfig});
 
-    MultiplexerIO &multiplexerio = MultiplexerIO::getInstance();
+    Multiplexer &multiplexer = Multiplexer::getInstance();
     for (auto &server : servers)
-        multiplexerio.addSocketToEpollFd(server, EPOLLIN | EPOLLRDHUP);
+    {
+        if (multiplexer.addToEpoll(server, EPOLLIN | EPOLLRDHUP, server->m_socketFd))
+            throw std::runtime_error("Error: addToEpoll() failed\n");
+    }
 
     while (true)
     {
@@ -94,55 +37,59 @@ void run(const Configuration &config)
         for (auto &s : toBeDeleted)
             delete s;
 
-        int epollCount = epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, -1);
+        int epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
         if (epollCount < 0)
             throw std::runtime_error("Error: epoll_wait() failed\n");
 
         for (int i = 0; i < epollCount; i++) // Run through the existing connections looking for data to read
         {
-            Socket *ePollDataPtr = static_cast<Socket *>(multiplexerio.m_events[i].data.ptr);
+            Socket *ePollDataPtr = static_cast<Socket *>(multiplexer.m_events[i].data.ptr);
 
             if (ePollDataPtr->m_socketFd == -1)
                 continue;
 
-            if (multiplexerio.m_events[i].events & EPOLLIN) // If someone's ready to read
+            if (multiplexer.m_events[i].events & EPOLLIN) // If someone's ready to read
             {
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
-                    handleConnectedClient(client, toBeDeleted);
-                else if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr)) // If listener is ready to read, handle new connection
+                    client->handleConnectedClient(toBeDeleted);
+                else if (Server *server = dynamic_cast<Server *>(ePollDataPtr)) // If listener is ready to read, handle new connection
                 {
                     Client *client = new Client{*server};
-                    multiplexerio.addSocketToEpollFd(client, EPOLLIN | EPOLLRDHUP);
-                    multiplexerio.addSocketToEpollFd(client->m_timer, EPOLLIN | EPOLLRDHUP);
+                    if (multiplexer.addToEpoll(client, EPOLLIN | EPOLLRDHUP, client->m_socketFd))
+                        throw std::runtime_error("Error: addToEpoll()\n");
+                    if (multiplexer.addToEpoll(&(client->m_timer), EPOLLIN | EPOLLRDHUP, client->m_timer.m_socketFd))
+                        throw std::runtime_error("Error: addToEpoll()\n");
                 }
-                else if (AnotherPipe *ap = dynamic_cast<AnotherPipe *>(ePollDataPtr))
+                else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
                 {
-                    spdlog::critical("AnotherPipe ap->pipefd[0]");
+                    spdlog::critical("cgi out READ ready!");
 
-                    char buf;
-                    while (read(ap->pipefd[0], &buf, 1) > 0)
-                        write(STDOUT_FILENO, &buf, 1);
-                    write(STDOUT_FILENO, "\n", 1);
-                    close(ap->pipefd[0]);
-
-                    continue;
+                    char buf[BUFSIZ]{};
+                    int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
+                    if (nbytes <= 0)
+                        pipeout->m_response.m_statusCode = 500;
+                    else
+                    {
+                        pipeout->m_response.m_body = buf;
+                        pipeout->m_response.m_statusCode = 200;
+                    }
+                    if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
+                        throw std::runtime_error("Error: modifyEpollEvents()\n");
                 }
-                else if (Timer *m_timer = dynamic_cast<Timer *>(ePollDataPtr))
+                else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
-                    spdlog::warn("Timeout expired. Closing: {}", *(m_timer->m_client));
+                    spdlog::warn("Timeout expired. Closing: {}", timer->m_client);
 
-                    close(m_timer->m_client->m_socketFd);
-                    m_timer->m_client->m_socketFd = -1;
-                    toBeDeleted.push_back(m_timer->m_client);
+                    close(timer->m_client.m_socketFd);
+                    timer->m_client.m_socketFd = -1;
+                    toBeDeleted.push_back(&(timer->m_client));
 
-                    close(m_timer->m_socketFd);
-                    m_timer->m_socketFd = -1;
-                    toBeDeleted.push_back(m_timer);
+                    close(timer->m_socketFd);
+                    timer->m_socketFd = -1;
                 }
             }
-            else if (multiplexerio.m_events[i].events & EPOLLOUT) // If someone's ready to write
+            else if (multiplexer.m_events[i].events & EPOLLOUT) // If someone's ready to write
             {
-
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
                     if (client->m_request.m_response.sendAll(client->m_socketFd) <= 0)
@@ -151,61 +98,25 @@ void run(const Configuration &config)
                         client->m_socketFd = -1;
                         toBeDeleted.push_back(client);
                     }
-                    continue;
                 }
-                else if (Pipe *p = dynamic_cast<Pipe *>(ePollDataPtr))
+                else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
                 {
-                    spdlog::critical("Event van de WRITE kant van Pipe1");
+                    spdlog::critical("cgi in WRITE ready!");
 
-                    dup2(p->pipefd[0], STDIN_FILENO); // Dup de READ kant van Pipe1 naar stdin
-                    close(p->pipefd[0]);
-                    write(p->pipefd[1], "Marco", 5); // Write "Marco" naar stdin
-                    close(p->pipefd[1]);
+                    pipein->dupAndWrite();
 
-                    // Hier voegen we de READ kant van Pipe1 toe aan Epoll
-                    AnotherPipe *ap = new AnotherPipe;
-                    pipe(ap->pipefd);
-                    struct epoll_event ev
-                    {
-                    };
-                    ev.data.ptr = ap;
-                    ev.events = EPOLLIN;
-                    epoll_ctl(multiplexerio.m_epollfd, EPOLL_CTL_ADD, ap->pipefd[0], &ev);
+                    CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
+                    if (pipe(pipeout->m_pipeFd) == -1)
+                        throw StatusCodeException(500, "Error: pipe()");
+                    if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[READ])) // Add READ end from pipe2 to epoll
+                        throw StatusCodeException(500, "Error: epoll_ctl()");
 
-                    // execve ish
-                    char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
-                    char *scriptPath = "./hello.py";       // Path to the Python script
-                    char *argv[] = {
-                        pythonPath,
-                        scriptPath,
-                        NULL};
-                    pid_t cpid;
-                    cpid = fork();
-                    if (cpid == 0)
-                    {
-                        dup2(ap->pipefd[1], STDOUT_FILENO); // Dup de Write kant van Pipe1 naar stdout
-                        close(ap->pipefd[1]);
-
-                        // Debugging ish
-                        char buf;
-                        while (read(STDIN_FILENO, &buf, 1) > 0)
-                            write(STDOUT_FILENO, &buf, 1);
-                        write(STDOUT_FILENO, "\n", 1);
-                        close(p->pipefd[0]);
-
-                        execve(pythonPath, argv, NULL);
-                    }
-                    else
-                        wait(NULL); /* Wait for child */
-
-                    continue;
+                    pipeout->forkDupAndExec();
                 }
             }
             else
-            {
                 spdlog::critical("Unexpected");
-            }
-            if (multiplexerio.m_events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+            if (multiplexer.m_events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
             {
                 close(ePollDataPtr->m_socketFd);
                 ePollDataPtr->m_socketFd = -1;
