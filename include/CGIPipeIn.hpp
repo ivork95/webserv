@@ -4,6 +4,9 @@
 #include "Client.hpp"
 #include <cstring>
 
+#define READ 0
+#define WRITE 1
+
 class CGIPipeIn : public Socket
 {
 public:
@@ -13,6 +16,9 @@ public:
 
     // constructor
     CGIPipeIn(Client &client);
+
+    // method
+    void dupAndWrite(void);
 };
 
 #endif

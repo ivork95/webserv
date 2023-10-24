@@ -1,8 +1,13 @@
 #ifndef CGIPIPEOUT_HPP
 #define CGIPIPEOUT_HPP
 
+#include <sys/wait.h>
+
 #include "Client.hpp"
 #include "Request.hpp"
+
+#define READ 0
+#define WRITE 1
 
 class CGIPipeOut : public Socket
 {
@@ -14,6 +19,9 @@ public:
 
     // constructor
     CGIPipeOut(Client &client, Request &request, Response &response);
+
+    // methods
+    void forkDupAndExec(void);
 };
 
 #endif

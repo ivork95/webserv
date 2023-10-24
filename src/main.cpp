@@ -10,7 +10,6 @@
 #include "Timer.hpp"
 #include "Response.hpp"
 #include "CGIPipeIn.hpp"
-#include <sys/wait.h>
 #include "CGIPipeOut.hpp"
 
 #define PARSTER false // change this
@@ -103,60 +102,15 @@ void run(const Configuration &config)
                 {
                     spdlog::critical("cgi in WRITE ready!");
 
-                    if (dup2(pipein->m_pipeFd[READ], STDIN_FILENO) == -1) // Dup de READ kant van Pipe1 naar stdin
-                        throw StatusCodeException(500, "Error: dup2() 2");
-                    if (close(pipein->m_pipeFd[READ]) == -1)
-                        throw StatusCodeException(500, "Error: close()");
-                    int nbytes{static_cast<int>(write(pipein->m_pipeFd[WRITE], pipein->m_input, std::strlen(pipein->m_input)))}; // Write to stdin
-                    if (nbytes == -1)
-                        throw StatusCodeException(500, "Error: write()");
-                    if (close(pipein->m_pipeFd[WRITE]) == -1)
-                        throw StatusCodeException(500, "Error: close()");
+                    pipein->dupAndWrite();
 
-                    // Hier voegen we de READ kant van Pipe2 toe aan Epoll
                     CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
                     if (pipe(pipeout->m_pipeFd) == -1)
                         throw StatusCodeException(500, "Error: pipe()");
-                    struct epoll_event ev
-                    {
-                    };
-                    ev.data.ptr = pipeout;
-                    ev.events = EPOLLIN;
-                    if (epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_ADD, pipeout->m_pipeFd[READ], &ev) == -1)
+                    if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[READ])) // Add READ end from pipe2 to epoll
                         throw StatusCodeException(500, "Error: epoll_ctl()");
 
-                    // execve ish
-                    char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
-                    char *scriptPath = "./hello.py";       // Path to the Python script
-                    char *argv[] = {
-                        pythonPath,
-                        scriptPath,
-                        NULL};
-                    pid_t cpid;
-                    cpid = fork();
-                    if (cpid == -1)
-                        throw StatusCodeException(500, "Error: fork())");
-                    if (cpid == 0)
-                    {
-                        if (close(pipeout->m_pipeFd[READ]) == -1)
-                            throw StatusCodeException(500, "Error: close())");
-                        if (dup2(pipeout->m_pipeFd[WRITE], STDOUT_FILENO) == -1) // Dup de Write kant van Pipe2 naar stdout
-                            throw StatusCodeException(500, "Error: dup2() 1");
-                        if (close(pipeout->m_pipeFd[WRITE]) == -1)
-                            throw StatusCodeException(500, "Error: close()");
-                        execve(pythonPath, argv, NULL);
-                        throw StatusCodeException(500, "Error: execve()");
-                    }
-                    else
-                    {
-                        int wstatus{};
-                        if (wait(&wstatus) == -1) /* Wait for child */
-                            throw StatusCodeException(500, "Error: wait()");
-                        if (wstatus)
-                            throw StatusCodeException(500, "Error: wstatus");
-                        if (close(pipeout->m_pipeFd[WRITE]) == -1)
-                            throw StatusCodeException(500, "Error: close()");
-                    }
+                    pipeout->forkDupAndExec();
                 }
             }
             else
