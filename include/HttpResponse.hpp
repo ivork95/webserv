@@ -54,6 +54,7 @@ public:
     void postHandle(void);
     void deleteHandle(void);
     void responseHandle(void);
+    int sendAll(int sockFd);
 
     std::map<int, std::string> m_statusCodes{
         {100, "HTTP/1.1 100 Continue"},

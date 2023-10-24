@@ -9,6 +9,9 @@
 #include "HttpRequest.hpp"
 #include "Timer.hpp"
 #include "HttpResponse.hpp"
+#include "Pipe.hpp"
+#include <sys/wait.h>
+#include "AnotherPipe.hpp"
 
 #define BUFSIZE 256
 #define PARSTER false // change this
@@ -93,10 +96,7 @@ void run(const Configuration &config)
 
         int epollCount = epoll_wait(multiplexerio.m_epollfd, multiplexerio.m_events.data(), MAX_EVENTS, -1);
         if (epollCount < 0)
-        {
-            std::perror("epoll_wait() failed");
             throw std::runtime_error("Error: epoll_wait() failed\n");
-        }
 
         for (int i = 0; i < epollCount; i++) // Run through the existing connections looking for data to read
         {
@@ -107,14 +107,26 @@ void run(const Configuration &config)
 
             if (multiplexerio.m_events[i].events & EPOLLIN) // If someone's ready to read
             {
-                if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr)) // If listener is ready to read, handle new connection
+                if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
+                    handleConnectedClient(client, toBeDeleted);
+                else if (TcpServer *server = dynamic_cast<TcpServer *>(ePollDataPtr)) // If listener is ready to read, handle new connection
                 {
                     Client *client = new Client{*server};
                     multiplexerio.addSocketToEpollFd(client, EPOLLIN | EPOLLRDHUP);
                     multiplexerio.addSocketToEpollFd(client->m_timer, EPOLLIN | EPOLLRDHUP);
                 }
-                else if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // If not the listener, we're just a regular client
-                    handleConnectedClient(client, toBeDeleted);
+                else if (AnotherPipe *ap = dynamic_cast<AnotherPipe *>(ePollDataPtr))
+                {
+                    spdlog::critical("AnotherPipe ap->pipefd[0]");
+
+                    char buf;
+                    while (read(ap->pipefd[0], &buf, 1) > 0)
+                        write(STDOUT_FILENO, &buf, 1);
+                    write(STDOUT_FILENO, "\n", 1);
+                    close(ap->pipefd[0]);
+
+                    continue;
+                }
                 else if (Timer *m_timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
                     spdlog::warn("Timeout expired. Closing: {}", *(m_timer->m_client));
@@ -130,36 +142,63 @@ void run(const Configuration &config)
             }
             else if (multiplexerio.m_events[i].events & EPOLLOUT) // If someone's ready to write
             {
+
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
-                    if (client->m_request.m_response.m_buf.empty())
-                    {
-                        client->m_request.m_response.m_buf = client->m_request.m_response.responseBuild();
-                        client->m_request.m_response.m_len = client->m_request.m_response.m_buf.size();
-                        client->m_request.m_response.m_bytesleft = client->m_request.m_response.m_len;
-                    }
-
-                    if (client->m_request.m_response.m_total < client->m_request.m_response.m_len)
-                    {
-                        int nbytes{static_cast<int>(send(client->m_socketFd, client->m_request.m_response.m_buf.data() + client->m_request.m_response.m_total, client->m_request.m_response.m_bytesleft, 0))};
-                        if (nbytes <= 0)
-                        {
-                            close(client->m_socketFd);
-                            client->m_socketFd = -1;
-                            toBeDeleted.push_back(client);
-
-                            continue;
-                        }
-                        client->m_request.m_response.m_total += nbytes;
-                        client->m_request.m_response.m_bytesleft -= nbytes;
-                    }
-
-                    if (!client->m_request.m_response.m_bytesleft)
+                    if (client->m_request.m_response.sendAll(client->m_socketFd) <= 0)
                     {
                         close(client->m_socketFd);
                         client->m_socketFd = -1;
                         toBeDeleted.push_back(client);
                     }
+                    continue;
+                }
+                else if (Pipe *p = dynamic_cast<Pipe *>(ePollDataPtr))
+                {
+                    spdlog::critical("Event van de WRITE kant van Pipe1");
+
+                    dup2(p->pipefd[0], STDIN_FILENO); // Dup de READ kant van Pipe1 naar stdin
+                    close(p->pipefd[0]);
+                    write(p->pipefd[1], "Marco", 5); // Write "Marco" naar stdin
+                    close(p->pipefd[1]);
+
+                    // Hier voegen we de READ kant van Pipe1 toe aan Epoll
+                    AnotherPipe *ap = new AnotherPipe;
+                    pipe(ap->pipefd);
+                    struct epoll_event ev
+                    {
+                    };
+                    ev.data.ptr = ap;
+                    ev.events = EPOLLIN;
+                    epoll_ctl(multiplexerio.m_epollfd, EPOLL_CTL_ADD, ap->pipefd[0], &ev);
+
+                    // execve ish
+                    char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
+                    char *scriptPath = "./hello.py";       // Path to the Python script
+                    char *argv[] = {
+                        pythonPath,
+                        scriptPath,
+                        NULL};
+                    pid_t cpid;
+                    cpid = fork();
+                    if (cpid == 0)
+                    {
+                        dup2(ap->pipefd[1], STDOUT_FILENO); // Dup de Write kant van Pipe1 naar stdout
+                        close(ap->pipefd[1]);
+
+                        // Debugging ish
+                        char buf;
+                        while (read(STDIN_FILENO, &buf, 1) > 0)
+                            write(STDOUT_FILENO, &buf, 1);
+                        write(STDOUT_FILENO, "\n", 1);
+                        close(p->pipefd[0]);
+
+                        execve(pythonPath, argv, NULL);
+                    }
+                    else
+                        wait(NULL); /* Wait for child */
+
+                    continue;
                 }
             }
             else

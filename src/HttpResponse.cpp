@@ -212,3 +212,39 @@ void HttpResponse::responseHandle(void)
     //     spdlog::warn(e.what());
     // }
 }
+
+int HttpResponse::sendAll(int sockFd)
+{
+    if (m_buf.empty())
+    {
+        spdlog::critical("Never sent anything");
+
+        m_buf = responseBuild();
+
+        m_len = m_buf.size();
+        spdlog::critical("len = {}", m_len);
+
+        m_bytesleft = m_len;
+        spdlog::critical("bytesLeft = {}", m_bytesleft);
+    }
+
+    if (m_total < m_len)
+    {
+        spdlog::critical("Trying to send");
+
+        int nbytes{static_cast<int>(send(sockFd, m_buf.data() + m_total, m_bytesleft, 0))};
+        spdlog::critical("nbytes = {}", nbytes);
+        if (nbytes <= 0)
+            return -1;
+        m_total += nbytes;
+        spdlog::critical("total = {}", m_total);
+
+        m_bytesleft -= nbytes;
+        spdlog::critical("bytesLeft = {}", m_bytesleft);
+    }
+
+    if (m_bytesleft)
+        return 1;
+
+    return 0;
+}
