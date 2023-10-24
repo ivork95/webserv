@@ -8,8 +8,13 @@ CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m
 void CGIPipeOut::forkDupAndExec(void)
 {
     char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
+    auto elem = m_request.m_locationconfig.getCgiHandler().begin();
+    const char *pythonPath2 = elem->second.c_str();
+
+    spdlog::critical("python path: {}", pythonPath2);
     char *scriptPath = "./hello.py";       // Path to the Python script
     char *argv[] = {pythonPath, scriptPath, NULL};
+    char *env[] = {"ARG1=hello", "ARG2=bye", NULL};
     pid_t cpid = fork();
     if (cpid == -1)
         throw StatusCodeException(500, "Error: fork())");
@@ -21,7 +26,7 @@ void CGIPipeOut::forkDupAndExec(void)
             throw StatusCodeException(500, "Error: dup2() 1");
         if (close(m_pipeFd[WRITE]) == -1)
             throw StatusCodeException(500, "Error: close()");
-        execve(pythonPath, argv, NULL);
+        execve(pythonPath, argv, env);
         throw StatusCodeException(500, "Error: execve()");
     }
     else

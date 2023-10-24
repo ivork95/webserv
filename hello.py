@@ -1,4 +1,2 @@
-import fileinput
-
-for line in fileinput.input():
-    print(line.rstrip())
+import os
+print(os.environ)

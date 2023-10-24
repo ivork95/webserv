@@ -1,6 +1,7 @@
 #include "Request.hpp"
 #include "Multiplexer.hpp"
 #include "CGIPipeIn.hpp"
+#include "CGIPipeOut.hpp"
 
 // constructor
 // Request::Request(void)
@@ -253,6 +254,30 @@ void Request::parse(void)
     if (it == m_locationconfig.getHttpMethods().end())
         throw StatusCodeException(405, "Warning: method not allowed");
 
+    if (!m_methodPathVersion[1].compare(0, 13, "/www/cgi-bin/"))
+    {
+        spdlog::critical("CGI get handler");
+        if (m_methodPathVersion[0] == "GET")
+        {
+            CGIPipeOut *pipeout = new CGIPipeOut(m_client, m_client.m_request, m_client.m_request.m_response);
+            if (pipe(pipeout->m_pipeFd) == -1)
+                throw StatusCodeException(500, "Error: pipe()");
+            if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[0]))
+                throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+            pipeout->forkDupAndExec();
+            return ;
+        }
+        if (m_methodPathVersion[0] == "POST")
+        {
+            // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
+            CGIPipeIn *pipein = new CGIPipeIn(m_client);
+            if (pipe(pipein->m_pipeFd) == -1)
+                throw StatusCodeException(500, "Error: pipe()");
+            if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
+                throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+            return;
+        }
+    }
     // For a certain location block, loops over index files, and checks if one exists
     bool isIndexFileFound{false};
     for (const auto &index : m_locationconfig.getIndexFile())
@@ -270,14 +295,6 @@ void Request::parse(void)
 
     if (m_methodPathVersion[0] == "POST")
     {
-        // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
-        CGIPipeIn *pipein = new CGIPipeIn(m_client);
-        if (pipe(pipein->m_pipeFd) == -1)
-            throw StatusCodeException(500, "Error: pipe()");
-        if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
-            throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
-        return;
-
         // Parse chunked request
         if (m_isChunked)
         {
