@@ -55,13 +55,12 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
     int nbytes{static_cast<int>(recv(m_socketFd, buf, BUFSIZ - 1, 0))};
     if (nbytes <= 0)
     {
-        close(m_timer.m_socketFd);
-        m_timer.m_socketFd = -1;
-        toBeDeleted.push_back(&m_timer);
-
         close(m_socketFd);
         m_socketFd = -1;
         toBeDeleted.push_back(this);
+
+        close(m_timer.m_socketFd);
+        m_timer.m_socketFd = -1;
 
         return;
     }
@@ -78,8 +77,8 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
     }
     catch (const StatusCodeException &e)
     {
-        m_request.m_response.m_statusCode = e.getStatusCode();
         spdlog::warn(e.what());
+        m_request.m_response.m_statusCode = e.getStatusCode();
 
         for (const auto &errorPageConfig : m_server.m_serverconfig.getErrorPagesConfig())
         {
