@@ -232,6 +232,7 @@ void HttpRequest::parse(void)
     {
         if (m_methodPathVersion[1] == location.getRequestURI())
         {
+			spdlog::info("Found location block: {}", location.getRequestURI());
             m_locationconfig = location;
             isLocationFound = true;
             break;
@@ -251,9 +252,10 @@ void HttpRequest::parse(void)
     bool isIndexFileFound{false};
     for (const auto &index : m_locationconfig.getIndexFile())
     {
-        spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index);
+        // spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index);
         if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
         {
+			spdlog::info("Found index file: {}", m_locationconfig.getRootPath() + index);
             m_response.m_path = m_locationconfig.getRootPath() + index;
             isIndexFileFound = true;
             break;
@@ -262,19 +264,19 @@ void HttpRequest::parse(void)
 
 	// Can't find an index file, check if directory listing
     if (!isIndexFileFound) {
+		spdlog::info("No index file, looking for autoindex: {}", m_locationconfig.getRootPath());
 		const std::string	dirPath = directoryListingParse();
 		if (dirPath.empty())
-			throw StatusCodeException(400, "Error: directoryListingParse");
+			throw StatusCodeException(500, "Error: directoryListingParse");
 
-		// Check if URI + root is dir
 		if (std::filesystem::is_directory(dirPath)) {
 
-			// Check if autoindex is on
 			if (!m_locationconfig.getAutoIndex())
-				throw StatusCodeException(403, "Forbidden: Directory listing is disabled.");
-			
+				throw StatusCodeException(403, "Forbidden: directory listing disabled");
+
+			spdlog::info("Found autoindex: {}", dirPath);
 			directoryListingBodySet(dirPath);
-			return ; // not sure how the body is supposed to be set
+			return ;
 		} else {
 			throw StatusCodeException(404, "Error: no matching index file found");
 		}

@@ -1,11 +1,21 @@
 #include "HttpRequest.hpp"
 
 static std::string directoryListingGenerate(const std::string &dirPath) {
-    std::string listing = "<html><body><h1>Directory Listing</h1><ul>";
+    std::string listing = "<html><body><h1>" + dirPath + "</h1><ul>";
 
     for (const auto &entry : std::filesystem::directory_iterator(dirPath))
     {
-        listing += "<li>" + entry.path().filename().string() + "</li>";
+        const std::string entryName = entry.path().filename().string();
+        const std::string entryPath = entry.path().string();
+
+        if (std::filesystem::is_directory(entryPath))
+        {
+            listing += "<li><a href='" + entryName + "/'>" + entryName + "/</a></li>";
+        }
+        else
+        {
+			listing += "<li>" + entryName + "</li>";
+        }
     }
 
     listing += "</ul></body></html>";
@@ -16,7 +26,7 @@ static std::string directoryListingGenerate(const std::string &dirPath) {
 void	HttpRequest::directoryListingBodySet(const std::string &dirPath) {
 	const std::string directoryListing = directoryListingGenerate(dirPath);
 	if (directoryListing.empty())
-		throw StatusCodeException(400, "Error: directoryListingBodySet");
+		throw StatusCodeException(500, "Error: directoryListingBodySet");
 
 	// m_response.bodySet(directoryListing); // to change I guess
 	m_response.m_body = directoryListing;

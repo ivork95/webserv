@@ -22,12 +22,12 @@ void	HttpRequest::chunkBodySet() {
 			tmp = m_chunkLine[n].substr(0, m_chunkLine[n].size() - 1); // to remove trailing \n
 			finalChunkBody.append(tmp);
 		} catch (...) {
-			throw StatusCodeException(400, "Error: chunkBodySet substr");
+			throw StatusCodeException(500, "Error: chunkBodySet substr");
 		}
 	}
 
 	if (finalChunkBody.empty()) {
-		throw StatusCodeException(400, "Error: chunkBodySet finalChunkBody");
+		throw StatusCodeException(500, "Error: chunkBodySet finalChunkBody");
 	}
 
 	m_chunkBody = finalChunkBody;
@@ -35,17 +35,17 @@ void	HttpRequest::chunkBodySet() {
 
 static void	chunkBodyParse(size_t nbLines, std::vector<size_t> chunkLength, std::vector<std::string> chunkLine) {
 	if (chunkLine.empty())
-		throw StatusCodeException(400, "Error: empty chunk request");
+		throw StatusCodeException(500, "Error: empty chunk request");
 	
 	if (nbLines % 2 != 1)
-		throw StatusCodeException(400, "Error: invalid chunk body");
+		throw StatusCodeException(500, "Error: invalid chunk body");
 	
 	// 1 chunk = chunk size + actual chunk
 	size_t	nbChunks = (nbLines - 1) / 2;
 
 	for (size_t n = 0; n < nbChunks; n++) {
 		if (chunkLength[n] != chunkLine[n].size() - 1)
-				throw StatusCodeException(400, "Warning: chunk size is different from the chunk line length");
+				throw StatusCodeException(500, "Warning: chunk size is different from the chunk line length");
 	}
 }
 
@@ -71,7 +71,7 @@ void	HttpRequest::chunkBodyTokenize(void) {
 	}
 
 	if (chunkLine.empty() || chunkLength.empty()) {
-		throw StatusCodeException(400, "Error: chunkBodyTokenize");
+		throw StatusCodeException(500, "Error: chunkBodyTokenize");
 	}
 
 	chunkBodyParse(nbLines, chunkLength, chunkLine);
@@ -87,7 +87,7 @@ void	HttpRequest::chunkBodyExtract(void) {
 	try {
 		m_rawChunkBody = m_rawMessage.substr(headersEndPos + 4, chunkEndPos - headersEndPos); // + 4 to remove CRLF (Carriage Return - Line Feed)
 	} catch (...) {
-		throw StatusCodeException(400, "Error: chunkBodyExtract substr");
+		throw StatusCodeException(500, "Error: chunkBodyExtract substr");
 	}
 }
 
@@ -95,9 +95,9 @@ void	HttpRequest::chunkHeadersParse(void) {
 	auto it = m_requestHeaders.find("Transfer-Encoding");
 	if (it != m_requestHeaders.end()) {
 		if (it->second != "chunked") {
-			throw StatusCodeException(400, "Error: invalid Transfer-Encoding form");
+			throw StatusCodeException(500, "Error: invalid Transfer-Encoding form");
 		}
 	} else {
-		throw StatusCodeException(400, "Error: could not find Transfer-Encoding");
+		throw StatusCodeException(500, "Error: could not find Transfer-Encoding");
 	}
 }
