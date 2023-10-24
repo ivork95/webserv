@@ -12,6 +12,7 @@
 #include "CGIPipeIn.hpp"
 #include <sys/wait.h>
 #include "CGIPipeOut.hpp"
+#include <cstring>
 
 #define PARSTER false // change this
 #define READ 0
@@ -57,9 +58,9 @@ void run(const Configuration &config)
                 {
                     Client *client = new Client{*server};
                     if (multiplexer.addToEpoll(client, EPOLLIN | EPOLLRDHUP, client->m_socketFd))
-                        throw std::runtime_error("Error: addToEpoll() failed\n");
+                        throw std::runtime_error("Error: addToEpoll()\n");
                     if (multiplexer.addToEpoll(&(client->m_timer), EPOLLIN | EPOLLRDHUP, client->m_timer.m_socketFd))
-                        throw std::runtime_error("Error: addToEpoll() failed\n");
+                        throw std::runtime_error("Error: addToEpoll()\n");
                 }
                 else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
                 {
@@ -73,7 +74,8 @@ void run(const Configuration &config)
                     }
                     pipeout->m_response.m_body = buf;
                     pipeout->m_response.m_statusCode = 200;
-                    multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT);
+                    if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
+                        throw std::runtime_error("Error: modifyEpollEvents()\n");
                 }
                 else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
                 {
@@ -103,14 +105,11 @@ void run(const Configuration &config)
                     spdlog::critical("cgi in WRITE ready!");
 
                     if (dup2(pipein->m_pipeFd[READ], STDIN_FILENO) == -1) // Dup de READ kant van Pipe1 naar stdin
-                    {
-                        perror("Error: dup2()");
                         throw StatusCodeException(500, "Error: dup2() 2");
-                    }
-
                     if (close(pipein->m_pipeFd[READ]) == -1)
                         throw StatusCodeException(500, "Error: close()");
-                    int nbytes{static_cast<int>(write(pipein->m_pipeFd[WRITE], "Marco", 5))}; // Write "Marco" naar stdin
+                    static char input[] = "<html>\r\n<head><title>hello.py</title></head>\r\n<body>\r\n<center><h1>Whohoo! CGI works...</h1></center>\r\n";
+                    int nbytes{static_cast<int>(write(pipein->m_pipeFd[WRITE], input, std::strlen(input)))}; // Write to stdin
                     if (nbytes == -1)
                         throw StatusCodeException(500, "Error: write()");
                     if (close(pipein->m_pipeFd[WRITE]) == -1)

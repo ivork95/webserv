@@ -98,7 +98,8 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
                 }
             }
         }
-        multiplexer.modifyEpollEvents(this, EPOLLOUT);
+        if (multiplexer.modifyEpollEvents(this, EPOLLOUT, this->m_socketFd))
+            throw StatusCodeException(500, "Error: modifyEpollEvents()");
     }
     spdlog::critical(m_request);
 

@@ -36,7 +36,7 @@ Multiplexer &Multiplexer::getInstance(void)
     return instance;
 }
 
-void Multiplexer::modifyEpollEvents(Socket *ptr, int events)
+int Multiplexer::modifyEpollEvents(Socket *ptr, int events, int fd)
 {
     struct epoll_event ev
     {
@@ -44,8 +44,7 @@ void Multiplexer::modifyEpollEvents(Socket *ptr, int events)
     ev.data.ptr = ptr;
     ev.events = events;
 
-    if (epoll_ctl(m_epollfd, EPOLL_CTL_MOD, ptr->m_socketFd, &ev) == -1)
-        throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+    return epoll_ctl(m_epollfd, EPOLL_CTL_MOD, fd, &ev);
 }
 
 int Multiplexer::addToEpoll(Socket *ptr, int events, int fd)

@@ -229,7 +229,8 @@ void Request::parse(void)
     {
         m_response.bodySet("./www" + m_methodPathVersion[1]);
         m_response.m_statusCode = 200;
-        multiplexer.modifyEpollEvents(&m_client, EPOLLOUT);
+        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+            throw StatusCodeException(500, "Error: modifyEpollEvents()");
         return;
     }
 
@@ -312,11 +313,13 @@ void Request::parse(void)
             bodyToDisk("./www/" + m_fileName);
             m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
             m_response.m_statusCode = 303;
-            multiplexer.modifyEpollEvents(&m_client, EPOLLOUT);
+            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+                throw StatusCodeException(500, "Error: modifyEpollEvents()");
             return;
         }
     }
     m_response.bodySet(m_response.m_path);
     m_response.m_statusCode = 200;
-    multiplexer.modifyEpollEvents(&m_client, EPOLLOUT);
+    if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+        throw StatusCodeException(500, "Error: modifyEpollEvents()");
 }

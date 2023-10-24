@@ -35,7 +35,7 @@ public:
 
     // member functions
     static Multiplexer &getInstance(void);
-    void modifyEpollEvents(Socket *ptr, int events);
+    int modifyEpollEvents(Socket *ptr, int events, int fd);
     int addToEpoll(Socket *ptr, int events, int fd);
 
     // outstream operator overload
