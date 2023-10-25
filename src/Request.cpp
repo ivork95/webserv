@@ -322,7 +322,7 @@ void Request::parse(void)
     if (it == m_locationconfig.getHttpMethods().end())
         throw StatusCodeException(405, "Warning: method not allowed");
 
-    if (!m_methodPathVersion[1].compare(0, 13, "/www/cgi-bin/"))
+    if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
     {
         spdlog::critical("CGI get handler");
         if (m_methodPathVersion[0] == "GET")
@@ -343,7 +343,7 @@ void Request::parse(void)
                 throw StatusCodeException(500, "Error: pipe()");
             if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
                 throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
-            return;
+            return ;
         }
     }
     // For a certain location block, loops over index files, and checks if one exists

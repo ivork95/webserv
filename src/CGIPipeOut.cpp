@@ -1,4 +1,5 @@
 #include "CGIPipeOut.hpp"
+#include <unistd.h>
 
 CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m_client(client), m_request(request), m_response(response)
 {
@@ -7,19 +8,25 @@ CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m
 
 void CGIPipeOut::forkDupAndExec(void)
 {
-    char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
-    auto elem = m_request.m_locationconfig.getCgiHandler().begin();
-    const char *pythonPath2 = elem->second.c_str();
-
-    spdlog::critical("python path: {}", pythonPath2);
-    char *scriptPath = "./hello.py";       // Path to the Python script
-    char *argv[] = {pythonPath, scriptPath, NULL};
-    char *env[] = {"ARG1=hello", "ARG2=bye", NULL};
     pid_t cpid = fork();
     if (cpid == -1)
         throw StatusCodeException(500, "Error: fork())");
     if (cpid == 0)
     {
+
+        std::map<std::string, std::string>::const_iterator elem = m_request.m_locationconfig.getCgiHandler().begin();
+        std::string temp{elem->second};
+        char* pythonPath = new char[elem->second.size() + 1];
+        strcpy(pythonPath, elem->second.c_str());
+
+        std::string scriptLocation = "./" + m_request.m_locationconfig.getRootPath() + m_request.m_locationconfig.getRequestURI() + "/hello" + elem->first;       // Path to the Python script
+        char* scriptPath = new char[scriptLocation.size() + 1];
+        strcpy(scriptPath, scriptLocation.c_str());
+        // if (!access (scriptPath, X_OK))
+        //     throw StatusCodeException(500, "CGI script not executable");
+        spdlog::critical("FULL script path: {}", scriptPath);
+        char *argv[] = {pythonPath, scriptPath, NULL};
+        char *env[] = {"ARG1=hello", "ARG2=bye", NULL};
         if (close(m_pipeFd[READ]) == -1)
             throw StatusCodeException(500, "Error: close())");
         if (dup2(m_pipeFd[WRITE], STDOUT_FILENO) == -1) // Dup the write end of pipe2 to stdout
@@ -27,6 +34,8 @@ void CGIPipeOut::forkDupAndExec(void)
         if (close(m_pipeFd[WRITE]) == -1)
             throw StatusCodeException(500, "Error: close()");
         execve(pythonPath, argv, env);
+        delete[] pythonPath;
+        delete[] scriptPath;
         throw StatusCodeException(500, "Error: execve()");
     }
     else
