@@ -88,31 +88,37 @@ void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationCon
 void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
 	// std::cout << "\tParsing cgi directive\n"; // ? debug
 
-	if (tokens.at(*i).getWord()[0] == '.') {
-		const std::string cgiExtension = tokens.at(*i).getWord();
-		if (!isValidCgiExtension(cgiExtension))
-			throw CgiExtensionException(cgiExtension);
+	const std::string cgiScript = tokens.at(*i).getWord();
+	if (cgiScript.empty())
+		throw InvalidTokenException("Missing python script: " + tokens.at(*i).getWord());
+	
+	std::filesystem::path cgiScriptPath(cgiScript);
 
-		if (tokens.at(*i + 1).getType() == Token::WORD) {
-			(*i)++;
+	// Not .py ?
+	if (cgiScriptPath.extension() != ".py")
+		throw CgiExtensionException(cgiScript);
 
-			const std::string					cgiPath = tokens.at(*i).getWord();
-			if (!isValidPath(cgiPath, false) || !std::filesystem::exists(cgiPath))
-				throw PathException(cgiPath);
+	// Just .py ?
+	if (!cgiScriptPath.has_stem())
+		throw InvalidTokenException("Invalid script name: " + cgiScriptPath.filename().string());
 
-			// TODO permissions? x r w ?
-			std::filesystem::perms requiredPermissions = OWREAD | OWWRITE | OWEXEC | OTREAD | OTEXEC | GRREAD | GREXEC;
-			if (!hasRequiredPermissions(cgiPath, requiredPermissions))
-				throw MissingPermissionsException(cgiPath + " (r-w-x required)");
+	route.setCgiScript(cgiScript);
 
-			std::map<std::string, std::string>	cgiHandler;
-			cgiHandler[cgiExtension] = cgiPath;
-			route.setCgiHandler(cgiExtension, cgiPath);
-		} else {
-			throw InvalidTokenException("Missing interpreter path");
-		}
+	if (tokens.at(*i + 1).getType() == Token::WORD) {
+		(*i)++;
+
+		const std::string cgiInterpreter = tokens.at(*i).getWord();
+		if (!isValidPath(cgiInterpreter, false) || !std::filesystem::exists(cgiInterpreter))
+			throw PathException(cgiInterpreter);
+
+		std::filesystem::perms requiredPermissions = OWREAD | OWWRITE | OWEXEC | OTREAD | OTEXEC | GRREAD | GREXEC;
+		if (!hasRequiredPermissions(cgiInterpreter, requiredPermissions))
+			throw MissingPermissionsException(cgiInterpreter + " (r-w-x required)");
+
+		route.setCgiInterpreter(cgiInterpreter);
+
 	} else {
-		throw InvalidTokenException("Expected file extension: " + tokens.at(*i).getWord());
+		throw InvalidTokenException("Missing interpreter path" + tokens.at(*i).getWord());
 	}
 }
 

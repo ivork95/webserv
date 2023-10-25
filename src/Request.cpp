@@ -207,6 +207,8 @@ int Request::tokenize(const char *buf, int nbytes)
 
     spdlog::info("message complete!");
 
+	spdlog::critical("raw_message = {}", m_rawMessage); // ? debug
+
     return 0;
 }
 
@@ -229,50 +231,44 @@ void Request::parse(void)
 	if (m_methodPathVersion[0] == "DELETE")
 	{
 		spdlog::warn("DELETE"); // ? debug
+		spdlog::warn("m_methodPathVersion : {}", m_methodPathVersion[1]); // ? debug
+		
+		// Remove file from request URI
+		std::filesystem::path filePath(m_methodPathVersion[1]);
+		std::filesystem::path requestParentPath = filePath.remove_filename();
+		spdlog::warn("parentPath = {}", requestParentPath); // ? debug
 
-		std::string path = m_methodPathVersion[1];
-		spdlog::warn("path : {}", path); // ? debug
-
-		if (m_methodPathVersion[1][0] == '/')
-			path = m_methodPathVersion[1].substr(1, m_methodPathVersion[1].size());
-
-		spdlog::warn("path : {}", path); // ? debug
-
-		// Find location blocks with DELETE method
-		std::vector<LocationConfig> allowedLocations{};
+		// Loops over location blocks and checks for match between location block and request path
+		bool isLocationFound{false};
 		for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
 		{
-			for (const auto &method : location.getHttpMethods())
+			if (requestParentPath == location.getRequestURI())
 			{
-				if (method == "DELETE")
-				{
-					spdlog::info("Found location block: {}", location.getRequestURI());
-					allowedLocations.push_back(location);
-				}
+				m_locationconfig = location;
+				isLocationFound = true;
+				break;
 			}
 		}
+		if (!isLocationFound) // there's no matching URI
+			throw StatusCodeException(404, "Error: no matching location/path found");
 
-		// Compare requested path with DELETE enabled location blocks
-		for (const auto &location : allowedLocations)
-		{
-			// Remove leading '/' to append both paths
-			std::string testPath{};
-			if (location.getRequestURI()[0] == '/')
-				testPath = location.getRootPath() + location.getRequestURI().substr(1, location.getRequestURI().size());
-			else
-				testPath = location.getRootPath() + location.getRequestURI();
+		// For a certain location block, check if the request method is allowed
+		auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
+		if (it == m_locationconfig.getHttpMethods().end())
+			throw StatusCodeException(405, "Warning: method not allowed");	
 
+		// Remove trailing '/' from root path
+		std::filesystem::path rootPath(m_locationconfig.getRootPath());
+		std::filesystem::path rootParentPath = rootPath.parent_path();
+		spdlog::warn("rootParentPath = {}", rootParentPath); // ? debug
+		
+		// Append root and request URI
+		std::string fullPath = rootParentPath.string() + m_methodPathVersion[1];
+		spdlog::warn("fullPath = {}", fullPath); // ? debug
 
-			spdlog::warn("testPath: {}", testPath);
-			spdlog::warn("path: {}", path);
-
-			// Found
-			if (path.compare(0, testPath.length(), testPath) == 0)
-				break ;
-		}
-
+		// Remove file and error check
 		std::error_code ec;  // To capture error information
-		if (std::filesystem::remove(path, ec))
+		if (std::filesystem::remove(fullPath, ec))
 		{
 			m_body = "Success: File deleted";
 			m_response.m_statusCode = 200;

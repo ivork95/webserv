@@ -14,14 +14,18 @@ void CGIPipeOut::forkDupAndExec(void)
     if (cpid == 0)
     {
 
-        std::map<std::string, std::string>::const_iterator elem = m_request.m_locationconfig.getCgiHandler().begin();
-        std::string temp{elem->second};
-        char* pythonPath = new char[elem->second.size() + 1];
-        strcpy(pythonPath, elem->second.c_str());
+        // std::map<std::string, std::string>::const_iterator elem = m_request.m_locationconfig.getCgiHandler().begin();
+        // std::string temp{elem->second};
+        // char* pythonPath = new char[elem->second.size() + 1];
+		std::string tmpMerge{m_request.m_locationconfig.getCgiInterpreter()};
+        char* pythonPath = new char[tmpMerge.size() + 1];
+        strcpy(pythonPath, tmpMerge.c_str());
 
-        std::string scriptLocation = "./" + m_request.m_locationconfig.getRootPath() + m_request.m_locationconfig.getRequestURI() + "/hello" + elem->first;       // Path to the Python script
-        char* scriptPath = new char[scriptLocation.size() + 1];
-        strcpy(scriptPath, scriptLocation.c_str());
+        // std::string scriptLocation = "./" + m_request.m_locationconfig.getRootPath() + m_request.m_locationconfig.getRequestURI() + "/hello" + elem->first;       // Path to the Python script
+        // char* scriptPath = new char[scriptLocation.size() + 1];
+		std::string tmpScript{"./" + m_request.m_locationconfig.getRootPath() + m_request.m_locationconfig.getRequestURI() + "/" + m_request.m_locationconfig.getCgiScript()};
+        char* scriptPath = new char[tmpScript.size() + 1];
+        strcpy(scriptPath, tmpScript.c_str());
         // if (!access (scriptPath, X_OK))
         //     throw StatusCodeException(500, "CGI script not executable");
         spdlog::critical("FULL script path: {}", scriptPath);

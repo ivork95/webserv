@@ -16,13 +16,13 @@
 */
 LocationConfig::LocationConfig(void) : \
 	_requestURI{}, _rootPath{}, _clientMaxBodySize{}, \
-	_autoIndex(false), _indexFile{}, _cgiHandler{}, _httpMethods{} {
+	_autoIndex(false), _indexFile{}, _cgiScript{}, _cgiInterpreter{}, _httpMethods{} {
 	// std::cout << "LocationConfig default constructor called\n";
 }
 
 LocationConfig::LocationConfig(const std::string &requestURI) : \
 	_requestURI(requestURI), _hasRequestURI(true), _rootPath{}, _clientMaxBodySize{}, \
-	_autoIndex(false), _indexFile{}, _cgiHandler{}, _httpMethods{} {
+	_autoIndex(false), _indexFile{}, _cgiScript{}, _cgiInterpreter{}, _httpMethods{} {
 	// std::cout << "LocationConfig parametric constructor called\n";
 }
 
@@ -53,8 +53,12 @@ const std::vector<std::string> &LocationConfig::getIndexFile(void) const {
 	return (_indexFile);
 }
 
-const std::map<std::string, std::string> &LocationConfig::getCgiHandler(void) const {
-	return (_cgiHandler);
+const std::string &LocationConfig::getCgiScript(void) const {
+	return (_cgiScript);
+}
+
+const std::string &LocationConfig::getCgiInterpreter(void) const {
+	return (_cgiInterpreter);
 }
 
 const std::vector<std::string> &LocationConfig::getHttpMethods(void) const {
@@ -96,11 +100,18 @@ void LocationConfig::setIndexFile(const std::vector<std::string> &indexFile) {
 	_hasIndexFile = true;
 }
 
-void LocationConfig::setCgiHandler(const std::string &cgiExtension, const std::string &cgiPath) {
-	// if (_hasCgiHandler)
-	// 	throw DirectiveAlreadySetException("CGI handler"); // ! there can be multiple cgi handlers
-	_cgiHandler[cgiExtension] = cgiPath;
-	_hasCgiHandler = true; // ! needed ?
+void LocationConfig::setCgiScript(const std::string &cgiScript) {
+	if (_hasCgiScript)
+		throw AlreadySetException("CGI script");
+	_cgiScript = cgiScript;
+	_hasCgiScript = true;
+}
+
+void LocationConfig::setCgiInterpreter(const std::string &cgiInterpreter) {
+	if (_hasCgiInterpreter)
+		throw AlreadySetException("CGI interpreter");
+	_cgiInterpreter = cgiInterpreter;
+	_hasCgiInterpreter = true;
 }
 
 void LocationConfig::setHttpMethods(const std::vector<std::string> &httpMethods) {
@@ -130,8 +141,12 @@ bool LocationConfig::hasIndexFile(void) const {
 	return (_hasIndexFile);
 }
 
-bool LocationConfig::hasCgiHandler(void) const {
-	return (_hasCgiHandler);
+bool LocationConfig::hasCgiScript(void) const {
+	return (_hasCgiScript);
+}
+
+bool LocationConfig::hasCgiInterpreter(void) const {
+	return (_hasCgiInterpreter);
 }
 
 bool LocationConfig::hasHttpMethods(void) const {
@@ -152,11 +167,10 @@ std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
 		out << route.getIndexFile()[i] << ",";
 	}
 	out << "]" << std::endl;
-	out << "\tcgiHandler(s): [";
-	for (std::map<std::string, std::string>::const_iterator it = route.getCgiHandler().begin(); it != route.getCgiHandler().end(); ++it) {
-		out << "(" << it->first << ", " << it->second << "), ";
+	if (route.hasCgiInterpreter() && route.hasCgiScript()) {
+		out << "\tcgiScript: " << route.getCgiScript() << std::endl;
+		out << "\tcgiInterpreter: " << route.getCgiInterpreter() << std::endl;
 	}
-	out << "]" << std::endl;
 	out << "\thttpMethod(s): [";
 	for (size_t i = 0; i < route.getHttpMethods().size(); ++i) {
 		out << route.getHttpMethods()[i] << ",";
@@ -188,13 +202,5 @@ void	LocationConfig::checkMissingDirective(void) {
 	if (!hasIndexFile()) {
 		// std::cout << "No index file (setting to default)\n"; // ? debug
 		setIndexFile({"index.html"});
-	}
-	if (!hasCgiHandler()) {
-		// default value: -
-		// std::cout << "No CGI handler\n"; // ? debug
-	}
-	if (!hasHttpMethods()) {
-		// default value: -
-		// std::cout << "No HTTP methods\n"; // ? debug
 	}
 }
