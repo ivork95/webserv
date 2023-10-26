@@ -30,11 +30,6 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
         // Lose the pesky "address already in use" error message
         setsockopt(m_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
-        // struct timeval timeout;
-        // timeout.tv_sec = 30; // 30 seconds timeout
-        // timeout.tv_usec = 0; // 0 microseconds
-        // setsockopt(m_socketFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-
         if (bind(m_socketFd, p->ai_addr, p->ai_addrlen) < 0)
         {
             close(m_socketFd);
@@ -46,10 +41,7 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
 
     // If we got here, it means we didn't get bound
     if (p == NULL)
-    {
-        std::perror("bind() failed");
         throw std::runtime_error("bind() failed");
-    }
 
     // get the pointer to the address itself,
     // different fields in IPv4 and IPv6:
@@ -73,13 +65,11 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     freeaddrinfo(ai); // All done with this
 
     // Listen
-    if (listen(m_socketFd, 10) == -1)
-    {
-        std::perror("listen() failed");
+    if (listen(m_socketFd, BACKLOG) == -1)
         throw std::runtime_error("Error: listen() failed\n");
-    }
 
-    setNonBlocking();
+    if (fcntl(m_socketFd, F_SETFL, O_NONBLOCK) == -1)
+        throw std::runtime_error("Error: fcntl() failed\n");
 
     spdlog::debug("{0} constructor called", *this);
 }
