@@ -2,12 +2,6 @@
 #include "Multiplexer.hpp"
 #include "CGIPipeIn.hpp"
 
-// constructor
-// Request::Request(void)
-// {
-//     spdlog::debug("Request default constructor called");
-// }
-
 Request::Request(Client &client) : m_client(client)
 {
     spdlog::debug("Request serverconfig constructor called");
@@ -205,6 +199,7 @@ int Request::tokenize(const char *buf, int nbytes)
     }
 
     spdlog::info("message complete!");
+    spdlog::critical("m_rawMessage = \n|{}|", m_rawMessage);
 
     return 0;
 }

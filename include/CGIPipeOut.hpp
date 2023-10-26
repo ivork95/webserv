@@ -19,6 +19,9 @@ public:
 
     // constructor
     CGIPipeOut(Client &client, Request &request, Response &response);
+
+    // member functions
+    void forkCloseDupExec(std::vector<Socket *> &toBeDeleted);
 };
 
 #endif

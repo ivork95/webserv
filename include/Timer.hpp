@@ -1,6 +1,7 @@
 #ifndef TIMER_HPP
 #define TIMER_HPP
 
+#include <fcntl.h>
 #include <sys/timerfd.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h> // must be included

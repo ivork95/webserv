@@ -16,6 +16,9 @@ public:
 
     // constructor
     CGIPipeIn(Client &client);
+
+    // member functions
+    void dupCloseWrite(std::vector<Socket *> &toBeDeleted);
 };
 
 #endif
