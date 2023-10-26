@@ -18,8 +18,8 @@ void CGIPipeOut::forkCloseDupExec(std::vector<Socket *> &toBeDeleted)
     }
     if (cpid == 0)
     {
-        char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
-        char *scriptPath = "./hello.py";       // Path to the Python script
+        char *pythonPath = "/usr/bin/python3";     // Path to the Python interpreter
+        char *scriptPath = "www/cgi-bin/hello.py"; // Path to the Python script
         char *argv[] = {pythonPath, scriptPath, NULL};
 
         if (close(m_pipeFd[READ]) == -1)

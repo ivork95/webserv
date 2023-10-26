@@ -413,8 +413,15 @@ void Request::parse(void)
             chunkBodySet();
             spdlog::warn("m_chunkBody = {}", m_chunkBody);
 
-            // ! To change I guess
-            m_body = m_chunkBody;
+            // Replace headers
+            chunkHeaderReplace();
+            requestHeadersPrint(m_requestHeaders);
+
+            m_response.m_body = m_chunkBody;
+            m_response.m_statusCode = 200;
+            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+                throw StatusCodeException(500, "Error: modifyEpollEvents()");
+            return;
         }
         else
         {
