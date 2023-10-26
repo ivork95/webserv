@@ -81,3 +81,21 @@ int Helper::hexToInt(const std::string &hex)
     ss >> value;
     return static_cast<int>(value);
 }
+
+int Helper::setNonBlocking(int fd)
+{
+    int result{};
+    int flags{};
+
+    flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1)
+        return -1;
+
+    flags |= O_NONBLOCK;
+
+    result = fcntl(fd, F_SETFL, flags);
+    if (result == -1)
+        return -1;
+
+    return 0;
+}

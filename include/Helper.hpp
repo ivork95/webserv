@@ -6,6 +6,7 @@
 #include <sstream>
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
+#include <fcntl.h>
 
 #include "StatusCodes.hpp"
 
@@ -22,6 +23,7 @@ public:
     static void strip(std::string &str);
     static std::vector<std::string> split(const std::string &str);
     static std::string fileToStr(const std::string &path);
+    static int setNonBlocking(int fd);
 };
 
 #endif
