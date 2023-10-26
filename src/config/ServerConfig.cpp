@@ -189,12 +189,4 @@ void	ServerConfig::checkMissingDirective(void) {
 		// std::cout << "No client max body size (setting to default)\n"; // ? debug
 		setClientMaxBodySize(1000000);
 	}
-	if (!hasErrorPagesConfig()) {
-		// default value: -
-		// std::cout << "No error pages config\n"; // ? debug
-	}
-	if (!hasLocationsConfig()) {
-		// default value: -
-		// std::cout << "No locations config\n"; // ? debug
-	}
 }

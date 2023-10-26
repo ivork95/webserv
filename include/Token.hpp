@@ -1,8 +1,6 @@
 #ifndef TOKEN_HPP
 #define TOKEN_HPP
 
-#include "Logger.hpp"
-
 #include <iostream>
 #include <vector>
 

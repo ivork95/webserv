@@ -90,35 +90,31 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 
 	const std::string cgiScript = tokens.at(*i).getWord();
 	if (cgiScript.empty())
-		throw InvalidTokenException("Missing python script: " + tokens.at(*i).getWord());
+		throw InvalidTokenException("Missing CGI script: " + cgiScript);
 	
-	std::filesystem::path cgiScriptPath(cgiScript);
-
-	// Not .py ?
-	if (cgiScriptPath.extension() != ".py")
-		throw CgiExtensionException(cgiScript);
-
-	// Just .py ?
-	if (!cgiScriptPath.has_stem())
-		throw InvalidTokenException("Invalid script name: " + cgiScriptPath.filename().string());
-
+	if (!isValidCgiScript(cgiScript))
+		throw CgiException("Invalid script: " + cgiScript);
+	
 	route.setCgiScript(cgiScript);
 
 	if (tokens.at(*i + 1).getType() == Token::WORD) {
 		(*i)++;
 
 		const std::string cgiInterpreter = tokens.at(*i).getWord();
-		if (!isValidPath(cgiInterpreter, false) || !std::filesystem::exists(cgiInterpreter))
-			throw PathException(cgiInterpreter);
+		if (cgiInterpreter.empty())
+			throw InvalidTokenException("Missing CGI interpreter after: " + cgiScript);
+	
+		if (!isValidCgiInterpreter(cgiInterpreter))
+			throw CgiException("Invalid interpreter: " + cgiInterpreter);
 
 		std::filesystem::perms requiredPermissions = OWREAD | OWWRITE | OWEXEC | OTREAD | OTEXEC | GRREAD | GREXEC;
 		if (!hasRequiredPermissions(cgiInterpreter, requiredPermissions))
-			throw MissingPermissionsException(cgiInterpreter + " (r-w-x required)");
+			throw CgiException("Invalid permissions for interpreter: " + cgiInterpreter + " (r-w-x required)");
 
 		route.setCgiInterpreter(cgiInterpreter);
 
 	} else {
-		throw InvalidTokenException("Missing interpreter path" + tokens.at(*i).getWord());
+		throw InvalidTokenException("Missing CGI interpreter after: " + cgiScript);
 	}
 }
 

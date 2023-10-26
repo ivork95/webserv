@@ -25,7 +25,8 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/hasConversionUnit.o \
 				obj/utils/config/isAlphaNum.o \
 				obj/utils/config/isNumber.o \
-				obj/utils/config/isValidCgiExtension.o \
+				obj/utils/config/isValidCgiInterpreter.o \
+				obj/utils/config/isValidCgiScript.o \
 				obj/utils/config/isValidErrorCode.o \
 				obj/utils/config/isValidHttpMethod.o \
 				obj/utils/config/isValidIndexExtension.o \
@@ -35,7 +36,6 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidServerName.o \
 				obj/utils/config/isValidUri.o \
 				obj/utils/config/hasRequiredPermissions.o \
-				obj/logger/Logger.o \
 				obj/ChunkRequest.o \
 				obj/DirectoryListing.o
 HEADERS		:=	include/CGIPipeIn.hpp \
@@ -57,7 +57,8 @@ HEADERS		:=	include/CGIPipeIn.hpp \
 				include/ServerConfig.hpp \
 				include/LocationConfig.hpp \
 				include/ErrorPageConfig.hpp \
-				include/UtilsConfig.hpp
+				include/UtilsConfig.hpp \
+				include/Permissions.hpp
 SPDLOGLIB	:=	./spdlog/build/libspdlog.a
 SPDLOGINCL	:=	-DSPDLOG_COMPILED_LIB -I./spdlog/include
 CONTAINER	:=	webserv-container

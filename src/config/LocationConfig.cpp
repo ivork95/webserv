@@ -4,16 +4,6 @@
 /**
  * CONSTRUCTORS / DESTRUCTORS
  */
-/**
- * TODO set default values ?
- * 	requestURI: /;
- * 	root: html;
- * 	client_max_body_size: 1M;
- * 	autoindex: off;
- * 	index: index.html;
- *  cgi_handler: -; => ?
- *  limit_except: -;
-*/
 LocationConfig::LocationConfig(void) : \
 	_requestURI{}, _rootPath{}, _clientMaxBodySize{}, \
 	_autoIndex(false), _indexFile{}, _cgiScript{}, _cgiInterpreter{}, _httpMethods{} {
@@ -118,7 +108,7 @@ void LocationConfig::setHttpMethods(const std::vector<std::string> &httpMethods)
 	if (_hasHttpMethods)
 		throw AlreadySetException("HTTP methods");
 	_httpMethods = httpMethods;
-	_hasHttpMethods = true; // ! needed ?
+	_hasHttpMethods = true;
 }
 
 bool LocationConfig::hasRequestURI(void) const {
@@ -183,13 +173,9 @@ std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
  * MEMBER FUNCTIONS
  */
 void	LocationConfig::checkMissingDirective(void) {
-	if (!hasRequestURI()) {
-		// default value: -
-		// std::cout << "No request URI\n"; // ? debug
-	}
 	if (!hasRootPath()) {
 		// std::cout << "No root path (setting to default)\n"; // ? debug
-		setRootPath("www");
+		setRootPath("www/");
 	}
 	if (!hasClientMaxBodySize()) {
 		// std::cout << "No client max body size (setting to default)\n"; // ? debug

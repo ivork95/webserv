@@ -1,31 +1,20 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
-#include "Lexer.hpp"
-#include "Configuration.hpp"
-#include "Exceptions.hpp"
+# include "Lexer.hpp"
+# include "Configuration.hpp"
+# include "Exceptions.hpp"
+# include "Permissions.hpp"
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
+# include <iostream>
+# include <fstream>
+# include <sstream>
 
-#include <string.h>
-#include <string>
-#include <algorithm>
-#include <vector>
-#include <stack>
-
-#define OWREAD std::filesystem::perms::owner_read
-#define OWWRITE std::filesystem::perms::owner_write
-#define OWEXEC std::filesystem::perms::owner_exec
-
-#define OTREAD std::filesystem::perms::others_read
-#define OTWRITE std::filesystem::perms::others_write
-#define OTEXEC std::filesystem::perms::others_exec
-
-#define GRREAD std::filesystem::perms::group_read
-#define GRWRITE std::filesystem::perms::group_write
-#define GREXEC std::filesystem::perms::group_exec
+# include <string.h>
+# include <string>
+# include <algorithm>
+# include <vector>
+# include <stack>
 
 class Parser {
 	private:

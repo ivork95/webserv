@@ -2,10 +2,14 @@
 #include "UtilsConfig.hpp"
 
 bool	isValidIndexExtension(const std::string &str) {
-	const std::string inputFileExtension = std::filesystem::path(str).extension();
-	// std::cout << inputFileExtension << std::endl; // ? debug
+	// std::cout << "isValidIndexExtension: " + str << std::endl; // ? debug
 
-	if (inputFileExtension != ".html")
+	if (str.empty())
+		return false;
+
+	const std::filesystem::path inputFile(str);
+
+	if (inputFile.extension() != ".html")
 		return false;
 	return true;
 }
