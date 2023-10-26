@@ -146,7 +146,7 @@ std::string Request::fileNameParse(const std::map<std::string, std::string> &gen
     if (contentDispositionIt == generalHeaders.end())
         throw StatusCodeException(400, "Error: couldn't find Content-Disposition");
 
-    std::string fileNameStart{"filename="};
+    std::string fileNameStart = "filename=";
     size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
     if (fileNameStartPos == std::string::npos)
         throw StatusCodeException(400, "Error: couldn't find filename=");
@@ -209,33 +209,10 @@ int Request::tokenize(const char *buf, int nbytes)
     return 0;
 }
 
-void Request::parse(void)
+void Request::locationconfigSet(void)
 {
-    Multiplexer &multiplexer = Multiplexer::getInstance();
-
-    methodPathVersionSet();
-    if (m_methodPathVersion.size() != 3)
-        throw StatusCodeException(400, "Error: not 3 elements in request-line");
-    if (m_methodPathVersion[2] != "HTTP/1.1")
-        throw StatusCodeException(505, "Warning: http version not allowed");
-    if ((m_methodPathVersion[0] != "GET") && (m_methodPathVersion[0] != "POST") && (m_methodPathVersion[0] != "DELETE")) // Maybe this can be removed
-        throw StatusCodeException(405, "Warning: method not allowed");
-
-    // Percentage decode URI string
-    m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
-
-    // Nasty solution to redirect + get back upload
-    if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
-    {
-        m_response.bodySet("./www" + m_methodPathVersion[1]);
-        m_response.m_statusCode = 200;
-        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-            throw StatusCodeException(500, "Error: modifyEpollEvents()");
-        return;
-    }
-
-    // Loops over location blocks and checks for match between location block and request path
     bool isLocationFound{false};
+
     for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
     {
         if (m_methodPathVersion[1] == location.getRequestURI())
@@ -247,14 +224,19 @@ void Request::parse(void)
     }
     if (!isLocationFound) // there's no matching URI
         throw StatusCodeException(404, "Error: no matching location/path found");
+}
 
-    // For a certain location block, check if the request method is allowed
+void Request::isMethodAllowed(void)
+{
     auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
     if (it == m_locationconfig.getHttpMethods().end())
         throw StatusCodeException(405, "Warning: method not allowed");
+}
 
-    // For a certain location block, loops over index files, and checks if one exists
+void Request::responsePathSet(void)
+{
     bool isIndexFileFound{false};
+
     for (const auto &index : m_locationconfig.getIndexFile())
     {
         spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index);
@@ -267,6 +249,43 @@ void Request::parse(void)
     }
     if (!isIndexFileFound)
         throw StatusCodeException(404, "Error: no matching index file found");
+}
+
+void Request::parse(void)
+{
+    Multiplexer &multiplexer = Multiplexer::getInstance();
+
+    methodPathVersionSet();
+    if (m_methodPathVersion.size() != 3)
+        throw StatusCodeException(400, "Error: not 3 elements in request-line");
+    if (m_methodPathVersion[2] != "HTTP/1.1")
+        throw StatusCodeException(505, "Warning: http version not allowed");
+    if ((m_methodPathVersion[0] != "GET") && (m_methodPathVersion[0] != "POST") && (m_methodPathVersion[0] != "DELETE")) // Maybe this can be removed
+        throw StatusCodeException(405, "Warning: method not allowed");
+    m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
+
+    // Nasty solution to redirect + get back upload
+    if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
+    {
+        m_response.bodySet("./www" + m_methodPathVersion[1]);
+        m_response.m_statusCode = 200;
+        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+            throw StatusCodeException(500, "Error: modifyEpollEvents()");
+        return;
+    }
+
+    locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
+    isMethodAllowed();   // For a certain location block, check if the request method is allowed
+    responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
+
+    if (m_methodPathVersion[0] == "GET")
+    {
+        m_response.bodySet(m_response.m_path);
+        m_response.m_statusCode = 200;
+        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+            throw StatusCodeException(500, "Error: modifyEpollEvents()");
+        return;
+    }
 
     if (m_methodPathVersion[0] == "POST")
     {
@@ -274,8 +293,16 @@ void Request::parse(void)
         CGIPipeIn *pipein = new CGIPipeIn(m_client);
         if (pipe(pipein->m_pipeFd) == -1)
             throw StatusCodeException(500, "Error: pipe()");
+        if (Helper::setNonBlocking(pipein->m_pipeFd[READ]) == -1)
+            throw StatusCodeException(500, "Error: fcntl()");
+        if (Helper::setNonBlocking(pipein->m_pipeFd[WRITE]) == -1)
+            throw StatusCodeException(500, "Error: fcntl()");
         if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
+        {
+            close(pipein->m_pipeFd[READ]);
+            close(pipein->m_pipeFd[WRITE]);
             throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+        }
         return;
 
         // Parse chunked request
@@ -306,11 +333,8 @@ void Request::parse(void)
             generalHeadersSet();
             fileNameSet();
             bodySet();
-
-            // Needs to be moved - Upload Post handeling
-            if (m_fileName.empty())
-                throw StatusCodeException(400, "Error: no fileName");
             bodyToDisk("./www/" + m_fileName);
+
             m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
             m_response.m_statusCode = 303;
             if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
@@ -318,8 +342,4 @@ void Request::parse(void)
             return;
         }
     }
-    m_response.bodySet(m_response.m_path);
-    m_response.m_statusCode = 200;
-    if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-        throw StatusCodeException(500, "Error: modifyEpollEvents()");
 }

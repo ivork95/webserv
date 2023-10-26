@@ -68,7 +68,7 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     if (listen(m_socketFd, BACKLOG) == -1)
         throw std::runtime_error("Error: listen() failed\n");
 
-    if (fcntl(m_socketFd, F_SETFL, O_NONBLOCK) == -1)
+    if (Helper::setNonBlocking(m_socketFd) == -1)
         throw std::runtime_error("Error: fcntl() failed\n");
 
     spdlog::debug("{0} constructor called", *this);

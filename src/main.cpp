@@ -103,15 +103,121 @@ void run(const Configuration &config)
                 {
                     spdlog::critical("cgi in WRITE ready!");
 
-                    pipein->dupAndWrite();
+                    try
+                    {
+                        // dupCloseAndWrite
+                        if (dup2(pipein->m_pipeFd[READ], STDIN_FILENO) == -1) // Dup the READ end of pipe1 to stdin
+                        {
+                            close(pipein->m_pipeFd[READ]);
+                            pipein->m_pipeFd[READ] = -1;
+                            close(pipein->m_pipeFd[WRITE]);
+                            pipein->m_pipeFd[WRITE] = -1;
+                            toBeDeleted.push_back(pipein);
+                            throw StatusCodeException(500, "Error: dup2()");
+                        }
 
-                    CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
-                    if (pipe(pipeout->m_pipeFd) == -1)
-                        throw StatusCodeException(500, "Error: pipe()");
-                    if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[READ])) // Add READ end from pipe2 to epoll
-                        throw StatusCodeException(500, "Error: epoll_ctl()");
+                        if (close(pipein->m_pipeFd[READ]) == -1)
+                        {
+                            pipein->m_pipeFd[READ] = -1;
+                            close(pipein->m_pipeFd[WRITE]);
+                            pipein->m_pipeFd[WRITE] = -1;
+                            toBeDeleted.push_back(pipein);
+                            throw StatusCodeException(500, "Error: close()");
+                        }
+                        pipein->m_pipeFd[READ] = -1;
 
-                    pipeout->forkDupAndExec();
+                        int nbytes{static_cast<int>(write(pipein->m_pipeFd[WRITE], pipein->m_input, std::strlen(pipein->m_input)))}; // Write to stdin
+                        if (nbytes == -1)
+                        {
+                            close(pipein->m_pipeFd[WRITE]);
+                            pipein->m_pipeFd[WRITE] = -1;
+                            toBeDeleted.push_back(pipein);
+                            throw StatusCodeException(500, "Error: write()");
+                        }
+
+                        if (close(pipein->m_pipeFd[WRITE]) == -1)
+                        {
+                            pipein->m_pipeFd[WRITE] = -1;
+                            toBeDeleted.push_back(pipein);
+                            throw StatusCodeException(500, "Error: close()");
+                        }
+                        pipein->m_pipeFd[WRITE] = -1;
+
+                        // Create pipeout
+                        CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
+                        if (pipe(pipeout->m_pipeFd) == -1)
+                            throw StatusCodeException(500, "Error: pipe()");
+                        if (Helper::setNonBlocking(pipeout->m_pipeFd[READ] == -1))
+                            throw StatusCodeException(500, "Error: setNonBlocking()");
+                        if (Helper::setNonBlocking(pipeout->m_pipeFd[WRITE] == -1))
+                            throw StatusCodeException(500, "Error: setNonBlocking()");
+                        if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[READ])) // Add READ end from pipe2 to epoll
+                            throw StatusCodeException(500, "Error: epoll_ctl()");
+
+                        // forkCloseDupAndExec
+                        pid_t cpid = fork();
+                        if (cpid == -1)
+                        {
+                            close(pipeout->m_pipeFd[READ]);
+                            pipeout->m_pipeFd[READ] = -1;
+                            close(pipeout->m_pipeFd[WRITE]);
+                            pipeout->m_pipeFd[WRITE] = -1;
+                            toBeDeleted.push_back(pipeout);
+                            throw StatusCodeException(500, "Error: fork())");
+                        }
+                        if (cpid == 0)
+                        {
+                            char *pythonPath = "/usr/bin/python3"; // Path to the Python interpreter
+                            char *scriptPath = "./hello.py";       // Path to the Python script
+                            char *argv[] = {pythonPath, scriptPath, NULL};
+
+                            if (close(pipeout->m_pipeFd[READ]) == -1)
+                                throw StatusCodeException(500, "Error: close())");
+                            if (dup2(pipeout->m_pipeFd[WRITE], STDOUT_FILENO) == -1) // Dup the write end of pipe2 to stdout
+                                throw StatusCodeException(500, "Error: dup2() 1");
+                            if (close(pipeout->m_pipeFd[WRITE]) == -1)
+                                throw StatusCodeException(500, "Error: close()");
+                            execve(pythonPath, argv, NULL);
+                            throw StatusCodeException(500, "Error: execve()");
+                        }
+                        else
+                        {
+                            int wstatus{};
+                            if (wait(&wstatus) == -1)
+                            {
+                                close(pipeout->m_pipeFd[READ]);
+                                pipeout->m_pipeFd[READ] = -1;
+                                close(pipeout->m_pipeFd[WRITE]);
+                                pipeout->m_pipeFd[WRITE] = -1;
+                                toBeDeleted.push_back(pipeout);
+                                throw StatusCodeException(500, "Error: wait()");
+                            }
+                            if (wstatus)
+                            {
+                                close(pipeout->m_pipeFd[READ]);
+                                pipeout->m_pipeFd[READ] = -1;
+                                close(pipeout->m_pipeFd[WRITE]);
+                                pipeout->m_pipeFd[WRITE] = -1;
+                                toBeDeleted.push_back(pipeout);
+                                throw StatusCodeException(500, "Error: wstatus");
+                            }
+                            if (close(pipeout->m_pipeFd[WRITE]) == -1)
+                            {
+                                close(pipeout->m_pipeFd[READ]);
+                                pipeout->m_pipeFd[READ] = -1;
+                                pipeout->m_pipeFd[WRITE] = -1;
+                                toBeDeleted.push_back(pipeout);
+                                throw StatusCodeException(500, "Error: close()");
+                            }
+                            pipeout->m_pipeFd[WRITE] = -1;
+                        }
+                    }
+                    catch (const StatusCodeException &e)
+                    {
+                        std::cerr << e.what() << '\n';
+                        pipein->m_client.m_request.m_response.m_statusCode = e.getStatusCode();
+                        multiplexer.modifyEpollEvents(&(pipein->m_client), EPOLLOUT, pipein->m_client.m_socketFd);
+                    }
                 }
             }
             else
