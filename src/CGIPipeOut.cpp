@@ -1,5 +1,4 @@
 #include "CGIPipeOut.hpp"
-#include <unistd.h>
 
 CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m_client(client), m_request(request), m_response(response)
 {
@@ -29,9 +28,7 @@ void CGIPipeOut::forkCloseDupExec(std::vector<Socket *> &toBeDeleted)
             throw StatusCodeException(500, "Error: dup2() 1");
         if (close(m_pipeFd[WRITE]) == -1)
             throw StatusCodeException(500, "Error: close()");
-        execve(pythonPath, argv, env);
-        delete[] pythonPath;
-        delete[] scriptPath;
+        execve(pythonPath, argv, NULL);
         throw StatusCodeException(500, "Error: execve()");
     }
     else

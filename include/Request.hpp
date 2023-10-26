@@ -60,6 +60,7 @@ public:
     void bodySet(void);
     void locationconfigSet(void);
     void responsePathSet(void);
+
     // methods
     std::string boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders);
     std::string generalHeadersParse(const std::string &boundaryCode);
@@ -71,7 +72,7 @@ public:
     void isMethodAllowed(void);
 
     // chunk related
-	void chunkHeaderReplace();
+    void chunkHeaderReplace();
     void chunkHeadersParse(void);
     void chunkBodyExtract(void);
     void chunkBodyTokenize(void);
@@ -81,11 +82,11 @@ public:
     std::string m_rawChunkBody{};
     std::string m_chunkBody{};
     std::vector<std::string> m_chunkLine{};
-	int m_totalChunkLength{};
+    int m_totalChunkLength{};
 
-	// directory listing related
-	void	directoryListingBodySet(const std::string &dirPath);
-	std::string	directoryListingParse(void);
+    // directory listing related
+    void directoryListingBodySet(const std::string &dirPath);
+    std::string directoryListingParse(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Request &request);
