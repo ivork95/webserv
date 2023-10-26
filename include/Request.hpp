@@ -58,7 +58,8 @@ public:
     void generalHeadersSet(void);
     void fileNameSet(void);
     void bodySet(void);
-
+    void locationconfigSet(void);
+    void responsePathSet(void);
     // methods
     std::string boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders);
     std::string generalHeadersParse(const std::string &boundaryCode);
@@ -67,6 +68,7 @@ public:
     void bodyToDisk(const std::string &path);
     int tokenize(const char *buf, int nbytes);
     void parse(void);
+    void isMethodAllowed(void);
 
     // chunk related
 	void chunkHeaderReplace();

@@ -1,7 +1,6 @@
 #ifndef SOCKET_HPP
 #define SOCKET_HPP
 
-#include <fcntl.h>
 #include <iostream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -21,9 +20,6 @@ public:
 
     // destructor
     virtual ~Socket(void) = 0;
-
-    // member functions
-    int setNonBlocking(void);
 };
 
 #endif

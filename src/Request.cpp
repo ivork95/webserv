@@ -1,13 +1,6 @@
 #include "Request.hpp"
 #include "Multiplexer.hpp"
 #include "CGIPipeIn.hpp"
-#include "CGIPipeOut.hpp"
-
-// constructor
-// Request::Request(void)
-// {
-//     spdlog::debug("Request default constructor called");
-// }
 
 Request::Request(Client &client) : m_client(client)
 {
@@ -147,7 +140,7 @@ std::string Request::fileNameParse(const std::map<std::string, std::string> &gen
     if (contentDispositionIt == generalHeaders.end())
         throw StatusCodeException(400, "Error: couldn't find Content-Disposition");
 
-    std::string fileNameStart{"filename="};
+    std::string fileNameStart = "filename=";
     size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
     if (fileNameStartPos == std::string::npos)
         throw StatusCodeException(400, "Error: couldn't find filename=");
@@ -206,10 +199,99 @@ int Request::tokenize(const char *buf, int nbytes)
     }
 
     spdlog::info("message complete!");
-
-	spdlog::critical("raw_message = {}", m_rawMessage); // ? debug
+    spdlog::critical("m_rawMessage = \n|{}|", m_rawMessage);
 
     return 0;
+}
+
+void Request::locationconfigSet(void)
+{
+    bool isLocationFound{false};
+
+    for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
+    {
+        if (m_methodPathVersion[1] == location.getRequestURI())
+        {
+            m_locationconfig = location;
+            isLocationFound = true;
+            break;
+        }
+    }
+    if (!isLocationFound) // there's no matching URI
+        throw StatusCodeException(404, "Error: no matching location/path found");
+}
+
+void Request::isMethodAllowed(void)
+{
+    auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
+    if (it == m_locationconfig.getHttpMethods().end())
+        throw StatusCodeException(405, "Warning: method not allowed");
+}
+
+if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
+{
+    spdlog::critical("CGI get handler");
+    if (m_methodPathVersion[0] == "GET")
+    {
+        CGIPipeOut *pipeout = new CGIPipeOut(m_client, m_client.m_request, m_client.m_request.m_response);
+        if (pipe(pipeout->m_pipeFd) == -1)
+            throw StatusCodeException(500, "Error: pipe()");
+        if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[0]))
+            throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+        pipeout->forkDupAndExec();
+        return;
+    }
+    if (m_methodPathVersion[0] == "POST")
+    {
+        // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
+        CGIPipeIn *pipein = new CGIPipeIn(m_client);
+        if (pipe(pipein->m_pipeFd) == -1)
+            throw StatusCodeException(500, "Error: pipe()");
+        if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
+            throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+        return;
+    }
+}
+void Request::responsePathSet(void)
+{
+    bool isIndexFileFound{false};
+
+    for (const auto &index : m_locationconfig.getIndexFile())
+    {
+        spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index);
+        if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
+        {
+            m_response.m_path = m_locationconfig.getRootPath() + index;
+            isIndexFileFound = true;
+            break;
+        }
+    }
+
+    // Can't find an index file, check if directory listing
+    if (!isIndexFileFound)
+    {
+        spdlog::info("No index file, looking for autoindex: {}", m_locationconfig.getRootPath());
+        const std::string dirPath = directoryListingParse();
+        if (dirPath.empty())
+            throw StatusCodeException(500, "Error: directoryListingParse");
+
+        if (std::filesystem::is_directory(dirPath))
+        {
+
+            if (!m_locationconfig.getAutoIndex())
+                throw StatusCodeException(403, "Forbidden: directory listing disabled");
+
+            spdlog::info("Found autoindex: {}", dirPath);
+            directoryListingBodySet(dirPath);
+            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+                throw StatusCodeException(500, "Error: directoryListing()");
+            return;
+        }
+        else
+        {
+            throw StatusCodeException(404, "Error: no matching index file found");
+        }
+    }
 }
 
 void Request::parse(void)
@@ -223,71 +305,7 @@ void Request::parse(void)
         throw StatusCodeException(505, "Warning: http version not allowed");
     if ((m_methodPathVersion[0] != "GET") && (m_methodPathVersion[0] != "POST") && (m_methodPathVersion[0] != "DELETE")) // Maybe this can be removed
         throw StatusCodeException(405, "Warning: method not allowed");
-
-    // Percentage decode URI string
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
-
-	// TODO fix this approximate DELETE
-	if (m_methodPathVersion[0] == "DELETE")
-	{
-		spdlog::warn("DELETE"); // ? debug
-		spdlog::warn("m_methodPathVersion : {}", m_methodPathVersion[1]); // ? debug
-		
-		// Remove file from request URI
-		std::filesystem::path filePath(m_methodPathVersion[1]);
-		std::filesystem::path requestParentPath = filePath.remove_filename();
-		spdlog::warn("parentPath = {}", requestParentPath); // ? debug
-
-		// Loops over location blocks and checks for match between location block and request path
-		bool isLocationFound{false};
-		for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
-		{
-			if (requestParentPath == location.getRequestURI())
-			{
-				m_locationconfig = location;
-				isLocationFound = true;
-				break;
-			}
-		}
-		if (!isLocationFound) // there's no matching URI
-			throw StatusCodeException(404, "Error: no matching location/path found");
-
-		// For a certain location block, check if the request method is allowed
-		auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
-		if (it == m_locationconfig.getHttpMethods().end())
-			throw StatusCodeException(405, "Warning: method not allowed");	
-
-		// Remove trailing '/' from root path
-		std::filesystem::path rootPath(m_locationconfig.getRootPath());
-		std::filesystem::path rootParentPath = rootPath.parent_path();
-		spdlog::warn("rootParentPath = {}", rootParentPath); // ? debug
-		
-		// Append root and request URI
-		std::string fullPath = rootParentPath.string() + m_methodPathVersion[1];
-		spdlog::warn("fullPath = {}", fullPath); // ? debug
-
-		// Remove file and error check
-		std::error_code ec;  // To capture error information
-		if (std::filesystem::remove(fullPath, ec))
-		{
-			m_body = "Success: File deleted";
-			m_response.m_statusCode = 200;
-			if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-				throw StatusCodeException(500, "Error: delete()");
-		}
-		else
-		{
-			if (ec == std::errc::no_such_file_or_directory)
-			{
-				throw StatusCodeException(404, "Error: File not found for DELETE request");
-			}
-			else
-			{
-				throw StatusCodeException(500, "Error: Failed to delete file");
-			}
-		}
-		return ;
-	}
 
     // Nasty solution to redirect + get back upload
     if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
@@ -299,85 +317,37 @@ void Request::parse(void)
         return;
     }
 
-    // Loops over location blocks and checks for match between location block and request path
-    bool isLocationFound{false};
-    for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
-    {
-        if (m_methodPathVersion[1] == location.getRequestURI())
-        {
-            m_locationconfig = location;
-            isLocationFound = true;
-            break;
-        }
-    }
-    if (!isLocationFound) // there's no matching URI
-        throw StatusCodeException(404, "Error: no matching location/path found");
+    locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
+    isMethodAllowed();   // For a certain location block, check if the request method is allowed
+    responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
 
-    // For a certain location block, check if the request method is allowed
-    auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
-    if (it == m_locationconfig.getHttpMethods().end())
-        throw StatusCodeException(405, "Warning: method not allowed");
-
-    if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
+    if (m_methodPathVersion[0] == "GET")
     {
-        spdlog::critical("CGI get handler");
-        if (m_methodPathVersion[0] == "GET")
-        {
-            CGIPipeOut *pipeout = new CGIPipeOut(m_client, m_client.m_request, m_client.m_request.m_response);
-            if (pipe(pipeout->m_pipeFd) == -1)
-                throw StatusCodeException(500, "Error: pipe()");
-            if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[0]))
-                throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
-            pipeout->forkDupAndExec();
-            return ;
-        }
-        if (m_methodPathVersion[0] == "POST")
-        {
-            // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
-            CGIPipeIn *pipein = new CGIPipeIn(m_client);
-            if (pipe(pipein->m_pipeFd) == -1)
-                throw StatusCodeException(500, "Error: pipe()");
-            if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
-                throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
-            return ;
-        }
-    }
-    // For a certain location block, loops over index files, and checks if one exists
-    bool isIndexFileFound{false};
-    for (const auto &index : m_locationconfig.getIndexFile())
-    {
-        spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index);
-        if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
-        {
-            m_response.m_path = m_locationconfig.getRootPath() + index;
-            isIndexFileFound = true;
-            break;
-        }
+        m_response.bodySet(m_response.m_path);
+        m_response.m_statusCode = 200;
+        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+            throw StatusCodeException(500, "Error: modifyEpollEvents()");
+        return;
     }
 
-	// Can't find an index file, check if directory listing
-    if (!isIndexFileFound) {
-		spdlog::info("No index file, looking for autoindex: {}", m_locationconfig.getRootPath());
-		const std::string	dirPath = directoryListingParse();
-		if (dirPath.empty())
-			throw StatusCodeException(500, "Error: directoryListingParse");
-
-		if (std::filesystem::is_directory(dirPath)) {
-
-			if (!m_locationconfig.getAutoIndex())
-				throw StatusCodeException(403, "Forbidden: directory listing disabled");
-
-			spdlog::info("Found autoindex: {}", dirPath);
-			directoryListingBodySet(dirPath);
-			if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-				throw StatusCodeException(500, "Error: directoryListing()");
-			return ;
-		} else {
-			throw StatusCodeException(404, "Error: no matching index file found");
-		}
-	}
     if (m_methodPathVersion[0] == "POST")
     {
+        // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
+        CGIPipeIn *pipein = new CGIPipeIn(m_client);
+        if (pipe(pipein->m_pipeFd) == -1)
+            throw StatusCodeException(500, "Error: pipe()");
+        if (Helper::setNonBlocking(pipein->m_pipeFd[READ]) == -1)
+            throw StatusCodeException(500, "Error: fcntl()");
+        if (Helper::setNonBlocking(pipein->m_pipeFd[WRITE]) == -1)
+            throw StatusCodeException(500, "Error: fcntl()");
+        if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
+        {
+            close(pipein->m_pipeFd[READ]);
+            close(pipein->m_pipeFd[WRITE]);
+            throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+        }
+        return;
+
         // Parse chunked request
         if (m_isChunked)
         {
@@ -406,11 +376,8 @@ void Request::parse(void)
             generalHeadersSet();
             fileNameSet();
             bodySet();
-
-            // Needs to be moved - Upload Post handeling
-            if (m_fileName.empty())
-                throw StatusCodeException(400, "Error: no fileName");
             bodyToDisk("./www/" + m_fileName);
+
             m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
             m_response.m_statusCode = 303;
             if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
@@ -418,9 +385,4 @@ void Request::parse(void)
             return;
         }
     }
-
-    m_response.bodySet(m_response.m_path);
-    m_response.m_statusCode = 200;
-    if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-        throw StatusCodeException(500, "Error: modifyEpollEvents()");
 }

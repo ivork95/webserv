@@ -19,6 +19,8 @@
 #include "Socket.hpp"
 #include "ServerConfig.hpp"
 
+#define BACKLOG 150 // how many pending connections queue will hold
+
 class Server : public Socket
 {
 public:

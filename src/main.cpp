@@ -13,8 +13,6 @@
 #include "CGIPipeOut.hpp"
 
 #define PARSTER false // change this
-#define READ 0
-#define WRITE 1
 
 void run(const Configuration &config)
 {
@@ -103,15 +101,29 @@ void run(const Configuration &config)
                 {
                     spdlog::critical("cgi in WRITE ready!");
 
-                    pipein->dupAndWrite();
+                    try
+                    {
+                        pipein->dupCloseWrite(toBeDeleted);
 
-                    CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
-                    if (pipe(pipeout->m_pipeFd) == -1)
-                        throw StatusCodeException(500, "Error: pipe()");
-                    if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[READ])) // Add READ end from pipe2 to epoll
-                        throw StatusCodeException(500, "Error: epoll_ctl()");
+                        // Create pipeout
+                        CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
+                        if (pipe(pipeout->m_pipeFd) == -1)
+                            throw StatusCodeException(500, "Error: pipe()");
+                        if (Helper::setNonBlocking(pipeout->m_pipeFd[READ] == -1))
+                            throw StatusCodeException(500, "Error: setNonBlocking()");
+                        if (Helper::setNonBlocking(pipeout->m_pipeFd[WRITE] == -1))
+                            throw StatusCodeException(500, "Error: setNonBlocking()");
+                        if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[READ])) // Add READ end from pipe2 to epoll
+                            throw StatusCodeException(500, "Error: epoll_ctl()");
 
-                    pipeout->forkDupAndExec();
+                        pipeout->forkCloseDupExec(toBeDeleted);
+                    }
+                    catch (const StatusCodeException &e)
+                    {
+                        std::cerr << e.what() << '\n';
+                        pipein->m_client.m_request.m_response.m_statusCode = e.getStatusCode();
+                        multiplexer.modifyEpollEvents(&(pipein->m_client), EPOLLOUT, pipein->m_client.m_socketFd);
+                    }
                 }
             }
             else

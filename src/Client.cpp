@@ -5,12 +5,10 @@ Client::Client(const Server &server) : m_server(server), m_request(*this), m_tim
 {
     m_socketFd = accept(m_server.m_socketFd, (struct sockaddr *)&m_remoteaddr, &m_addrlen);
     if (m_socketFd == -1)
-    {
-        std::perror("accept() failed");
         throw std::runtime_error("Error: accept() failed\n");
-    }
 
-    setNonBlocking();
+    if (Helper::setNonBlocking(m_socketFd) == -1)
+        throw std::runtime_error("Error: fcntl() failed\n");
 
     // different fields in IPv4 and IPv6:
     if (m_remoteaddr.ss_family == AF_INET)
@@ -65,11 +63,10 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
         return;
     }
 
+    if (m_request.tokenize(buf, nbytes))
+        return;
     try
     {
-        if (m_request.tokenize(buf, nbytes))
-            return;
-
         if (timerfd_settime(m_timer.m_socketFd, 0, &m_timer.m_spec, NULL) == -1)
             throw StatusCodeException(500, "Error: timerfd_settime()");
 

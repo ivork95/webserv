@@ -20,8 +20,8 @@ public:
     // constructor
     CGIPipeOut(Client &client, Request &request, Response &response);
 
-    // methods
-    void forkDupAndExec(void);
+    // member functions
+    void forkCloseDupExec(std::vector<Socket *> &toBeDeleted);
 };
 
 #endif
