@@ -16,9 +16,6 @@ public:
 
     // constructor
     CGIPipeIn(Client &client);
-
-    // method
-    void dupAndWrite(void);
 };
 
 #endif

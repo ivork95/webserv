@@ -19,9 +19,6 @@ public:
 
     // constructor
     CGIPipeOut(Client &client, Request &request, Response &response);
-
-    // methods
-    void forkDupAndExec(void);
 };
 
 #endif
