@@ -17,6 +17,62 @@ Parser::~Parser(void) {
 /**
  * STATIC FUNCTIONS
 */
+static std::string removeExtraSlashes(const std::string& path) {
+    size_t start = path.find_first_not_of('/');
+    size_t end = path.find_last_not_of('/');
+
+    if (start == std::string::npos || end == std::string::npos)
+        return "";
+
+    return path.substr(start, end - start + 1);
+}
+
+static int checkCgiScript(LocationConfig &route) {
+
+	std::string scriptFile = removeExtraSlashes(route.getCgiScript());
+    std::string requestUri = removeExtraSlashes(route.getRequestURI());
+    std::string rootPath = removeExtraSlashes(route.getRootPath());
+
+	// std::cout << "script: " + scriptFile << std::endl; // ? debug
+	// std::cout << "requestUri: " + requestUri << std::endl; // ? debug
+	// std::cout << "rootPath: " + rootPath << std::endl; // ? debug
+
+	std::string scriptAbsolutePath{};
+	if (!rootPath.empty()) {
+		scriptAbsolutePath = rootPath;
+	}
+	if (!requestUri.empty()) {
+		scriptAbsolutePath = scriptAbsolutePath.append("/" + requestUri);
+	}
+	if (!scriptFile.empty()) {
+		scriptAbsolutePath = scriptAbsolutePath.append("/" + scriptFile);
+	}
+
+    // std::cout << "scriptAbsolutePath: " << scriptAbsolutePath << std::endl; // ? debug
+
+    // std::string fullPath = rootPath + "/" + requestUri + "/" + scriptFile;
+    // std::cout << "Full Path: " << fullPath << std::endl;
+	// std::filesystem::path path(fullPath);
+
+	std::filesystem::path path(scriptAbsolutePath);
+    // std::cout << "path: " << path << std::endl; // ? debug
+
+    if (!std::filesystem::exists(path)) {
+        std::cerr << "File does not exist: " << path << std::endl;
+		return 1;
+	}
+	
+	std::filesystem::perms requiredPermissions = OWEXEC;
+	if (!hasRequiredPermissions(path, requiredPermissions)) {
+		std::cout << "File is missing execute permissions." << std::endl;
+		return 1;
+	}
+
+	route.setAbsCgiScript(path);
+
+    return 0;
+}
+
 static int convertToBytes(const std::string &rawValue) {
 	std::string convertedValue{};
 	for (size_t j = 0; j < rawValue.size() - 1; j++) {
@@ -212,6 +268,10 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
 	
 	// Check for missing directives and set defaults
 	route.checkMissingDirective();
+
+	// Check CGI script
+	if (route.hasCgiScript() && checkCgiScript(route))
+		throw CgiException("Can't find: " + route.getCgiScript());
 	
 	server->setLocationsConfig(route);
 	(*i) = j;

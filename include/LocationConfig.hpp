@@ -32,6 +32,9 @@ private:
 	std::string	_cgiInterpreter;
 	bool _hasCgiInterpreter{false};
 
+	std::string _absCgiScript;
+	bool _hasAbsCgiScript{false};
+
     std::vector<std::string> _httpMethods;
     bool _hasHttpMethods{false};
 
@@ -47,6 +50,7 @@ public:
     const std::vector<std::string> &getIndexFile(void) const;
 	const std::string &getCgiScript(void) const;
 	const std::string &getCgiInterpreter(void) const;
+	const std::string &getAbsCgiScript(void) const;
     const std::vector<std::string> &getHttpMethods(void) const;
 
     void setRequestURI(const std::string &requestURI);
@@ -56,6 +60,7 @@ public:
     void setIndexFile(const std::vector<std::string> &indexFile);
 	void setCgiScript(const std::string &cgiScript);
 	void setCgiInterpreter(const std::string &cgiInterpreter);
+	void setAbsCgiScript(const std::string &cgiScriptPath);
     void setHttpMethods(const std::vector<std::string> &httpMethods);
 
     bool hasRequestURI(void) const;
@@ -65,6 +70,7 @@ public:
     bool hasIndexFile(void) const;
 	bool hasCgiScript(void) const;
 	bool hasCgiInterpreter(void) const;
+	bool hasAbsCgiScript(void) const;
     bool hasHttpMethods(void) const;
 
     void checkMissingDirective(void); // TODO make virtual?

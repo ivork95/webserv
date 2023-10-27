@@ -12,7 +12,7 @@
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
 
-#define PARSTER false // change this
+#define PARSTER true // change this
 
 void run(const Configuration &config)
 {

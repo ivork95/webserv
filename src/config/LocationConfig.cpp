@@ -5,14 +5,14 @@
  * CONSTRUCTORS / DESTRUCTORS
  */
 LocationConfig::LocationConfig(void) : \
-	_requestURI{}, _rootPath{}, _clientMaxBodySize{}, \
-	_autoIndex(false), _indexFile{}, _cgiScript{}, _cgiInterpreter{}, _httpMethods{} {
+	_requestURI{}, _rootPath{}, _clientMaxBodySize{}, _autoIndex(false), \
+	_indexFile{}, _cgiScript{}, _cgiInterpreter{}, _absCgiScript{}, _httpMethods{} {
 	// std::cout << "LocationConfig default constructor called\n";
 }
 
 LocationConfig::LocationConfig(const std::string &requestURI) : \
 	_requestURI(requestURI), _hasRequestURI(true), _rootPath{}, _clientMaxBodySize{}, \
-	_autoIndex(false), _indexFile{}, _cgiScript{}, _cgiInterpreter{}, _httpMethods{} {
+	_autoIndex(false), _indexFile{}, _cgiScript{}, _cgiInterpreter{}, _absCgiScript{}, _httpMethods{} {
 	// std::cout << "LocationConfig parametric constructor called\n";
 }
 
@@ -49,6 +49,10 @@ const std::string &LocationConfig::getCgiScript(void) const {
 
 const std::string &LocationConfig::getCgiInterpreter(void) const {
 	return (_cgiInterpreter);
+}
+
+const std::string &LocationConfig::getAbsCgiScript(void) const {
+	return (_absCgiScript);
 }
 
 const std::vector<std::string> &LocationConfig::getHttpMethods(void) const {
@@ -102,6 +106,13 @@ void LocationConfig::setCgiInterpreter(const std::string &cgiInterpreter) {
 		throw AlreadySetException("CGI interpreter");
 	_cgiInterpreter = cgiInterpreter;
 	_hasCgiInterpreter = true;
+}
+
+void LocationConfig::setAbsCgiScript(const std::string &cgiScriptPath) {
+	if (_hasAbsCgiScript)
+		throw AlreadySetException("CGI script absolute path");
+	_absCgiScript = cgiScriptPath;
+	_hasAbsCgiScript = true;
 }
 
 void LocationConfig::setHttpMethods(const std::vector<std::string> &httpMethods) {
@@ -158,8 +169,9 @@ std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
 	}
 	out << "]" << std::endl;
 	if (route.hasCgiInterpreter() && route.hasCgiScript()) {
-		out << "\tcgiScript: " << route.getCgiScript() << std::endl;
-		out << "\tcgiInterpreter: " << route.getCgiInterpreter() << std::endl;
+		out << "\tcgiScript: " << route.getCgiScript() << " => " << route.getAbsCgiScript() << std::endl;
+		out << "\tabsCgiScript: " << route.getAbsCgiScript() << std::endl;
+		// out << "\tcgiInterpreter: " << route.getCgiInterpreter() << std::endl;
 	}
 	out << "\thttpMethod(s): [";
 	for (size_t i = 0; i < route.getHttpMethods().size(); ++i) {
