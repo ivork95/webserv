@@ -157,12 +157,9 @@ void Request::fileNameSet(void)
 
 int Request::tokenize(const char *buf, int nbytes)
 {
-    // We got some good data from a client
     spdlog::info("nbytes = {}", nbytes);
 
     m_rawMessage.append(buf, buf + nbytes);
-
-    // spdlog::info("[before] m_rawMessage = \n|{}|", m_rawMessage);
 
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
     if (fieldLinesEndPos == std::string::npos)
@@ -200,8 +197,6 @@ int Request::tokenize(const char *buf, int nbytes)
     }
 
     spdlog::info("message complete!");
-    spdlog::critical("m_rawMessage = \n|{}|", m_rawMessage);
-
     return 0;
 }
 
@@ -269,6 +264,7 @@ void Request::parse(void)
         bool isLocationFound{false};
         for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
         {
+            spdlog::critical("location = {}", location);
             if (requestParentPath == location.getRequestURI())
             {
                 m_locationconfig = location;
@@ -313,60 +309,26 @@ void Request::parse(void)
         return;
     }
 
-    // Nasty solution to redirect + get back upload
-    if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
-    {
-        m_response.bodySet("./www" + m_methodPathVersion[1]);
-        m_response.m_statusCode = 200;
-        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-            throw StatusCodeException(500, "Error: modifyEpollEvents()");
-        return;
-    }
-
     locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
     isMethodAllowed();   // For a certain location block, check if the request method is allowed
     responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
 
-    // Can't find an index file, check if directory listing
-    if (m_response.m_path.empty())
-    {
-        spdlog::info("No index file, looking for autoindex: {}", m_locationconfig.getRootPath());
-        const std::string dirPath = directoryListingParse();
-        if (dirPath.empty())
-            throw StatusCodeException(500, "Error: directoryListingParse");
-
-        if (std::filesystem::is_directory(dirPath))
-        {
-
-            if (!m_locationconfig.getAutoIndex())
-                throw StatusCodeException(403, "Forbidden: directory listing disabled");
-
-            spdlog::info("Found autoindex: {}", dirPath);
-            directoryListingBodySet(dirPath);
-            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                throw StatusCodeException(500, "Error: directoryListing()");
-            return;
-        }
-        else
-        {
-            throw StatusCodeException(404, "Error: no matching index file found");
-        }
-    }
-
     if (m_methodPathVersion[0] == "GET")
     {
-        m_response.bodySet(m_response.m_path);
-        m_response.m_statusCode = 200;
-        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-            throw StatusCodeException(500, "Error: modifyEpollEvents()");
-        return;
-    }
-
-    if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
-    {
-        spdlog::critical("CGI get handler");
-        if (m_methodPathVersion[0] == "GET")
+        // Nasty solution to redirect + get back upload
+        if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
         {
+            m_response.bodySet("./www" + m_methodPathVersion[1]);
+            m_response.m_statusCode = 200;
+            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+                throw StatusCodeException(500, "Error: modifyEpollEvents()");
+            return;
+        }
+
+        if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
+        {
+            spdlog::critical("CGI get handler");
+
             CGIPipeOut *pipeout = new CGIPipeOut(m_client, m_client.m_request, m_client.m_request.m_response);
             if (pipe(pipeout->m_pipeFd) == -1)
                 throw StatusCodeException(500, "Error: pipe()");
@@ -375,8 +337,45 @@ void Request::parse(void)
             // pipeout->forkCloseDupExec();
             return;
         }
-        if (m_methodPathVersion[0] == "POST")
+
+        // Can't find an index file, check if directory listing
+        if (m_response.m_path.empty())
         {
+            spdlog::info("No index file, looking for autoindex: {}", m_locationconfig.getRootPath());
+            const std::string dirPath = directoryListingParse();
+            if (dirPath.empty())
+                throw StatusCodeException(500, "Error: directoryListingParse");
+
+            if (std::filesystem::is_directory(dirPath))
+            {
+
+                if (!m_locationconfig.getAutoIndex())
+                    throw StatusCodeException(403, "Forbidden: directory listing disabled");
+
+                spdlog::info("Found autoindex: {}", dirPath);
+                directoryListingBodySet(dirPath);
+                if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+                    throw StatusCodeException(500, "Error: directoryListing()");
+                return;
+            }
+            else
+            {
+                throw StatusCodeException(404, "Error: no matching index file found");
+            }
+        }
+
+        m_response.bodySet(m_response.m_path);
+        m_response.m_statusCode = 200;
+        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+            throw StatusCodeException(500, "Error: modifyEpollEvents()");
+        return;
+    }
+
+    if (m_methodPathVersion[0] == "POST")
+    {
+        if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
+        {
+            spdlog::critical("CGI get handler");
             // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
             CGIPipeIn *pipein = new CGIPipeIn(m_client);
             if (pipe(pipein->m_pipeFd) == -1)
@@ -393,10 +392,6 @@ void Request::parse(void)
             }
             return;
         }
-    }
-
-    if (m_methodPathVersion[0] == "POST")
-    {
         // Parse chunked request
         if (m_isChunked)
         {
