@@ -256,7 +256,8 @@ int Request::parse(void)
 		return deleteHandler(); // ? new
     }
 
-    locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
+    // locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
+	updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
     isMethodAllowed();   // For a certain location block, check if the request method is allowed
     responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
 
