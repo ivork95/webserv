@@ -27,15 +27,10 @@ static std::string removeExtraSlashes(const std::string& path) {
     return path.substr(start, end - start + 1);
 }
 
-static int checkCgiScript(LocationConfig &route) {
-
+static int checkCgiScriptAbsPath(LocationConfig &route) {
 	std::string scriptFile = removeExtraSlashes(route.getCgiScript());
     std::string requestUri = removeExtraSlashes(route.getRequestURI());
     std::string rootPath = removeExtraSlashes(route.getRootPath());
-
-	// std::cout << "script: " + scriptFile << std::endl; // ? debug
-	// std::cout << "requestUri: " + requestUri << std::endl; // ? debug
-	// std::cout << "rootPath: " + rootPath << std::endl; // ? debug
 
 	std::string scriptAbsolutePath{};
 	if (!rootPath.empty()) {
@@ -48,25 +43,13 @@ static int checkCgiScript(LocationConfig &route) {
 		scriptAbsolutePath = scriptAbsolutePath.append("/" + scriptFile);
 	}
 
-    // std::cout << "scriptAbsolutePath: " << scriptAbsolutePath << std::endl; // ? debug
-
-    // std::string fullPath = rootPath + "/" + requestUri + "/" + scriptFile;
-    // std::cout << "Full Path: " << fullPath << std::endl;
-	// std::filesystem::path path(fullPath);
-
 	std::filesystem::path path(scriptAbsolutePath);
-    // std::cout << "path: " << path << std::endl; // ? debug
-
-    if (!std::filesystem::exists(path)) {
-        std::cerr << "File does not exist: " << path << std::endl;
+    if (!std::filesystem::exists(path))
 		return 1;
-	}
 	
-	std::filesystem::perms requiredPermissions = OWEXEC;
-	if (!hasRequiredPermissions(path, requiredPermissions)) {
-		std::cout << "File is missing execute permissions." << std::endl;
-		return 1;
-	}
+	std::filesystem::perms requiredPermissions = OWREAD | OWEXEC; // ? add permissions here
+	if (!hasRequiredPermissions(path, requiredPermissions))
+		return 2;
 
 	route.setAbsCgiScript(path);
 
@@ -165,7 +148,7 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 
 		std::filesystem::perms requiredPermissions = OWREAD | OWWRITE | OWEXEC | OTREAD | OTEXEC | GRREAD | GREXEC;
 		if (!hasRequiredPermissions(cgiInterpreter, requiredPermissions))
-			throw CgiException("Invalid permissions for interpreter: " + cgiInterpreter + " (r-w-x required)");
+			throw CgiException("Missing permissions: " + cgiInterpreter + " (r-w-x required)");
 
 		route.setCgiInterpreter(cgiInterpreter);
 
@@ -266,13 +249,24 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
 		j++;
 	}
 	
-	// Check for missing directives and set defaults
 	route.checkMissingDirective();
 
-	// Check CGI script
-	if (route.hasCgiScript() && checkCgiScript(route))
-		throw CgiException("Can't find: " + route.getCgiScript());
-	
+	if (route.hasCgiScript()) {
+		const int res = checkCgiScriptAbsPath(route);
+		switch (res)
+		{
+		case 1:
+			throw CgiException("File does not exist: " + route.getRootPath() + route.getRequestURI() + route.getCgiScript());
+			break;
+		case 2:
+			throw CgiException("Invalid permissions: " + route.getCgiScript() + " (r-x required)");
+			break;
+		default:
+			// std::cout << route.getAbsCgiScript() << std::endl; // ? debug
+			break;
+		}
+	}
+
 	server->setLocationsConfig(route);
 	(*i) = j;
 }
@@ -389,10 +383,8 @@ ServerConfig Parser::parseTokens(ServerConfig server) {
 		parser._parseServerContext(&server, server.getTokens(), &i);
 	}
 
-	// Check for missing directives and set defaults
 	server.checkMissingDirective();
 
-	// Check for duplicate request URIs
 	std::vector<std::string>	usedRequestUris;
 	for (size_t i = 0; i < server.getLocationsConfig().size(); i++) {
 		const std::string requestUri = server.getLocationsConfig()[i].getRequestURI();
