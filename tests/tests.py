@@ -20,6 +20,16 @@ class TestServerResponse(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 404)
 
+	# def test_get_method_not_allowed
+	# def test_get_method_not_allowed(self):
+		
+
+	# def test_get_autoindex
+
+	# def test_get_redirection
+
+	# def test_get_bigger_max_client_size
+
     def test_post(self):
         url = "http://localhost:8081/upload"
         files = {'file': open('Poster.jpg', 'rb')}
@@ -35,6 +45,27 @@ class TestServerResponse(unittest.TestCase):
         files["file"].close()
         self.assertTrue(response.history)
         self.assertEqual(response.history[0].status_code, 303)
+
+	# def test_post_method_not_allowed
+
+    def test_post_chunked(self):
+        conn = http.client.HTTPConnection("localhost:8081")
+
+        conn.putrequest("POST", "/upload")
+        conn.putheader("Transfer-Encoding", "chunked")
+        conn.endheaders()
+
+        # Write the chunked data
+        conn.send(b"7\r\nMozilla\r\n11\r\nDeveloper Network\r\n0\r\n\r\n")
+
+        # Get the response
+        response = conn.getresponse()
+        conn.close()
+        self.assertEqual(response.status, 200)
+        # print(response.status, response.reason)
+        # print(response.read())
+
+	# def test_post_chunked_invalid_chunks
 
     def atest_delete(self):
         filename = '../www/upload/test.txt'
@@ -58,22 +89,10 @@ class TestServerResponse(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 405)
 
-    def test_post_chunked(self):
-        conn = http.client.HTTPConnection("localhost:8081")
+	# def test_delete_file_does_not_exist
 
-        conn.putrequest("POST", "/upload")
-        conn.putheader("Transfer-Encoding", "chunked")
-        conn.endheaders()
+	# def test_unknown_requet
 
-        # Write the chunked data
-        conn.send(b"7\r\nMozilla\r\n11\r\nDeveloper Network\r\n0\r\n\r\n")
-
-        # Get the response
-        response = conn.getresponse()
-        conn.close()
-        self.assertEqual(response.status, 200)
-        # print(response.status, response.reason)
-        # print(response.read())
 
 
 if __name__ == '__main__':
