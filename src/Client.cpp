@@ -73,7 +73,11 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
 
     try
     {
-        m_request.parse();
+        if (!m_request.parse())
+        {
+            if (multiplexer.modifyEpollEvents(this, EPOLLOUT, m_socketFd))
+                throw StatusCodeException(500, "Error: delete()");
+        }
     }
     catch (const StatusCodeException &e)
     {

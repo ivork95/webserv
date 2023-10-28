@@ -68,7 +68,7 @@ public:
     std::string bodyParse(const std::string &boundaryCode);
     void bodyToDisk(const std::string &path);
     int tokenize(const char *buf, int nbytes);
-    void parse(void);
+    int parse(void);
     void isMethodAllowed(void);
 
     // chunk related

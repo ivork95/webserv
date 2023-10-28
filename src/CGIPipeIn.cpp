@@ -2,6 +2,12 @@
 
 CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
 {
+    if (pipe(m_pipeFd) == -1)
+        throw StatusCodeException(500, "Error: pipe()");
+    if (Helper::setNonBlocking(m_pipeFd[READ]) == -1)
+        throw StatusCodeException(500, "Error: fcntl()");
+    if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
+        throw StatusCodeException(500, "Error: fcntl()");
 }
 
 void CGIPipeIn::dupCloseWrite(std::vector<Socket *> &toBeDeleted)

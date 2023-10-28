@@ -19,19 +19,7 @@ void handleRead(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // We're just a regular client
-    {
         client->handleConnectedClient(toBeDeleted);
-        /*
-        if (handleConnectedClient)
-        {
-            // return to Epoll
-        }
-        else
-        {
-            // Set Read ready and return to Epoll
-        }
-        */
-    }
     else if (Server *server = dynamic_cast<Server *>(ePollDataPtr)) // Server is ready to read, handle new connection
     {
         try
@@ -97,14 +85,7 @@ void handleWrite(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
         {
             pipein->dupCloseWrite(toBeDeleted);
 
-            // Create pipeout
             CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
-            if (pipe(pipeout->m_pipeFd) == -1)
-                throw StatusCodeException(500, "Error: pipe()");
-            if (Helper::setNonBlocking(pipeout->m_pipeFd[READ] == -1))
-                throw StatusCodeException(500, "Error: setNonBlocking()");
-            if (Helper::setNonBlocking(pipeout->m_pipeFd[WRITE] == -1))
-                throw StatusCodeException(500, "Error: setNonBlocking()");
             if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[READ])) // Add READ end from pipe2 to epoll
                 throw StatusCodeException(500, "Error: epoll_ctl()");
 

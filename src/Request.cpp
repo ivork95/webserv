@@ -236,7 +236,7 @@ void Request::responsePathSet(void)
     }
 }
 
-void Request::parse(void)
+int Request::parse(void)
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
@@ -288,25 +288,16 @@ void Request::parse(void)
 
         // Remove file and error check
         std::error_code ec; // To capture error information
-        if (std::filesystem::remove(fullPath, ec))
-        {
-            m_body = "Success: File deleted";
-            m_response.m_statusCode = 200;
-            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                throw StatusCodeException(500, "Error: delete()");
-        }
-        else
+        if (!std::filesystem::remove(fullPath, ec))
         {
             if (ec == std::errc::no_such_file_or_directory)
-            {
                 throw StatusCodeException(404, "Error: File not found for DELETE request");
-            }
             else
-            {
                 throw StatusCodeException(500, "Error: Failed to delete file");
-            }
         }
-        return;
+        m_body = "Success: File deleted";
+        m_response.m_statusCode = 200;
+        return 0;
     }
 
     locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
@@ -320,9 +311,7 @@ void Request::parse(void)
         {
             m_response.bodySet("./www" + m_methodPathVersion[1]);
             m_response.m_statusCode = 200;
-            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                throw StatusCodeException(500, "Error: modifyEpollEvents()");
-            return;
+            return 0;
         }
 
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
@@ -330,45 +319,36 @@ void Request::parse(void)
             spdlog::critical("CGI get handler");
 
             CGIPipeOut *pipeout = new CGIPipeOut(m_client, m_client.m_request, m_client.m_request.m_response);
-            if (pipe(pipeout->m_pipeFd) == -1)
-                throw StatusCodeException(500, "Error: pipe()");
             if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[0]))
                 throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
             // pipeout->forkCloseDupExec();
-            return;
+            return 1;
         }
 
         // Can't find an index file, check if directory listing
         if (m_response.m_path.empty())
         {
             spdlog::info("No index file, looking for autoindex: {}", m_locationconfig.getRootPath());
+
             const std::string dirPath = directoryListingParse();
             if (dirPath.empty())
                 throw StatusCodeException(500, "Error: directoryListingParse");
-
-            if (std::filesystem::is_directory(dirPath))
+            if (!std::filesystem::is_directory(dirPath))
+                throw StatusCodeException(404, "Error: no matching index file found");
+            else
             {
-
                 if (!m_locationconfig.getAutoIndex())
                     throw StatusCodeException(403, "Forbidden: directory listing disabled");
 
                 spdlog::info("Found autoindex: {}", dirPath);
                 directoryListingBodySet(dirPath);
-                if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                    throw StatusCodeException(500, "Error: directoryListing()");
-                return;
-            }
-            else
-            {
-                throw StatusCodeException(404, "Error: no matching index file found");
+                return 0;
             }
         }
 
         m_response.bodySet(m_response.m_path);
         m_response.m_statusCode = 200;
-        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-            throw StatusCodeException(500, "Error: modifyEpollEvents()");
-        return;
+        return 0;
     }
 
     if (m_methodPathVersion[0] == "POST")
@@ -378,20 +358,15 @@ void Request::parse(void)
             spdlog::critical("CGI get handler");
             // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
             CGIPipeIn *pipein = new CGIPipeIn(m_client);
-            if (pipe(pipein->m_pipeFd) == -1)
-                throw StatusCodeException(500, "Error: pipe()");
-            if (Helper::setNonBlocking(pipein->m_pipeFd[READ]) == -1)
-                throw StatusCodeException(500, "Error: fcntl()");
-            if (Helper::setNonBlocking(pipein->m_pipeFd[WRITE]) == -1)
-                throw StatusCodeException(500, "Error: fcntl()");
             if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
             {
                 close(pipein->m_pipeFd[READ]);
                 close(pipein->m_pipeFd[WRITE]);
                 throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
             }
-            return;
+            return 2;
         }
+
         // Parse chunked request
         if (m_isChunked)
         {
@@ -414,26 +389,20 @@ void Request::parse(void)
 
             m_response.m_body = m_chunkBody;
             m_response.m_statusCode = 200;
-            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                throw StatusCodeException(500, "Error: modifyEpollEvents()");
-            return;
+            return 0;
         }
-        else
-        {
-            if (m_contentLength > m_locationconfig.getClientMaxBodySize())
-                throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
-            boundaryCodeSet();
-            generalHeadersSet();
-            fileNameSet();
-            bodySet();
-            bodyToDisk("./www/" + m_fileName);
+        if (m_contentLength > m_locationconfig.getClientMaxBodySize())
+            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
-            m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
-            m_response.m_statusCode = 303;
-            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                throw StatusCodeException(500, "Error: modifyEpollEvents()");
-            return;
-        }
+        boundaryCodeSet();
+        generalHeadersSet();
+        fileNameSet();
+        bodySet();
+        bodyToDisk("./www/" + m_fileName);
+
+        m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
+        m_response.m_statusCode = 303;
+        return 0;
     }
 }
