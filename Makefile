@@ -36,8 +36,10 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidServerName.o \
 				obj/utils/config/isValidUri.o \
 				obj/utils/config/hasRequiredPermissions.o \
-				obj/ChunkRequest.o \
-				obj/DirectoryListing.o
+				obj/Request/DirectoryListing.o \
+				obj/Request/RequestDelete.o \
+				obj/Request/RequestChunk.o \
+				obj/Request/RequestUtils.o
 HEADERS		:=	include/CGIPipeIn.hpp \
 				include/CGIPipeOut.hpp \
 				include/Client.hpp \

@@ -1,0 +1,35 @@
+
+
+
+src/
+	config/
+		Parser.cpp
+		Lexer.cpp
+		...
+	utils/
+		config/
+			hasValid.cpp
+		helper/ ?
+			...
+	Request/
+		RequestParser.cpp
+		RequestTokenizer.cpp
+		ChunkRequest.cpp
+		DirectoryListing.cpp
+		DeleteRequest.cpp
+		GetRequest.cpp
+		...
+	Response/ ?
+		... ?
+	Message/ ?
+		... ?
+	Cgi/ ?
+		CGIPipeIn.cpp
+		...
+	Socket/ ?
+		... ?
+	main.cpp
+	InitConfig.cpp
+	Multiplexer.cpp
+	Server.cpp
+	...

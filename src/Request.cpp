@@ -249,55 +249,11 @@ int Request::parse(void)
         throw StatusCodeException(405, "Warning: method not allowed");
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
-    // TODO fix this approximate DELETE
     if (m_methodPathVersion[0] == "DELETE")
     {
-        spdlog::warn("DELETE");                                           // ? debug
-        spdlog::warn("m_methodPathVersion : {}", m_methodPathVersion[1]); // ? debug
-
-        // Remove file from request URI
-        std::filesystem::path filePath(m_methodPathVersion[1]);
-        std::filesystem::path requestParentPath = filePath.remove_filename();
-        spdlog::warn("parentPath = {}", requestParentPath); // ? debug
-
-        // Loops over location blocks and checks for match between location block and request path
-        bool isLocationFound{false};
-        for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
-        {
-            spdlog::critical("location = {}", location);
-            if (requestParentPath == location.getRequestURI())
-            {
-                m_locationconfig = location;
-                isLocationFound = true;
-                break;
-            }
-        }
-        if (!isLocationFound) // there's no matching URI
-            throw StatusCodeException(404, "Error: no matching location/path found");
-
-        isMethodAllowed();
-
-        // Remove trailing '/' from root path
-        std::filesystem::path rootPath(m_locationconfig.getRootPath());
-        std::filesystem::path rootParentPath = rootPath.parent_path();
-        spdlog::warn("rootParentPath = {}", rootParentPath); // ? debug
-
-        // Append root and request URI
-        std::string fullPath = rootParentPath.string() + m_methodPathVersion[1];
-        spdlog::warn("fullPath = {}", fullPath); // ? debug
-
-        // Remove file and error check
-        std::error_code ec; // To capture error information
-        if (!std::filesystem::remove(fullPath, ec))
-        {
-            if (ec == std::errc::no_such_file_or_directory)
-                throw StatusCodeException(404, "Error: File not found for DELETE request");
-            else
-                throw StatusCodeException(500, "Error: Failed to delete file");
-        }
-        m_body = "Success: File deleted";
-        m_response.m_statusCode = 200;
-        return 0;
+        spdlog::warn("DELETE | m_methodPathVersion : {}", m_methodPathVersion[1]); // ? debug
+	
+		return deleteHandler();
     }
 
     locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
@@ -370,22 +326,16 @@ int Request::parse(void)
         // Parse chunked request
         if (m_isChunked)
         {
-            // Check for "chunked" directive
             chunkHeadersParse();
-
-            // Extract chunk body
             chunkBodyExtract();
-
-            // Tokenize body to separate len and actual chunk
             chunkBodyTokenize();
-
-            // Set body
             chunkBodySet();
-            spdlog::warn("m_chunkBody = {}", m_chunkBody);
 
-            // Replace headers
+            spdlog::warn("m_chunkBody = {}", m_chunkBody); // ? debug
+
             chunkHeaderReplace();
-            requestHeadersPrint(m_requestHeaders);
+
+            requestHeadersPrint(m_requestHeaders); // ? debug
 
             m_response.m_body = m_chunkBody;
             m_response.m_statusCode = 200;

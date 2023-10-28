@@ -72,11 +72,10 @@ public:
     void isMethodAllowed(void);
 
     // chunk related
-    void chunkHeaderReplace();
+    void chunkHeaderReplace(void);
     void chunkHeadersParse(void);
     void chunkBodyExtract(void);
     void chunkBodyTokenize(void);
-    // void chunkBodyParse(size_t nbChunks, std::vector<size_t> chunkLength, std::vector<std::string> chunkLine);
     void chunkBodySet(void);
 
     std::string m_rawChunkBody{};
@@ -87,6 +86,13 @@ public:
     // directory listing related
     void directoryListingBodySet(const std::string &dirPath);
     std::string directoryListingParse(void);
+
+	// delete method related
+	int	deleteHandler(void);
+	std::string buildDeleteFilePath(void);
+
+	// updated to accept arg
+	void updatedLocationConfigSet(const std::string &methodPath);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Request &request);
