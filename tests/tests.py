@@ -96,6 +96,11 @@ class TestServerResponse(unittest.TestCase):
         response = requests.delete(url=url)
         self.assertEqual(response.status_code, 500)
 
+	# TO ADD
+	# test UNKNOWN command
+	# ...
+	# ...
+
     def delete_tests(self):
         self.test_delete()
         self.test_delete_file_does_not_exist()
