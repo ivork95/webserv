@@ -141,6 +141,9 @@ docker-exec:
 basic: all
 	./webserv config-files/valid/basic.conf
 
+py: all
+	./webserv config-files/py.conf
+
 test: all
 	./webserv config-files/valid/multiple-servers.conf
 
