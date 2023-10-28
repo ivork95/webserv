@@ -77,11 +77,17 @@ public:
     void chunkBodyExtract(void);
     void chunkBodyTokenize(void);
     void chunkBodySet(void);
+	int	chunkHandler(void);
 
     std::string m_rawChunkBody{};
     std::string m_chunkBody{};
     std::vector<std::string> m_chunkLine{};
     int m_totalChunkLength{};
+
+	// get method related
+	int getHandler(void);
+	int uploadHandler(void);
+	int directoryListingHandler(void);
 
     // directory listing related
     void directoryListingBodySet(const std::string &dirPath);
@@ -90,6 +96,9 @@ public:
 	// delete method related
 	int	deleteHandler(void);
 	std::string buildDeleteFilePath(void);
+
+	// post method related
+	int postHandler(void);
 
 	// updated to accept arg
 	void updatedLocationConfigSet(const std::string &methodPath);

@@ -101,3 +101,20 @@ void	Request::chunkHeadersParse(void) {
 		throw StatusCodeException(500, "Error: could not find Transfer-Encoding");
 	}
 }
+
+int	Request::chunkHandler(void) {
+	chunkHeadersParse();
+	chunkBodyExtract();
+	chunkBodyTokenize();
+	chunkBodySet();
+
+	spdlog::warn("m_chunkBody = {}", m_chunkBody); // ? debug
+
+	chunkHeaderReplace();
+
+	requestHeadersPrint(m_requestHeaders); // ? debug
+
+	m_response.m_body = m_chunkBody;
+	m_response.m_statusCode = 200;
+	return 0;
+}

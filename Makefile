@@ -39,7 +39,9 @@ OBJECTS		:=	obj/main.o \
 				obj/Request/DirectoryListing.o \
 				obj/Request/RequestDelete.o \
 				obj/Request/RequestChunk.o \
-				obj/Request/RequestUtils.o
+				obj/Request/RequestUtils.o \
+				obj/Request/RequestGet.o \
+				obj/Request/RequestPost.o
 HEADERS		:=	include/CGIPipeIn.hpp \
 				include/CGIPipeOut.hpp \
 				include/Client.hpp \

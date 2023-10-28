@@ -56,104 +56,104 @@ void Request::methodPathVersionSet(void)
     m_methodPathVersion = Helper::split(requestLine);
 }
 
-std::string Request::boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders)
-{
-    auto contentTypeIt = requestHeaders.find("Content-Type");
-    if (contentTypeIt == requestHeaders.end())
-        throw StatusCodeException(400, "Error: missing Content-Type header");
+// std::string Request::boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders)
+// {
+//     auto contentTypeIt = requestHeaders.find("Content-Type");
+//     if (contentTypeIt == requestHeaders.end())
+//         throw StatusCodeException(400, "Error: missing Content-Type header");
 
-    std::string contentType = contentTypeIt->second;
+//     std::string contentType = contentTypeIt->second;
 
-    std::string_view boundary{"boundary="};
-    size_t boundaryStartPos = contentType.find(boundary);
-    if (boundaryStartPos == std::string::npos)
-        throw StatusCodeException(400, "Error: missing boundary=");
+//     std::string_view boundary{"boundary="};
+//     size_t boundaryStartPos = contentType.find(boundary);
+//     if (boundaryStartPos == std::string::npos)
+//         throw StatusCodeException(400, "Error: missing boundary=");
 
-    return contentType.substr(boundaryStartPos + boundary.length());
-}
+//     return contentType.substr(boundaryStartPos + boundary.length());
+// }
 
-void Request::boundaryCodeSet(void)
-{
-    m_boundaryCode = boundaryCodeParse(m_requestHeaders);
-}
+// void Request::boundaryCodeSet(void)
+// {
+//     m_boundaryCode = boundaryCodeParse(m_requestHeaders);
+// }
 
-std::string Request::generalHeadersParse(const std::string &boundaryCode)
-{
-    const std::string boundaryStart = "--" + boundaryCode + "\r\n";
-    const std::string generalHeadersEnd = "\r\n\r\n";
+// std::string Request::generalHeadersParse(const std::string &boundaryCode)
+// {
+//     const std::string boundaryStart = "--" + boundaryCode + "\r\n";
+//     const std::string generalHeadersEnd = "\r\n\r\n";
 
-    size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
-    if (BoundaryStartPos == std::string::npos)
-    {
-        throw StatusCodeException(400, "Error: invalid Content-Length header2");
-    }
+//     size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
+//     if (BoundaryStartPos == std::string::npos)
+//     {
+//         throw StatusCodeException(400, "Error: invalid Content-Length header2");
+//     }
 
-    size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
-    if (generalHeadersEndPos == std::string::npos)
-        throw StatusCodeException(400, "Error: invalid Content-Length header3");
+//     size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
+//     if (generalHeadersEndPos == std::string::npos)
+//         throw StatusCodeException(400, "Error: invalid Content-Length header3");
 
-    return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
-}
+//     return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
+// }
 
-void Request::generalHeadersSet(void)
-{
-    std::string generalFieldLines = generalHeadersParse(m_boundaryCode);
-    m_generalHeaders = fieldLinesToHeaders(generalFieldLines);
-}
+// void Request::generalHeadersSet(void)
+// {
+//     std::string generalFieldLines = generalHeadersParse(m_boundaryCode);
+//     m_generalHeaders = fieldLinesToHeaders(generalFieldLines);
+// }
 
-std::string Request::bodyParse(const std::string &boundaryCode)
-{
-    const std::string headersEnd = "\r\n\r\n";
-    size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
-    size_t generalHeadersEndPos = m_rawMessage.find(headersEnd, requestHeadersEndPos + 1);
+// std::string Request::bodyParse(const std::string &boundaryCode)
+// {
+//     const std::string headersEnd = "\r\n\r\n";
+//     size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
+//     size_t generalHeadersEndPos = m_rawMessage.find(headersEnd, requestHeadersEndPos + 1);
 
-    if (boundaryCode.empty())
-    {
-        requestHeadersEndPos += 4;
-        spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
-        return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
-    }
+//     if (boundaryCode.empty())
+//     {
+//         requestHeadersEndPos += 4;
+//         spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+//         return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+//     }
 
-    const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
-    size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
-    if (boundaryEndPos == std::string::npos)
-        throw StatusCodeException(400, "Error: couldn't find boundaryEnd");
+//     const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
+//     size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
+//     if (boundaryEndPos == std::string::npos)
+//         throw StatusCodeException(400, "Error: couldn't find boundaryEnd");
 
-    return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
-}
+//     return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
+// }
 
-void Request::bodySet(void)
-{
-    m_body = bodyParse(m_boundaryCode);
-}
+// void Request::bodySet(void)
+// {
+//     m_body = bodyParse(m_boundaryCode);
+// }
 
-void Request::bodyToDisk(const std::string &path)
-{
-    std::ofstream outf{path};
-    if (!outf)
-        throw StatusCodeException(400, "Error: ofstream");
-    outf << m_body;
-}
+// void Request::bodyToDisk(const std::string &path)
+// {
+//     std::ofstream outf{path};
+//     if (!outf)
+//         throw StatusCodeException(400, "Error: ofstream");
+//     outf << m_body;
+// }
 
-std::string Request::fileNameParse(const std::map<std::string, std::string> &generalHeaders)
-{
-    auto contentDispositionIt = generalHeaders.find("Content-Disposition");
-    if (contentDispositionIt == generalHeaders.end())
-        throw StatusCodeException(400, "Error: couldn't find Content-Disposition");
+// std::string Request::fileNameParse(const std::map<std::string, std::string> &generalHeaders)
+// {
+//     auto contentDispositionIt = generalHeaders.find("Content-Disposition");
+//     if (contentDispositionIt == generalHeaders.end())
+//         throw StatusCodeException(400, "Error: couldn't find Content-Disposition");
 
-    std::string fileNameStart = "filename=";
-    size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
-    if (fileNameStartPos == std::string::npos)
-        throw StatusCodeException(400, "Error: couldn't find filename=");
+//     std::string fileNameStart = "filename=";
+//     size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
+//     if (fileNameStartPos == std::string::npos)
+//         throw StatusCodeException(400, "Error: couldn't find filename=");
 
-    return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
-}
+//     return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
+// }
 
-void Request::fileNameSet(void)
-{
-    m_fileName = fileNameParse(m_generalHeaders);
-    Helper::strip(m_fileName);
-}
+// void Request::fileNameSet(void)
+// {
+//     m_fileName = fileNameParse(m_generalHeaders);
+//     Helper::strip(m_fileName);
+// }
 
 int Request::tokenize(const char *buf, int nbytes)
 {
@@ -253,7 +253,7 @@ int Request::parse(void)
     {
         spdlog::warn("DELETE | m_methodPathVersion : {}", m_methodPathVersion[1]); // ? debug
 	
-		return deleteHandler();
+		return deleteHandler(); // ? new
     }
 
     locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
@@ -262,14 +262,7 @@ int Request::parse(void)
 
     if (m_methodPathVersion[0] == "GET")
     {
-        // Nasty solution to redirect + get back upload
-        if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
-        {
-            m_response.bodySet("./www" + m_methodPathVersion[1]);
-            m_response.m_statusCode = 200;
-            return 0;
-        }
-
+		// ? left it here because of the multiplexer
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
             spdlog::critical("CGI get handler");
@@ -280,35 +273,15 @@ int Request::parse(void)
             // pipeout->forkCloseDupExec();
             return 1;
         }
-
-        // Can't find an index file, check if directory listing
-        if (m_response.m_path.empty())
-        {
-            spdlog::info("No index file, looking for autoindex: {}", m_locationconfig.getRootPath());
-
-            const std::string dirPath = directoryListingParse();
-            if (dirPath.empty())
-                throw StatusCodeException(500, "Error: directoryListingParse");
-            if (!std::filesystem::is_directory(dirPath))
-                throw StatusCodeException(404, "Error: no matching index file found");
-            else
-            {
-                if (!m_locationconfig.getAutoIndex())
-                    throw StatusCodeException(403, "Forbidden: directory listing disabled");
-
-                spdlog::info("Found autoindex: {}", dirPath);
-                directoryListingBodySet(dirPath);
-                return 0;
-            }
-        }
-
-        m_response.bodySet(m_response.m_path);
-        m_response.m_statusCode = 200;
-        return 0;
+		else
+		{
+			return getHandler(); // ? new
+		}
     }
 
     if (m_methodPathVersion[0] == "POST")
     {
+		// ? left it here because of the multiplexer
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
             spdlog::critical("CGI get handler");
@@ -326,33 +299,9 @@ int Request::parse(void)
         // Parse chunked request
         if (m_isChunked)
         {
-            chunkHeadersParse();
-            chunkBodyExtract();
-            chunkBodyTokenize();
-            chunkBodySet();
-
-            spdlog::warn("m_chunkBody = {}", m_chunkBody); // ? debug
-
-            chunkHeaderReplace();
-
-            requestHeadersPrint(m_requestHeaders); // ? debug
-
-            m_response.m_body = m_chunkBody;
-            m_response.m_statusCode = 200;
-            return 0;
+			return chunkHandler(); // ? new
         }
 
-        if (m_contentLength > m_locationconfig.getClientMaxBodySize())
-            throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
-
-        boundaryCodeSet();
-        generalHeadersSet();
-        fileNameSet();
-        bodySet();
-        bodyToDisk("./www/" + m_fileName);
-
-        m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
-        m_response.m_statusCode = 303;
-        return 0;
+		return postHandler(); // ? new
     }
 }
