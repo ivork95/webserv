@@ -18,6 +18,8 @@ OBJECTS		:=	obj/main.o \
 				obj/config/Token.o \
 				obj/config/Lexer.o \
 				obj/config/Parser.o \
+				obj/config/ServerParser.o \
+				obj/config/LocationParser.o \
 				obj/config/Configuration.o \
 				obj/config/ServerConfig.o \
 				obj/config/LocationConfig.o \
@@ -36,6 +38,7 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidServerName.o \
 				obj/utils/config/isValidUri.o \
 				obj/utils/config/hasRequiredPermissions.o \
+				obj/utils/config/ParserUtils.o \
 				obj/Request/DirectoryListing.o \
 				obj/Request/RequestDelete.o \
 				obj/Request/RequestChunk.o \
