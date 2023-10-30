@@ -40,4 +40,7 @@ class Parser {
 
 };
 
+int convertToBytes(const std::string &rawValue);
+int parseClientMaxBodySize(const std::string &rawValue);
+
 #endif

@@ -68,25 +68,40 @@ public:
     std::string bodyParse(const std::string &boundaryCode);
     void bodyToDisk(const std::string &path);
     int tokenize(const char *buf, int nbytes);
-    void parse(void);
+    int parse(void);
     void isMethodAllowed(void);
 
     // chunk related
-    void chunkHeaderReplace();
+    void chunkHeaderReplace(void);
     void chunkHeadersParse(void);
     void chunkBodyExtract(void);
     void chunkBodyTokenize(void);
-    // void chunkBodyParse(size_t nbChunks, std::vector<size_t> chunkLength, std::vector<std::string> chunkLine);
     void chunkBodySet(void);
+	int	chunkHandler(void);
 
     std::string m_rawChunkBody{};
     std::string m_chunkBody{};
     std::vector<std::string> m_chunkLine{};
     int m_totalChunkLength{};
 
+	// get method related
+	int getHandler(void);
+	int uploadHandler(void);
+	int directoryListingHandler(void);
+
     // directory listing related
     void directoryListingBodySet(const std::string &dirPath);
     std::string directoryListingParse(void);
+
+	// delete method related
+	int	deleteHandler(void);
+	std::string buildDeleteFilePath(void);
+
+	// post method related
+	int postHandler(void);
+
+	// updated to accept arg
+	void updatedLocationConfigSet(const std::string &methodPath);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Request &request);

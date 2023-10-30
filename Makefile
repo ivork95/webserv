@@ -18,6 +18,8 @@ OBJECTS		:=	obj/main.o \
 				obj/config/Token.o \
 				obj/config/Lexer.o \
 				obj/config/Parser.o \
+				obj/config/ServerParser.o \
+				obj/config/LocationParser.o \
 				obj/config/Configuration.o \
 				obj/config/ServerConfig.o \
 				obj/config/LocationConfig.o \
@@ -36,8 +38,13 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidServerName.o \
 				obj/utils/config/isValidUri.o \
 				obj/utils/config/hasRequiredPermissions.o \
-				obj/ChunkRequest.o \
-				obj/DirectoryListing.o
+				obj/utils/config/ParserUtils.o \
+				obj/utils/request/RequestUtils.o \
+				obj/request/DirectoryListing.o \
+				obj/request/RequestDelete.o \
+				obj/request/RequestChunk.o \
+				obj/request/RequestGet.o \
+				obj/request/RequestPost.o
 HEADERS		:=	include/CGIPipeIn.hpp \
 				include/CGIPipeOut.hpp \
 				include/Client.hpp \
@@ -136,6 +143,9 @@ docker-exec:
 
 basic: all
 	./webserv config-files/valid/basic.conf
+
+py: all
+	./webserv config-files/py.conf
 
 test: all
 	./webserv config-files/valid/multiple-servers.conf

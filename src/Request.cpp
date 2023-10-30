@@ -56,113 +56,11 @@ void Request::methodPathVersionSet(void)
     m_methodPathVersion = Helper::split(requestLine);
 }
 
-std::string Request::boundaryCodeParse(const std::map<std::string, std::string> &requestHeaders)
-{
-    auto contentTypeIt = requestHeaders.find("Content-Type");
-    if (contentTypeIt == requestHeaders.end())
-        throw StatusCodeException(400, "Error: missing Content-Type header");
-
-    std::string contentType = contentTypeIt->second;
-
-    std::string_view boundary{"boundary="};
-    size_t boundaryStartPos = contentType.find(boundary);
-    if (boundaryStartPos == std::string::npos)
-        throw StatusCodeException(400, "Error: missing boundary=");
-
-    return contentType.substr(boundaryStartPos + boundary.length());
-}
-
-void Request::boundaryCodeSet(void)
-{
-    m_boundaryCode = boundaryCodeParse(m_requestHeaders);
-}
-
-std::string Request::generalHeadersParse(const std::string &boundaryCode)
-{
-    const std::string boundaryStart = "--" + boundaryCode + "\r\n";
-    const std::string generalHeadersEnd = "\r\n\r\n";
-
-    size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
-    if (BoundaryStartPos == std::string::npos)
-    {
-        throw StatusCodeException(400, "Error: invalid Content-Length header2");
-    }
-
-    size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
-    if (generalHeadersEndPos == std::string::npos)
-        throw StatusCodeException(400, "Error: invalid Content-Length header3");
-
-    return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
-}
-
-void Request::generalHeadersSet(void)
-{
-    std::string generalFieldLines = generalHeadersParse(m_boundaryCode);
-    m_generalHeaders = fieldLinesToHeaders(generalFieldLines);
-}
-
-std::string Request::bodyParse(const std::string &boundaryCode)
-{
-    const std::string headersEnd = "\r\n\r\n";
-    size_t requestHeadersEndPos = m_rawMessage.find(headersEnd);
-    size_t generalHeadersEndPos = m_rawMessage.find(headersEnd, requestHeadersEndPos + 1);
-
-    if (boundaryCode.empty())
-    {
-        requestHeadersEndPos += 4;
-        spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
-        return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
-    }
-
-    const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";
-    size_t boundaryEndPos = m_rawMessage.find(boundaryEnd);
-    if (boundaryEndPos == std::string::npos)
-        throw StatusCodeException(400, "Error: couldn't find boundaryEnd");
-
-    return m_rawMessage.substr(generalHeadersEndPos + headersEnd.length(), boundaryEndPos - (generalHeadersEndPos + headersEnd.length()));
-}
-
-void Request::bodySet(void)
-{
-    m_body = bodyParse(m_boundaryCode);
-}
-
-void Request::bodyToDisk(const std::string &path)
-{
-    std::ofstream outf{path};
-    if (!outf)
-        throw StatusCodeException(400, "Error: ofstream");
-    outf << m_body;
-}
-
-std::string Request::fileNameParse(const std::map<std::string, std::string> &generalHeaders)
-{
-    auto contentDispositionIt = generalHeaders.find("Content-Disposition");
-    if (contentDispositionIt == generalHeaders.end())
-        throw StatusCodeException(400, "Error: couldn't find Content-Disposition");
-
-    std::string fileNameStart = "filename=";
-    size_t fileNameStartPos = contentDispositionIt->second.find(fileNameStart);
-    if (fileNameStartPos == std::string::npos)
-        throw StatusCodeException(400, "Error: couldn't find filename=");
-
-    return contentDispositionIt->second.substr(fileNameStartPos + fileNameStart.length());
-}
-
-void Request::fileNameSet(void)
-{
-    m_fileName = fileNameParse(m_generalHeaders);
-    Helper::strip(m_fileName);
-}
-
 int Request::tokenize(const char *buf, int nbytes)
 {
-    // We got some good data from a client
     spdlog::info("nbytes = {}", nbytes);
 
     m_rawMessage.append(buf, buf + nbytes);
-
-    // spdlog::info("[before] m_rawMessage = \n|{}|", m_rawMessage);
 
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
     if (fieldLinesEndPos == std::string::npos)
@@ -200,8 +98,6 @@ int Request::tokenize(const char *buf, int nbytes)
     }
 
     spdlog::info("message complete!");
-    spdlog::critical("m_rawMessage = \n|{}|", m_rawMessage);
-
     return 0;
 }
 
@@ -241,7 +137,7 @@ void Request::responsePathSet(void)
     }
 }
 
-void Request::parse(void)
+int Request::parse(void)
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
@@ -254,191 +150,60 @@ void Request::parse(void)
         throw StatusCodeException(405, "Warning: method not allowed");
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
-    // TODO fix this approximate DELETE
     if (m_methodPathVersion[0] == "DELETE")
     {
-        spdlog::warn("DELETE");                                           // ? debug
-        spdlog::warn("m_methodPathVersion : {}", m_methodPathVersion[1]); // ? debug
-
-        // Remove file from request URI
-        std::filesystem::path filePath(m_methodPathVersion[1]);
-        std::filesystem::path requestParentPath = filePath.remove_filename();
-        spdlog::warn("parentPath = {}", requestParentPath); // ? debug
-
-        // Loops over location blocks and checks for match between location block and request path
-        bool isLocationFound{false};
-        for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
-        {
-            if (requestParentPath == location.getRequestURI())
-            {
-                m_locationconfig = location;
-                isLocationFound = true;
-                break;
-            }
-        }
-        if (!isLocationFound) // there's no matching URI
-            throw StatusCodeException(404, "Error: no matching location/path found");
-
-        isMethodAllowed();
-
-        // Remove trailing '/' from root path
-        std::filesystem::path rootPath(m_locationconfig.getRootPath());
-        std::filesystem::path rootParentPath = rootPath.parent_path();
-        spdlog::warn("rootParentPath = {}", rootParentPath); // ? debug
-
-        // Append root and request URI
-        std::string fullPath = rootParentPath.string() + m_methodPathVersion[1];
-        spdlog::warn("fullPath = {}", fullPath); // ? debug
-
-        // Remove file and error check
-        std::error_code ec; // To capture error information
-        if (std::filesystem::remove(fullPath, ec))
-        {
-            m_body = "Success: File deleted";
-            m_response.m_statusCode = 200;
-            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                throw StatusCodeException(500, "Error: delete()");
-        }
-        else
-        {
-            if (ec == std::errc::no_such_file_or_directory)
-            {
-                throw StatusCodeException(404, "Error: File not found for DELETE request");
-            }
-            else
-            {
-                throw StatusCodeException(500, "Error: Failed to delete file");
-            }
-        }
-        return;
+        spdlog::warn("DELETE | m_methodPathVersion : {}", m_methodPathVersion[1]); // ? debug
+	
+		return deleteHandler(); // ? new
     }
 
-    // Nasty solution to redirect + get back upload
-    if (m_methodPathVersion[1].ends_with("jpg") || m_methodPathVersion[1].ends_with("jpeg") || m_methodPathVersion[1].ends_with("png"))
-    {
-        m_response.bodySet("./www" + m_methodPathVersion[1]);
-        m_response.m_statusCode = 200;
-        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-            throw StatusCodeException(500, "Error: modifyEpollEvents()");
-        return;
-    }
-
-    locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
+    // locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
+	updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
     isMethodAllowed();   // For a certain location block, check if the request method is allowed
     responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
 
-    // Can't find an index file, check if directory listing
-    if (m_response.m_path.empty())
-    {
-        spdlog::info("No index file, looking for autoindex: {}", m_locationconfig.getRootPath());
-        const std::string dirPath = directoryListingParse();
-        if (dirPath.empty())
-            throw StatusCodeException(500, "Error: directoryListingParse");
-
-        if (std::filesystem::is_directory(dirPath))
-        {
-
-            if (!m_locationconfig.getAutoIndex())
-                throw StatusCodeException(403, "Forbidden: directory listing disabled");
-
-            spdlog::info("Found autoindex: {}", dirPath);
-            directoryListingBodySet(dirPath);
-            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                throw StatusCodeException(500, "Error: directoryListing()");
-            return;
-        }
-        else
-        {
-            throw StatusCodeException(404, "Error: no matching index file found");
-        }
-    }
-
     if (m_methodPathVersion[0] == "GET")
     {
-        m_response.bodySet(m_response.m_path);
-        m_response.m_statusCode = 200;
-        if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-            throw StatusCodeException(500, "Error: modifyEpollEvents()");
-        return;
-    }
-
-    if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
-    {
-        spdlog::critical("CGI get handler");
-        if (m_methodPathVersion[0] == "GET")
+		// ? left it here because of the multiplexer
+        if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
+            spdlog::critical("CGI get handler");
+
             CGIPipeOut *pipeout = new CGIPipeOut(m_client, m_client.m_request, m_client.m_request.m_response);
-            if (pipe(pipeout->m_pipeFd) == -1)
-                throw StatusCodeException(500, "Error: pipe()");
             if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[0]))
                 throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
             // pipeout->forkCloseDupExec();
-            return;
+            return 1;
         }
-        if (m_methodPathVersion[0] == "POST")
+		else
+		{
+			return getHandler(); // ? new
+		}
+    }
+
+    if (m_methodPathVersion[0] == "POST")
+    {
+		// ? left it here because of the multiplexer
+        if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
+            spdlog::critical("CGI get handler");
             // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
             CGIPipeIn *pipein = new CGIPipeIn(m_client);
-            if (pipe(pipein->m_pipeFd) == -1)
-                throw StatusCodeException(500, "Error: pipe()");
-            if (Helper::setNonBlocking(pipein->m_pipeFd[READ]) == -1)
-                throw StatusCodeException(500, "Error: fcntl()");
-            if (Helper::setNonBlocking(pipein->m_pipeFd[WRITE]) == -1)
-                throw StatusCodeException(500, "Error: fcntl()");
             if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
             {
                 close(pipein->m_pipeFd[READ]);
                 close(pipein->m_pipeFd[WRITE]);
                 throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
             }
-            return;
+            return 2;
         }
-    }
 
-    if (m_methodPathVersion[0] == "POST")
-    {
         // Parse chunked request
         if (m_isChunked)
         {
-            // Check for "chunked" directive
-            chunkHeadersParse();
-
-            // Extract chunk body
-            chunkBodyExtract();
-
-            // Tokenize body to separate len and actual chunk
-            chunkBodyTokenize();
-
-            // Set body
-            chunkBodySet();
-            spdlog::warn("m_chunkBody = {}", m_chunkBody);
-
-            // Replace headers
-            chunkHeaderReplace();
-            requestHeadersPrint(m_requestHeaders);
-
-            m_response.m_body = m_chunkBody;
-            m_response.m_statusCode = 200;
-            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                throw StatusCodeException(500, "Error: modifyEpollEvents()");
-            return;
+			return chunkHandler(); // ? new
         }
-        else
-        {
-            if (m_contentLength > m_locationconfig.getClientMaxBodySize())
-                throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
-            boundaryCodeSet();
-            generalHeadersSet();
-            fileNameSet();
-            bodySet();
-            bodyToDisk("./www/" + m_fileName);
-
-            m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
-            m_response.m_statusCode = 303;
-            if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-                throw StatusCodeException(500, "Error: modifyEpollEvents()");
-            return;
-        }
+		return postHandler(); // ? new
     }
 }

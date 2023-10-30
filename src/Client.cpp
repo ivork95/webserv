@@ -3,12 +3,14 @@
 // server constructor
 Client::Client(const Server &server) : m_server(server), m_request(*this), m_timer(*this)
 {
+    Multiplexer &multiplexer = Multiplexer::getInstance();
+
     m_socketFd = accept(m_server.m_socketFd, (struct sockaddr *)&m_remoteaddr, &m_addrlen);
     if (m_socketFd == -1)
-        throw std::runtime_error("Error: accept() failed\n");
+        throw std::runtime_error("Error: accept()\n");
 
     if (Helper::setNonBlocking(m_socketFd) == -1)
-        throw std::runtime_error("Error: fcntl() failed\n");
+        throw std::runtime_error("Error: fcntl()\n");
 
     // different fields in IPv4 and IPv6:
     if (m_remoteaddr.ss_family == AF_INET)
@@ -65,41 +67,25 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
 
     if (m_request.tokenize(buf, nbytes))
         return;
+
+    close(m_timer.m_socketFd);
+    m_timer.m_socketFd = -1;
+
     try
     {
-        if (timerfd_settime(m_timer.m_socketFd, 0, &m_timer.m_spec, NULL) == -1)
-            throw StatusCodeException(500, "Error: timerfd_settime()");
-
-        m_request.parse();
+        if (!m_request.parse())
+        {
+            if (multiplexer.modifyEpollEvents(this, EPOLLOUT, m_socketFd))
+                throw StatusCodeException(500, "Error: delete()");
+        }
     }
     catch (const StatusCodeException &e)
     {
         spdlog::warn(e.what());
-        m_request.m_response.m_statusCode = e.getStatusCode();
 
-        for (const auto &errorPageConfig : m_server.m_serverconfig.getErrorPagesConfig())
-        {
-            for (const auto &errorCode : errorPageConfig.getErrorCodes())
-            {
-                if (errorCode == m_request.m_response.m_statusCode)
-                {
-                    try // try catch in case error page doesnt exist. Is it possible to check all files during parsing?
-                    {
-                        m_request.m_response.m_body = Helper::fileToStr(errorPageConfig.getFilePath());
-                    }
-                    catch (const std::exception &e)
-                    {
-                        std::cerr << e.what() << '\n';
-                    }
-                }
-            }
-        }
+        m_request.m_response.m_statusCode = e.getStatusCode();
         if (multiplexer.modifyEpollEvents(this, EPOLLOUT, this->m_socketFd))
             throw StatusCodeException(500, "Error: modifyEpollEvents()");
     }
     spdlog::critical(m_request);
-
-    close(m_timer.m_socketFd);
-    m_timer.m_socketFd = -1;
-    toBeDeleted.push_back(&m_timer);
 }

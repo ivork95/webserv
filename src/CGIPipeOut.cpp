@@ -2,6 +2,12 @@
 
 CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m_client(client), m_request(request), m_response(response)
 {
+    if (pipe(m_pipeFd) == -1)
+        throw StatusCodeException(500, "Error: pipe()");
+    if (Helper::setNonBlocking(m_pipeFd[READ]) == -1)
+        throw StatusCodeException(500, "Error: setNonBlocking()");
+    if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
+        throw StatusCodeException(500, "Error: setNonBlocking()");
 }
 
 void CGIPipeOut::forkCloseDupExec(std::vector<Socket *> &toBeDeleted)
