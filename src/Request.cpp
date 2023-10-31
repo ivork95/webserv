@@ -128,7 +128,7 @@ void Request::responsePathSet(void)
 {
     for (const auto &index : m_locationconfig.getIndexFile())
     {
-        spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index);
+        spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index); // ? debug
         if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
         {
             m_response.m_path = m_locationconfig.getRootPath() + index;
@@ -150,24 +150,30 @@ int Request::parse(void)
         throw StatusCodeException(405, "Warning: method not allowed");
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
+    spdlog::critical("m_methodPathVersion[1] : {}", m_methodPathVersion[1]); // ? debug
+
     if (m_methodPathVersion[0] == "DELETE")
     {
-        spdlog::warn("DELETE | m_methodPathVersion : {}", m_methodPathVersion[1]); // ? debug
-	
+        spdlog::warn("DELETE method"); // ? debug
+
 		return deleteHandler(); // ? new
     }
 
-    // locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
-	updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
-    isMethodAllowed();   // For a certain location block, check if the request method is allowed
-    responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
+	if (!isImageFormat(m_methodPathVersion[1])) { // ? new
+		// locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
+		updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
+		isMethodAllowed();   // For a certain location block, check if the request method is allowed
+		responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
+	}
 
     if (m_methodPathVersion[0] == "GET")
     {
+        spdlog::warn("GET method"); // ? debug
+
 		// ? left it here because of the multiplexer
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
-            spdlog::critical("CGI get handler");
+            spdlog::critical("GET cgi handler");
 
             CGIPipeOut *pipeout = new CGIPipeOut(m_client, m_client.m_request, m_client.m_request.m_response);
             if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[0]))
@@ -183,10 +189,12 @@ int Request::parse(void)
 
     if (m_methodPathVersion[0] == "POST")
     {
+        spdlog::warn("POST method"); // ? debug
+
 		// ? left it here because of the multiplexer
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
-            spdlog::critical("CGI get handler");
+            spdlog::critical("POST cgi handler");
             // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
             CGIPipeIn *pipein = new CGIPipeIn(m_client);
             if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
@@ -198,7 +206,6 @@ int Request::parse(void)
             return 2;
         }
 
-        // Parse chunked request
         if (m_isChunked)
         {
 			return chunkHandler(); // ? new

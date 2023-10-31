@@ -12,7 +12,7 @@
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
 
-#define PARSTER true // change this
+#define PARSTER false // change this
 
 void handleRead(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
 {

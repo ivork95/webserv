@@ -4,6 +4,8 @@
 #include "CGIPipeOut.hpp"
 
 static void	deleteFile(const std::string &filePath) {
+	spdlog::warn("DELETE delete file handler"); // ? debug
+
 	std::error_code ec;
 	if (!std::filesystem::remove(filePath, ec))
 	{
@@ -15,6 +17,8 @@ static void	deleteFile(const std::string &filePath) {
 }
 
 std::string Request::buildDeleteFilePath(void) {
+	spdlog::warn("DELETE build path handler"); // ? debug
+
 	std::filesystem::path rootPath(m_locationconfig.getRootPath());
 	std::filesystem::path rootParentPath = rootPath.parent_path();
 	// spdlog::warn("rootParentPath = {}", rootParentPath); // ? debug
@@ -26,6 +30,8 @@ std::string Request::buildDeleteFilePath(void) {
 }
 
 int Request::deleteHandler(void) {
+	spdlog::warn("DELETE handler"); // ? debug
+
 	std::filesystem::path requestPath(m_methodPathVersion[1]);
 	std::filesystem::path requestParentPath = requestPath.remove_filename();
 

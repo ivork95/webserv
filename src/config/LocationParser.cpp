@@ -6,20 +6,22 @@
 /**
  * STATIC FUNCTIONS
 */
-static std::string removeExtraSlashes(const std::string& path) {
+static std::string removeExtraSlashes(const std::string &path) {
     size_t start = path.find_first_not_of('/');
     size_t end = path.find_last_not_of('/');
 
-    if (start == std::string::npos || end == std::string::npos)
+    if (start == std::string::npos || end == std::string::npos) {
         return "";
+	}
 
-    return path.substr(start, end - start + 1);
+	std::string cleanedPath = path.substr(start, end - start + 1);
+    return cleanedPath;
 }
 
 static int checkCgiScriptAbsPath(LocationConfig &route) {
-	std::string scriptFile = removeExtraSlashes(route.getCgiScript());
-    std::string requestUri = removeExtraSlashes(route.getRequestURI());
-    std::string rootPath = removeExtraSlashes(route.getRootPath());
+	const std::string scriptFile = removeExtraSlashes(route.getCgiScript());
+    const std::string requestUri = removeExtraSlashes(route.getRequestURI());
+    const std::string rootPath = removeExtraSlashes(route.getRootPath());
 
 	std::string scriptAbsolutePath{};
 	if (!rootPath.empty()) {

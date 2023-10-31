@@ -103,8 +103,12 @@ public:
 	// updated to accept arg
 	void updatedLocationConfigSet(const std::string &methodPath);
 
+	//
+
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Request &request);
 };
+
+bool	isImageFormat(const std::string &methodPath);
 
 #endif

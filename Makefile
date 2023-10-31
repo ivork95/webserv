@@ -3,8 +3,6 @@ NAME		:=	webserv
 CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	obj/main.o \
-				obj/CGIPipeIn.o \
-				obj/CGIPipeOut.o \
 				obj/Client.o \
 				obj/Helper.o \
 				obj/Message.o \
@@ -44,7 +42,9 @@ OBJECTS		:=	obj/main.o \
 				obj/request/RequestDelete.o \
 				obj/request/RequestChunk.o \
 				obj/request/RequestGet.o \
-				obj/request/RequestPost.o
+				obj/request/RequestPost.o \
+				obj/cgi/CGIPipeIn.o \
+				obj/cgi/CGIPipeOut.o
 HEADERS		:=	include/CGIPipeIn.hpp \
 				include/CGIPipeOut.hpp \
 				include/Client.hpp \

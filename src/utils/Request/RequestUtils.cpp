@@ -21,3 +21,11 @@ void Request::updatedLocationConfigSet(const std::string &methodPath)
     if (!isLocationFound) // there's no matching URI
         throw StatusCodeException(404, "Error: no matching location/path found");
 }
+
+bool	isImageFormat(const std::string &methodPath) {
+	spdlog::warn("methodPath = {}", methodPath); // ? debug
+
+	if (methodPath.ends_with("jpg") || methodPath.ends_with("jpeg") || methodPath.ends_with("png"))
+		return true;
+	return false;
+}
