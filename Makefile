@@ -44,7 +44,8 @@ OBJECTS		:=	obj/main.o \
 				obj/request/RequestGet.o \
 				obj/request/RequestPost.o \
 				obj/cgi/CGIPipeIn.o \
-				obj/cgi/CGIPipeOut.o
+				obj/cgi/CGIPipeOut.o \
+				obj/Logger.o
 HEADERS		:=	include/CGIPipeIn.hpp \
 				include/CGIPipeOut.hpp \
 				include/Client.hpp \
@@ -65,7 +66,8 @@ HEADERS		:=	include/CGIPipeIn.hpp \
 				include/LocationConfig.hpp \
 				include/ErrorPageConfig.hpp \
 				include/UtilsConfig.hpp \
-				include/Permissions.hpp
+				include/Permissions.hpp \
+				include/Logger.hpp
 SPDLOGLIB	:=	./spdlog/build/libspdlog.a
 SPDLOGINCL	:=	-DSPDLOG_COMPILED_LIB -I./spdlog/include
 CONTAINER	:=	webserv-container

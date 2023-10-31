@@ -19,6 +19,8 @@
 #include "Socket.hpp"
 #include "ServerConfig.hpp"
 
+#include "Logger.hpp"
+
 #define BACKLOG 150 // how many pending connections queue will hold
 
 class Server : public Socket
@@ -47,6 +49,9 @@ public:
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Server &server);
+
+	//
+	std::string thisToString(void) const;
 };
 
 #endif

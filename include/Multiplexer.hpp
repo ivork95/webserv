@@ -41,6 +41,8 @@ public:
     // outstream operator overload
     friend std::ostream &
     operator<<(std::ostream &out, const Multiplexer &multiplexer);
+
+	std::string thisToString(void) const;
 };
 
 #endif
