@@ -3,8 +3,6 @@
 // server constructor
 Client::Client(const Server &server) : m_server(server), m_request(*this), m_timer(*this)
 {
-    Multiplexer &multiplexer = Multiplexer::getInstance();
-
     m_socketFd = accept(m_server.m_socketFd, (struct sockaddr *)&m_remoteaddr, &m_addrlen);
     if (m_socketFd == -1)
         throw std::runtime_error("Error: accept()\n");

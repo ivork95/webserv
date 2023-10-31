@@ -1,5 +1,7 @@
 #include "CGIPipeOut.hpp"
 #include <thread>
+#include <unistd.h>
+#include <iostream>
 
 CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m_client(client), m_request(request), m_response(response)
 {
@@ -13,11 +15,16 @@ CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m
 
 void CGIPipeOut::forkCloseDupExec(std::vector<Socket *> &toBeDeleted)
 {
-    pid_t cpid1{};
-    pid_t cpid2{};
-    int wstatus{};
-
-    cpid1 = fork();
+    pid_t cpid1 = fork();
+    if (cpid1 == -1)
+    {
+        close(m_pipeFd[READ]);
+        m_pipeFd[READ] = -1;
+        close(m_pipeFd[WRITE]);
+        m_pipeFd[WRITE] = -1;
+        toBeDeleted.push_back(this);
+        throw StatusCodeException(500, "Error: fork())");
+    }
     if (cpid1 == 0)
     {
         char *pythonPath = "/usr/bin/python3";     // Path to the Python interpreter
@@ -34,44 +41,62 @@ void CGIPipeOut::forkCloseDupExec(std::vector<Socket *> &toBeDeleted)
         throw StatusCodeException(500, "Error: execve()");
     }
 
-    cpid2 = fork();
+    pid_t cpid2 = fork();
     if (cpid2 == 0)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-        kill(cpid1, SIGKILL);
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         _exit(0);
     }
 
-    waitpid(cpid1, &wstatus, 0);
-    if (WIFSIGNALED(wstatus))
+    int wstatus{};
+    pid_t wpid{};
+    while (true)
     {
-        if (WTERMSIG(wstatus) == 9)
+        wpid = waitpid(0, &wstatus, WNOHANG);
+        if (wpid == cpid1)
         {
-            spdlog::info("cpid2: {} killed cpid1: {}", cpid2, cpid1);
-
-            close(m_pipeFd[READ]);
-            m_pipeFd[READ] = -1;
-            close(m_pipeFd[WRITE]);
-            m_pipeFd[WRITE] = -1;
-            toBeDeleted.push_back(this);
-            throw StatusCodeException(504, "Error: execve took to long");
-        }
-        else
-        {
-            spdlog::info("Execve exited with signal: {}", wstatus);
+            spdlog::debug("cpid: {}: completed!", cpid1);
 
             kill(cpid2, SIGKILL);
+
+            // if (wstatus)
+            // {
+            //     close(m_pipeFd[READ]);
+            //     m_pipeFd[READ] = -1;
+            //     close(m_pipeFd[WRITE]);
+            //     m_pipeFd[WRITE] = -1;
+            //     toBeDeleted.push_back(this);
+            //     throw StatusCodeException(500, "Error: wstatus");
+            // }
+
+            // if (close(m_pipeFd[WRITE]) == -1)
+            // {
+            //     close(m_pipeFd[READ]);
+            //     m_pipeFd[READ] = -1;
+            //     m_pipeFd[WRITE] = -1;
+            //     toBeDeleted.push_back(this);
+            //     throw StatusCodeException(500, "Error: close()");
+            // }
+            // m_pipeFd[WRITE] = -1;
+            break;
+        }
+        else if (wpid == cpid2)
+        {
+            spdlog::debug("cpid: {}: completed!", cpid2);
+
+            kill(cpid1, SIGKILL);
+
             close(m_pipeFd[READ]);
             m_pipeFd[READ] = -1;
             close(m_pipeFd[WRITE]);
             m_pipeFd[WRITE] = -1;
             toBeDeleted.push_back(this);
-            throw StatusCodeException(502, "Error: execve exited with error");
+            throw StatusCodeException(504, "Error: killed execve for taking to long");
         }
-    }
-    if (WIFEXITED(wstatus))
-    {
-        spdlog::info("Execve terminated normally");
-        kill(cpid2, SIGKILL);
+        else if (wpid == -1)
+        {
+            spdlog::debug("Error: waitpid()", cpid2);
+            break;
+        }
     }
 }

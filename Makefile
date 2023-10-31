@@ -107,7 +107,8 @@ docker-pwd-san:
 
 docker-pwd:
 	docker run \
-	-p 8081:8081 \
+	-p 80:80 \
+	-p 90:90 \
 	--name $(CONTAINER) \
 	-it \
 	--rm \
