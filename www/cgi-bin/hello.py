@@ -7,3 +7,5 @@ print(os.environ)
 #     data = sys.stdin.read()
 #     print(data)
 
+# while (1):
+#     continue
