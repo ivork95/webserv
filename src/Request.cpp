@@ -159,32 +159,22 @@ int Request::parse(void)
 		return deleteHandler(); // ? new
     }
 
-	if (!isImageFormat(m_methodPathVersion[1])) { // ? new
-		// locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
-		updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
-		isMethodAllowed();   // For a certain location block, check if the request method is allowed
-		responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
+	// Nasty solution to redirect + get back upload
+	if (m_methodPathVersion[0] == "GET" && isImageFormat(m_methodPathVersion[1]))
+	{
+		return uploadHandler();
 	}
+
+	// locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
+	updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
+	isMethodAllowed();   // For a certain location block, check if the request method is allowed
+	responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
 
     if (m_methodPathVersion[0] == "GET")
     {
         spdlog::warn("GET method"); // ? debug
 
-		// ? left it here because of the multiplexer
-        if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
-        {
-            spdlog::critical("GET cgi handler");
-
-            CGIPipeOut *pipeout = new CGIPipeOut(m_client, m_client.m_request, m_client.m_request.m_response);
-            if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[0]))
-                throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
-            // pipeout->forkCloseDupExec();
-            return 1;
-        }
-		else
-		{
-			return getHandler(); // ? new
-		}
+		return getHandler(); // ? new
     }
 
     if (m_methodPathVersion[0] == "POST")

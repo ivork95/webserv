@@ -87,7 +87,6 @@ public:
 	// get method related
 	int getHandler(void);
 	int uploadHandler(void);
-	int directoryListingHandler(void);
 
     // directory listing related
     void directoryListingBodySet(const std::string &dirPath);
