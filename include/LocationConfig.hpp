@@ -8,6 +8,8 @@
 #include <vector>
 #include <map>
 
+#include "Logger.hpp"
+
 class LocationConfig
 {
 private:

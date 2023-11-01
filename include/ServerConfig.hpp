@@ -9,6 +9,8 @@
 # include "LocationConfig.hpp"
 # include "ErrorPageConfig.hpp"
 
+# include "Logger.hpp"
+
 class ServerConfig {
 	private:
 		unsigned int					_index;

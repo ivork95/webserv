@@ -5,11 +5,11 @@
  * CONSTRUCTORS / DESTRUCTORS
 */
 Configuration::Configuration(void) : serversConfig(), serverSections() {
-	// std::cout << "Configuration default constructor called\n";
+	Logger::getInstance().debug("Configuration default constructor called");
 }
 
 Configuration::~Configuration(void) {
-	// std::cout << "Configuration destructor called\n";
+	Logger::getInstance().debug("Configuration destructor called");
 }
 
 /**

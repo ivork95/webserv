@@ -7,11 +7,11 @@
  * CONSTRUCTORS / DESTRUCTORS
 */
 Parser::Parser(void) {
-	// std::cout << "Parser constructor called\n";
+	Logger::getInstance().debug("Parser default constructor called");
 }
 
 Parser::~Parser(void) {
-	// std::cout << "Parser destructor called\n";
+	Logger::getInstance().debug("Parser destructor called");
 }
 
 /**

@@ -17,15 +17,12 @@ static int	parseTokens(Configuration *config) {
 		try {
 			config->serversConfig[i] = Parser::parseTokens(config->serversConfig[i]);
 		} catch (const std::exception &e) {
-			// std::cerr << "Error: Parsing server " << i << std::endl;
-			// std::cerr << e.what() << std::endl;
 			Logger::getInstance().error("Error: Parsing server " + std::to_string(i));
 			Logger::getInstance().error(e.what());
 			return 1;
 		}
 		const std::string portNb = config->serversConfig[i].getPortNb();
 		if (checkDuplicatePortNumbers(usedPorts, portNb)) {
-			// std::cerr << "Error: Duplicate port number: " << portNb << std::endl;
 			Logger::getInstance().error("Error: Duplicate port number: " + portNb);
 			return 1;
 		}
@@ -38,8 +35,6 @@ static int	tokenizeServers(Configuration *config) {
 		try {
 			config->serversConfig[i].setTokens(Lexer::tokenizeServer(config->serversConfig[i].getRawData()));
 		} catch (const std::exception &e) {
-			// std::cerr << "Error: Tokenizing server " << i << std::endl;
-			// std::cerr << e.what() << std::endl;
 			Logger::getInstance().error("Error: Tokenizing server: " + std::to_string(i));
 			Logger::getInstance().error(e.what());
 			return 1;
@@ -52,8 +47,6 @@ static int	createServers(Configuration *config) {
 	try {
 		config->serversConfig = Lexer::createServers(config);
 	} catch (const std::exception &e) {
-		// std::cerr << "Error: Creating server config" << std::endl;
-		// std::cerr << e.what() << std::endl;
 		Logger::getInstance().error("Error: Creating server config");
 		Logger::getInstance().error(e.what());
 		return 1;
@@ -65,8 +58,6 @@ static int	readFile(std::ifstream &configFile, Configuration *config) {
 	try {
 		config->serverSections = Lexer::splitServers(configFile);
 	} catch (const std::exception &e) {
-		// std::cerr << "Error: Splitting server blocks" << std::endl;
-		// std::cerr << e.what() << std::endl;
 		Logger::getInstance().error("Error: Splitting server blocks");
 		Logger::getInstance().error(e.what());
 		return 1;
@@ -77,7 +68,6 @@ static int	readFile(std::ifstream &configFile, Configuration *config) {
 static int	openFile(std::ifstream &configFile, const std::string &filePath) {
 	configFile.open(filePath);
 	if (!configFile.is_open()) {
-		// std::cerr << "Error: Opening file: " << filePath << std::endl;
 		Logger::getInstance().error("Error: Opening file: " + filePath);
 		return 1;
 	}
@@ -86,10 +76,8 @@ static int	openFile(std::ifstream &configFile, const std::string &filePath) {
 
 static bool	isValidConfigExtension(const std::string &str) {
 	const std::string inputFileExtension = std::filesystem::path(str).extension();
-	// std::cout << inputFileExtension << std::endl; // ? debug
 
 	if (inputFileExtension != ".conf") {
-		// std::cerr << "Error: Invalid config file extension: " << inputFileExtension << " (expected .conf)" << std::endl;
 		Logger::getInstance().error("Error: Invalid config file extension: " + inputFileExtension + " (expected .conf)");
 		return false;
 	}

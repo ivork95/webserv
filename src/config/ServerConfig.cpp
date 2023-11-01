@@ -4,32 +4,20 @@
 /**
  * CONSTRUCTORS / DESTRUCTORS
 */
-/**
- * TODO set default values ?
- * 	listen: *:80 | *:8000;
- * 	server_name: "";
- * 	client_max_body_size: 1M;
- * 	error_page: -;
- * 	location: -;
- * 		root: html;
- * 		index: index.html;
- * 		client_max_body_size: 1M;
- *      limit_except: -;
-*/
 ServerConfig::ServerConfig(void) : \
 	_index{}, _portNb{}, _serverName{}, _clientMaxBodySize{}, \
 	_errorPagesConfig{}, _locationsConfig{}, _rawData{} {
-	// std::cout << "ServerConfig default constructor called\n";
+	// Logger::getInstance().debug("ServerConfig default constructor called");
 }
 
 ServerConfig::ServerConfig(unsigned int index, std::string rawData) : \
 	_index(index), _portNb{}, _serverName{}, _clientMaxBodySize{}, \
 	_errorPagesConfig{}, _locationsConfig{}, _rawData(rawData) {
-	// std::cout << "ServerConfig parametric constructor called\n";
+	// Logger::getInstance().debug("ServerConfig (" + std::to_string(index) + ") parametric constructor called");
 }
 
 ServerConfig::~ServerConfig(void) {
-	// std::cout << "ServerConfig destructor called\n";
+	// Logger::getInstance().debug("ServerConfig (" + _portNb + ") destructor called");
 }
 
 /**
@@ -105,8 +93,6 @@ void ServerConfig::setErrorPagesConfig(const ErrorPageConfig &errorPages) {
 }
 
 void ServerConfig::setLocationsConfig(const LocationConfig &routeConfig) {
-	// if (_hasLocationsConfig)
-	// 	throw AlreadySetException("location"); // ! there can be multiple locations
 	_locationsConfig.push_back(routeConfig);
 	_hasLocationsConfig = true;
 }
@@ -178,15 +164,15 @@ std::ostream &operator << (std::ostream &out, const ServerConfig &server) {
 */
 void	ServerConfig::checkMissingDirective(void) {
 	if (!hasPortNb()) {
-		// std::cout << "No port number (setting to default)\n"; // ? debug
+		Logger::getInstance().debug("No port number (setting to default)");
 		setPortNb("80");
 	}
 	if (!hasServerName()) {
-		// std::cout << "No server name (setting to default)\n"; // ? debug
+		Logger::getInstance().debug("No server name (setting to default)");
 		setServerName({""});
 	}
 	if (!hasClientMaxBodySize()) {
-		// std::cout << "No client max body size (setting to default)\n"; // ? debug
+		Logger::getInstance().debug("No client max body size (setting to default)");
 		setClientMaxBodySize(1000000);
 	}
 }

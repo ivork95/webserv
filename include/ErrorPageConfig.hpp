@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 
+#include "Logger.hpp"
+
 class ErrorPageConfig
 {
 private:

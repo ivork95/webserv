@@ -5,11 +5,11 @@
  * CONSTRUCTORS / DESTRUCTORS
 */
 Token::Token(Token::ETokenType &type) : _type(type), _word("") {
-	// std::cout << "Token type constructor called\n";
+	// Logger::getInstance().debug("Token type constructor called");
 }
 
 Token::Token(std::string &word) : _type(Token::WORD), _word(word) {
-	// std::cout << "Token word constructor called\n";
+	// Logger::getInstance().debug("Token word constructor called");
 }
 
 Token::~Token(void) {

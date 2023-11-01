@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 
+#include "Logger.hpp"
+
 class Token {
 	public:
 		enum ETokenType {

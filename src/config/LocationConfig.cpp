@@ -7,17 +7,17 @@
 LocationConfig::LocationConfig(void) : \
 	_requestURI{}, _rootPath{}, _clientMaxBodySize{}, _autoIndex(false), \
 	_indexFile{}, _cgiScript{}, _cgiInterpreter{}, _absCgiScript{}, _httpMethods{} {
-	// std::cout << "LocationConfig default constructor called\n";
+	// Logger::getInstance().debug("LocationConfig default constructor called");
 }
 
 LocationConfig::LocationConfig(const std::string &requestURI) : \
 	_requestURI(requestURI), _hasRequestURI(true), _rootPath{}, _clientMaxBodySize{}, \
 	_autoIndex(false), _indexFile{}, _cgiScript{}, _cgiInterpreter{}, _absCgiScript{}, _httpMethods{} {
-	// std::cout << "LocationConfig parametric constructor called\n";
+	// Logger::getInstance().debug("LocationConfig (" + requestURI + ") parametric constructor called");
 }
 
 LocationConfig::~LocationConfig(void) {
-	// std::cout << "LocationConfig destructor called\n";
+	// Logger::getInstance().debug("LocationConfig (" + _requestURI + ") destructor called");
 }
 
 /**
@@ -186,19 +186,19 @@ std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
  */
 void	LocationConfig::checkMissingDirective(void) {
 	if (!hasRootPath()) {
-		// std::cout << "No root path (setting to default)\n"; // ? debug
+		Logger::getInstance().debug("No root path (setting to default)");
 		setRootPath("www/");
 	}
 	if (!hasClientMaxBodySize()) {
-		// std::cout << "No client max body size (setting to default)\n"; // ? debug
+		Logger::getInstance().debug("No client max body size (setting to default)");
 		setClientMaxBodySize(1000000);
 	}
 	if (!hasAutoIndex()) {
-		// std::cout << "No auto index (setting to default)\n"; // ? debug
+		Logger::getInstance().debug("No auto index (setting to default)");
 		setAutoIndex(false);
 	}
 	if (!hasIndexFile()) {
-		// std::cout << "No index file (setting to default)\n"; // ? debug
+		Logger::getInstance().debug("No index file (setting to default)");
 		setIndexFile({"index.html"});
 	}
 }

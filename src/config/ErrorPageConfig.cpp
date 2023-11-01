@@ -5,16 +5,16 @@
  * CONSTRUCTORS / DESTRUCTORS
 */
 ErrorPageConfig::ErrorPageConfig(void) : _errorCodes{}, _filePath{} {
-	// std::cout << "ErrorPageConfig default constructor called\n";
+	// Logger::getInstance().debug("ErrorPageConfig default constructor called");
 }
 
 ErrorPageConfig::ErrorPageConfig(const std::vector<int> &errorCode, const std::string &filePath) : \
 	_errorCodes(errorCode), _filePath(filePath) {
-	// std::cout << "ErrorPageConfig parametric constructor called\n";
+	// Logger::getInstance().debug("ErrorPageConfig (" + _filePath + ") parametric constructor called");
 }
 
 ErrorPageConfig::~ErrorPageConfig(void) {
-	// std::cout << "ErrorPageConfig destructor called\n";
+	// Logger::getInstance().debug("ErrorPageConfig (" + _filePath + ") destructor called");
 }
 
 /**

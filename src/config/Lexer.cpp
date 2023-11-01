@@ -5,11 +5,11 @@
  * CONSTRUCTORS / DESTRUCTORS
 */
 Lexer::Lexer(void) {
-	// std::cout << "Lexer default constructor called\n";
+	Logger::getInstance().debug("Lexer default constructor called");
 }
 
 Lexer::~Lexer(void) {
-	// std::cout << "Lexer destructor called\n";
+	Logger::getInstance().debug("Lexer destructor called");
 }
 
 /**

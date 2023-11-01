@@ -51,7 +51,7 @@ static int checkCgiScriptAbsPath(LocationConfig &route) {
  * MEMBER FUNCTIONS
 */
 void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing limit_except directive\n"; // ? debug
+	// Logger::getInstance().debug("Parsing limit_except directive"); // ? debug
 
 	size_t						j = *i;
 	std::vector<std::string>	httpMethods;
@@ -70,7 +70,7 @@ void	Parser::_parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationCon
 }
 
 void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing cgi directive\n"; // ? debug
+	// Logger::getInstance().debug("Parsing cgi directive"); // ? debug
 
 	const std::string cgiScript = tokens.at(*i).getWord();
 	if (cgiScript.empty())
@@ -103,7 +103,7 @@ void	Parser::_parseCgi(std::vector<Token> tokens, size_t *i, LocationConfig &rou
 }
 
 void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing index directive\n"; // ? debug
+	// Logger::getInstance().debug("Parsing index directive"); // ? debug
 
 	size_t						j = *i;
 	std::vector<std::string>	indexFile;
@@ -122,7 +122,7 @@ void	Parser::_parseIndex(std::vector<Token> tokens, size_t *i, LocationConfig &r
 }
 
 void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing autoindex directive\n"; // ? debug
+	// Logger::getInstance().debug("Parsing autoindex directive"); // ? debug
 
 	if (tokens.at(*i).getWord() == "off")
 		route.setAutoIndex(false);
@@ -133,13 +133,14 @@ void	Parser::_parseAutoIndex(std::vector<Token> tokens, size_t *i, LocationConfi
 }
 
 void	Parser::_parseLocationClientMaxBodySize(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing client_max_body_size directive\n"; // ? debug
+	// Logger::getInstance().debug("Parsing client_max_body_size directive"); // ? debug
+
 	const std::string rawValue = tokens.at(*i).getWord();
 	route.setClientMaxBodySize(parseClientMaxBodySize(rawValue));
 }
 
 void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &route) {
-	// std::cout << "\tParsing root directive\n"; // ? debug
+	// Logger::getInstance().debug("Parsing root directive"); // ? debug
 
 	const std::string	rootPath = tokens.at(*i).getWord();
 
@@ -150,7 +151,7 @@ void	Parser::_parseRoot(std::vector<Token> tokens, size_t *i, LocationConfig &ro
 }
 
 void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// std::cout << "Parsing location block\n"; // ? debug
+	// Logger::getInstance().debug("Parsing location directive"); // ? debug
 
 	size_t				j = *i;
 	const std::string	requestUri = tokens.at(j).getWord();
@@ -207,7 +208,7 @@ void Parser::_parseLocationContext(ServerConfig *server, std::vector<Token> toke
 			throw CgiException("Invalid permissions: " + route.getCgiScript() + " (r-x required)");
 			break;
 		default:
-			// std::cout << route.getAbsCgiScript() << std::endl; // ? debug
+			// Logger::getInstance().debug(route.getAbsCgiScript()); // ? debug
 			break;
 		}
 	}
