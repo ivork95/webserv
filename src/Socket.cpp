@@ -3,5 +3,6 @@
 // destructor
 Socket::~Socket(void)
 {
-    spdlog::debug("Socket destructor called");
+    // spdlog::debug("Socket destructor called");
+	Logger::getInstance().debug("Socket destructor called");
 }

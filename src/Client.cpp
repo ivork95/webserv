@@ -30,13 +30,15 @@ Client::Client(const Server &server) : m_server(server), m_request(*this), m_tim
     // convert the IP to a string and print it:
     inet_ntop(m_remoteaddr.ss_family, m_addr, m_ipstr, sizeof m_ipstr);
 
-    spdlog::debug("{0} constructor called", *this);
+    // spdlog::debug("{0} constructor called", *this);
+	Logger::getInstance().debug("Client(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") constructor called");
 }
 
 // destructor
 Client::~Client(void)
 {
-    spdlog::debug("{0} destructor called", *this);
+    // spdlog::debug("{0} destructor called", *this);
+	Logger::getInstance().debug("Client(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") destructor called");
 }
 
 // outstream operator overload
@@ -81,11 +83,15 @@ void Client::handleConnectedClient(std::vector<Socket *> &toBeDeleted)
     }
     catch (const StatusCodeException &e)
     {
-        spdlog::warn(e.what());
+        // spdlog::warn(e.what());
+		Logger::getInstance().debug(e.what());
 
         m_request.m_response.m_statusCode = e.getStatusCode();
         if (multiplexer.modifyEpollEvents(this, EPOLLOUT, this->m_socketFd))
             throw StatusCodeException(500, "Error: modifyEpollEvents()");
     }
-    spdlog::critical(m_request);
+    // spdlog::critical(m_request);
+	std::ostringstream request;
+	request << m_request;
+	Logger::getInstance().debug(request.str()); // TODO fix this
 }

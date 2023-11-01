@@ -6,8 +6,8 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
+
+
 #include <map>
 #include <string>
 #include <sstream>
@@ -18,6 +18,8 @@
 #include "Helper.hpp"
 #include "ServerConfig.hpp"
 #include "Response.hpp"
+
+#include "Logger.hpp"
 
 class Response;
 class Client;

@@ -44,7 +44,8 @@ std::string Request::bodyParse(const std::string &boundaryCode)
     if (boundaryCode.empty())
     {
         requestHeadersEndPos += 4;
-        spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+        // spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+		Logger::getInstance().debug("M_BODY NO BOUNDRY " + m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
         return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
     }
 
@@ -103,7 +104,8 @@ void Request::boundaryCodeSet(void)
 }
 
 int Request::postHandler(void) {
-	spdlog::warn("POST handler"); // ? debug
+	// spdlog::warn("POST handler"); // ? debug
+	Logger::getInstance().debug("POST handler");
 
 	if (m_contentLength > m_locationconfig.getClientMaxBodySize())
 		throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");

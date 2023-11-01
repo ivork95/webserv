@@ -103,14 +103,16 @@ void	Request::chunkHeadersParse(void) {
 }
 
 int	Request::chunkHandler(void) {
-	spdlog::warn("POST chunk handler"); // ? debug
+	// spdlog::warn("POST chunk handler"); // ? debug
+	Logger::getInstance().debug("POST chunk handler");
 
 	chunkHeadersParse();
 	chunkBodyExtract();
 	chunkBodyTokenize();
 	chunkBodySet();
 
-	spdlog::warn("m_chunkBody = {}", m_chunkBody); // ? debug
+	// spdlog::warn("m_chunkBody = {}", m_chunkBody); // ? debug
+	Logger::getInstance().debug("m_chunkBody = " + m_chunkBody);
 
 	chunkHeaderReplace();
 

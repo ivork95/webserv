@@ -4,8 +4,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
+#include <fstream>
 #include <fcntl.h>
 
 #include "StatusCodes.hpp"

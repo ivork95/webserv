@@ -13,6 +13,8 @@ CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m
 
 void CGIPipeOut::forkCloseDupExec(std::vector<Socket *> &toBeDeleted)
 {
+	Logger &logger = Logger::getInstance();
+
     pid_t cpid1{};
     pid_t cpid2{};
     int wstatus{};
@@ -47,7 +49,8 @@ void CGIPipeOut::forkCloseDupExec(std::vector<Socket *> &toBeDeleted)
     {
         if (WTERMSIG(wstatus) == 9)
         {
-            spdlog::info("cpid2: {} killed cpid1: {}", cpid2, cpid1);
+            // spdlog::info("cpid2: {} killed cpid1: {}", cpid2, cpid1);
+			logger.debug("cpid2: " + std::to_string(cpid2) + " killed cpid1: " + std::to_string(cpid1));
 
             close(m_pipeFd[READ]);
             m_pipeFd[READ] = -1;
@@ -58,7 +61,8 @@ void CGIPipeOut::forkCloseDupExec(std::vector<Socket *> &toBeDeleted)
         }
         else
         {
-            spdlog::info("Execve exited with signal: {}", wstatus);
+            // spdlog::info("Execve exited with signal: {}", wstatus);
+			logger.debug("Execve exited with signal: " + std::to_string(wstatus));
 
             kill(cpid2, SIGKILL);
             close(m_pipeFd[READ]);
@@ -71,7 +75,8 @@ void CGIPipeOut::forkCloseDupExec(std::vector<Socket *> &toBeDeleted)
     }
     if (WIFEXITED(wstatus))
     {
-        spdlog::info("Execve terminated normally");
+        // spdlog::info("Execve terminated normally");
+		logger.debug("Execve terminated normally");
         kill(cpid2, SIGKILL);
     }
 }

@@ -6,8 +6,6 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h> // must be included
 #include <map>
 
 #include "Server.hpp"
@@ -16,6 +14,8 @@
 #include "Request.hpp"
 #include "Message.hpp"
 #include "Multiplexer.hpp"
+
+#include "Logger.hpp"
 
 class Server;
 

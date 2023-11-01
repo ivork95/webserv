@@ -4,8 +4,10 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
+
+
+
+#include "Logger.hpp"
 
 class Socket
 {

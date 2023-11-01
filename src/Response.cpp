@@ -5,7 +5,8 @@
 // request constructor
 Response::Response(void)
 {
-    spdlog::debug("Response constructor called");
+    // spdlog::debug("Response constructor called");
+	Logger::getInstance().debug("Response constructor called");
 }
 
 // copy constructor
@@ -15,7 +16,8 @@ Response::Response(void)
 // destructor
 Response::~Response(void)
 {
-    spdlog::debug("Response destructor called");
+    // spdlog::debug("Response destructor called");
+	Logger::getInstance().debug("Response destructor called");
 }
 
 // outstream operator overload

@@ -48,6 +48,10 @@ void Logger::error(const std::string &message) {
 	std::cout << _getTimeStamp() << " [" << RED << "ERROR" << RC << "] " << message << std::endl;
 }
 
+void Logger::warn(const std::string &message) {
+	std::cout << _getTimeStamp() << " [" << YELLOW << "WARN" << RC << "] " << message << std::endl;
+}
+
 std::string Logger::_getTimeStamp() const {
 	std::string timeStamp = "[";
 	std::string currentTime = getCurrentTime();

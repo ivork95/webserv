@@ -3,7 +3,8 @@
 // constructor
 Message::Message(void)
 {
-    spdlog::debug("Message constructor called");
+    // spdlog::debug("Message constructor called");
+	Logger::getInstance().debug("Message constructor called");
 }
 
 // copy constructor
@@ -11,7 +12,8 @@ Message::Message(void)
 // destructor
 Message::~Message(void)
 {
-    spdlog::debug("Message destructor called");
+    // spdlog::debug("Message destructor called");
+	Logger::getInstance().debug("Message destructor called");
 }
 
 // outstream operator overload
@@ -93,7 +95,8 @@ void Message::requestHeadersPrint(const std::map<std::string, std::string> &head
 
     for (const auto &elem : headers)
     {
-        spdlog::debug("[{0}] = ({1}, {2})", i, elem.first, elem.second);
+        // spdlog::debug("[{0}] = ({1}, {2})", i, elem.first, elem.second);
+		Logger::getInstance().debug("[" + std::to_string(i) + "] = (" + elem.first + ", " + elem.second + ")");
         i++;
     }
 }

@@ -4,8 +4,6 @@
 // default constructor
 Multiplexer::Multiplexer(void)
 {
-	Logger &logger = Logger::getInstance();
-	
     m_epollfd = epoll_create(1);
     if (m_epollfd == -1)
     {
@@ -13,16 +11,14 @@ Multiplexer::Multiplexer(void)
         throw std::runtime_error("Error: epoll_create() failed\n");
     }
     // spdlog::debug("{} default constructor called", *this);
-	logger.debug(thisToString() + " default constructor called");
+	Logger::getInstance().debug("Multiplexer(" + std::to_string(m_epollfd) + ")" + " default constructor called");
 }
 
 // destructor
 Multiplexer::~Multiplexer(void)
 {
-	Logger &logger = Logger::getInstance();
-
     // spdlog::debug("{} destructor called", *this);
-	logger.debug(thisToString() + " destructor called");
+	Logger::getInstance().debug("Multiplexer(" + std::to_string(m_epollfd) + ")" + " destructor called");
 
     close(m_epollfd);
 }
@@ -62,13 +58,4 @@ int Multiplexer::addToEpoll(Socket *ptr, int events, int fd)
     ev.events = events;
 
     return epoll_ctl(m_epollfd, EPOLL_CTL_ADD, fd, &ev);
-}
-
-std::string Multiplexer::thisToString() const {
-
-	std::ostringstream serverInfo;
-	serverInfo << *this;
-	std::string strThis = serverInfo.str();
-
-	return strThis;
 }

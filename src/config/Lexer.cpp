@@ -88,8 +88,8 @@ std::vector<ServerConfig>	Lexer::createServers(Configuration *config) {
 	std::vector<ServerConfig>	servers;
 	if (config->serverSections.empty()) {
 		throw NoServerSectionException();
-		std::cout << "Error: No server sections found" << std::endl;
-		return std::vector<ServerConfig>();
+		// std::cout << "Error: No server sections found" << std::endl;
+		// return std::vector<ServerConfig>();
 	}
 	for (size_t i = 0; i < config->serverSections.size(); ++i) {
 		ServerConfig server(i, config->serverSections[i]);
@@ -97,7 +97,7 @@ std::vector<ServerConfig>	Lexer::createServers(Configuration *config) {
 	}
 	if (servers.empty()) {
 		throw NoServerBlockException();
-		return std::vector<ServerConfig>();
+		// return std::vector<ServerConfig>();
 	}
 	return (servers);
 }

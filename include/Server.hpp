@@ -11,8 +11,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
+
+
 #include <cstring>
 
 #include "Client.hpp"
@@ -50,8 +50,6 @@ public:
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Server &server);
 
-	//
-	std::string thisToString(void) const;
 };
 
 #endif

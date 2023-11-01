@@ -7,6 +7,7 @@
 void Request::updatedLocationConfigSet(const std::string &methodPath)
 {
 	// spdlog::warn("methodPath = {}", methodPath); // ? debug
+	Logger::getInstance().debug("methodPath = " + methodPath);
 
     bool isLocationFound{false};
     for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
@@ -23,7 +24,8 @@ void Request::updatedLocationConfigSet(const std::string &methodPath)
 }
 
 bool	isImageFormat(const std::string &methodPath) {
-	spdlog::warn("methodPath = {}", methodPath); // ? debug
+	// spdlog::warn("methodPath = {}", methodPath); // ? debug
+	Logger::getInstance().debug("methodPath = " + methodPath);
 
 	if (methodPath.ends_with("jpg") || methodPath.ends_with("jpeg") || methodPath.ends_with("png"))
 		return true;

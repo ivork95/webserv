@@ -3,10 +3,12 @@
 
 #include <fcntl.h>
 #include <sys/timerfd.h>
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h> // must be included
+
+ // must be included
 
 #include "Socket.hpp"
+
+#include "Logger.hpp"
 
 class Client;
 

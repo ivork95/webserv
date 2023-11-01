@@ -68,8 +68,6 @@ HEADERS		:=	include/CGIPipeIn.hpp \
 				include/UtilsConfig.hpp \
 				include/Permissions.hpp \
 				include/Logger.hpp
-SPDLOGLIB	:=	./spdlog/build/libspdlog.a
-SPDLOGINCL	:=	-DSPDLOG_COMPILED_LIB -I./spdlog/include
 CONTAINER	:=	webserv-container
 IMAGE		:=	ubuntu-c-plus
 INCLUDE		:= -I./include
@@ -77,11 +75,11 @@ INCLUDE		:= -I./include
 all : $(NAME)
 
 $(NAME) : $(OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $^ $(SPDLOGLIB)
+	$(CXX) $(LDFLAGS) -o $@ $^
 
 obj/%.o : %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	$(CXX) -c $(CXXFLAGS) $(INCLUDE) $(SPDLOGINCL) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(INCLUDE) -o $@ $<
 
 clean :
 	$(RM) -r obj

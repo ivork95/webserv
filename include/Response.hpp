@@ -7,12 +7,14 @@
 #include <sstream>
 #include <iostream>
 #include <filesystem>
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
+
+
 
 #include "StatusCodes.hpp"
 #include "ServerConfig.hpp"
 #include "Helper.hpp"
+
+#include "Logger.hpp"
 
 class Response
 {
@@ -123,6 +125,7 @@ public:
         {508, "HTTP/1.1 508 Loop Detected"},
         {510, "HTTP/1.1 510 Not Extended"},
         {511, "HTTP/1.1 511 Network Authentication Required"}};
+
 };
 
 #endif

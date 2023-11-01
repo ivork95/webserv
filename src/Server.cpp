@@ -3,8 +3,6 @@
 // serverConfig constructor
 Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
 {
-	Logger &logger = Logger::getInstance();
-
     int yes{1}; // For setsockopt() SO_REUSEADDR, below
     int rv{};
     struct addrinfo *ai{};
@@ -18,6 +16,7 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     if ((rv = getaddrinfo(NULL, m_serverconfig.getPortNb().c_str(), &m_hints, &ai)) != 0)
     {
         std::cerr << "selectserver: " << gai_strerror(rv) << '\n';
+		// Logger::getInstance().error("selectserver: " + gai_strerror(rv));
         throw std::runtime_error("Error: getaddrinfo() failed\n");
     }
 
@@ -67,23 +66,22 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     freeaddrinfo(ai); // All done with this
 
     // Listen
-    if (listen(m_socketFd, BACKLOG) == -1)
+    if (listen(m_socketFd, BACKLOG) == -1) {
         throw std::runtime_error("Error: listen() failed\n");
-
-    if (Helper::setNonBlocking(m_socketFd) == -1)
+	}
+    if (Helper::setNonBlocking(m_socketFd) == -1) {
         throw std::runtime_error("Error: fcntl() failed\n");
+	}
 
     // spdlog::debug("{0} constructor called", *this);
-	logger.debug(thisToString() + " constructor called");
+	Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") constructor called");
 }
 
 // destructor
 Server::~Server(void)
 {
-	Logger &logger = Logger::getInstance();
-
     // spdlog::debug("{0} destructor called", *this);
-	logger.debug(thisToString() + " destructor called");
+	Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") destructor called");
 
     close(m_socketFd);
 }
@@ -94,13 +92,4 @@ std::ostream &operator<<(std::ostream &out, const Server &server)
     out << "Server(" << server.m_socketFd << ": " << server.m_ipver << ": " << server.m_ipstr << ": " << server.m_port << ")";
 
     return out;
-}
-
-std::string Server::thisToString() const {
-
-	std::ostringstream serverInfo;
-	serverInfo << *this;
-	std::string strThis = serverInfo.str();
-
-	return strThis;
 }

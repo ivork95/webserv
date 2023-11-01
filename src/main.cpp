@@ -16,6 +16,8 @@
 
 void handleRead(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
 {
+	Logger &logger = Logger::getInstance();
+
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // We're just a regular client
@@ -32,12 +34,14 @@ void handleRead(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
         }
         catch (const std::exception &e)
         {
-            spdlog::critical("Error: couldn't create client\n{}", e.what());
+            // spdlog::critical("Error: couldn't create client\n{}", e.what());
+			logger.error("Error: couldn't create client: " + static_cast<std::string>(e.what()));
         }
     }
     else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
     {
-        spdlog::info("cgi out READ ready!");
+        // spdlog::info("cgi out READ ready!");
+		logger.debug("cgi out READ ready!");
 
         char buf[BUFSIZ]{};
         int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
@@ -53,7 +57,8 @@ void handleRead(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
     }
     else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
     {
-        spdlog::warn("Timeout expired. Closing: {}", timer->m_client);
+        // spdlog::warn("Timeout expired. Closing: {}", timer->m_client);
+		logger.debug("Timeout expired. Closing: Client(" + std::to_string(timer->m_client.m_socketFd) + ": " + timer->m_client.m_ipver + ": " + timer->m_client.m_ipstr + ": " + std::to_string(timer->m_client.m_port)); // TODO fix this
 
         close(timer->m_client.m_socketFd);
         timer->m_client.m_socketFd = -1;
@@ -79,7 +84,8 @@ void handleWrite(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
     }
     else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
     {
-        spdlog::critical("cgi in WRITE ready!");
+        // spdlog::critical("cgi in WRITE ready!");
+		Logger::getInstance().debug("cgi in WRITE ready!");
 
         try
         {
@@ -93,7 +99,8 @@ void handleWrite(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
         }
         catch (const StatusCodeException &e)
         {
-            std::cerr << e.what() << '\n';
+            // std::cerr << e.what() << '\n';
+			Logger::getInstance().error(e.what());
             pipein->m_client.m_request.m_response.m_statusCode = e.getStatusCode();
             multiplexer.modifyEpollEvents(&(pipein->m_client), EPOLLOUT, pipein->m_client.m_socketFd);
         }
@@ -136,8 +143,10 @@ void run(const Configuration &config)
                 handleRead(ePollDataPtr, toBeDeleted);
             else if (multiplexer.m_events[i].events & EPOLLOUT) // Ready to write
                 handleWrite(ePollDataPtr, toBeDeleted);
-            else // Shouldn't happen
-                spdlog::critical("Unexpected");
+            else { // Shouldn't happen
+                // spdlog::critical("Unexpected");
+				Logger::getInstance().warn("Unexpected");
+			}
 
             if (multiplexer.m_events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) // Hang up and error handeling
             {
@@ -151,8 +160,6 @@ void run(const Configuration &config)
 
 int main(int argc, char *argv[])
 {
-    spdlog::set_level(spdlog::level::debug);
-
     if (argc != 2)
         throw std::runtime_error("usage: webserv [port]\n\n\n");
 

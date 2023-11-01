@@ -1,6 +1,7 @@
 #ifndef STATUS_CODES_HPP
 #define STATUS_CODES_HPP
 
+#include <stdexcept>
 #include <exception>
 #include <map>
 
