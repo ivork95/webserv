@@ -38,20 +38,18 @@ class TestServerResponse(unittest.TestCase):
 
     def test_post_bigger_max_client_size(self):
         url = f"{self.base_url}/post-bigger"
-        files = {'file': open('tests/Poster.jpg', 'rb')}
-        headers = {'Content-Length': '1046495'}
+        large_payload = 'A' * 1024
+        headers = {'Content-Length': str(len(large_payload))}
 
-        response = requests.post(url=url, headers=headers, files=files)
-        files["file"].close()
+        response = requests.post(url=url, headers=headers, data=large_payload)
         self.assertEqual(response.status_code, 413)
 
     def test_post_method_not_allowed(self):
         url = f"{self.base_url}/no-post"
-        files = {'file': open('tests/Poster.jpg', 'rb')}
-        headers = {'Content-Length': '1046495'}
+        payload = 'A'
+        headers = {'Content-Length': str(len(payload))}
 
-        response = requests.post(url=url, headers=headers, files=files)
-        files["file"].close()
+        response = requests.post(url=url, headers=headers, data=payload)
         self.assertEqual(response.status_code, 405)
 
     def test_post_chunked(self):
