@@ -38,7 +38,7 @@ Multiplexer &Multiplexer::getInstance(void)
     return instance;
 }
 
-int Multiplexer::modifyEpollEvents(Socket *ptr, int events, int fd)
+int Multiplexer::modifyEpollEvents(ASocket *ptr, int events, int fd)
 {
     struct epoll_event ev
     {
@@ -49,7 +49,7 @@ int Multiplexer::modifyEpollEvents(Socket *ptr, int events, int fd)
     return epoll_ctl(m_epollfd, EPOLL_CTL_MOD, fd, &ev);
 }
 
-int Multiplexer::addToEpoll(Socket *ptr, int events, int fd)
+int Multiplexer::addToEpoll(ASocket *ptr, int events, int fd)
 {
     struct epoll_event ev
     {

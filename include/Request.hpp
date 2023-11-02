@@ -6,15 +6,13 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-
-
 #include <map>
 #include <string>
 #include <sstream>
 #include <filesystem>
 
 #include "Message.hpp"
-#include "StatusCodes.hpp"
+#include "StatusCodeException.hpp"
 #include "Helper.hpp"
 #include "ServerConfig.hpp"
 #include "Response.hpp"
@@ -31,19 +29,21 @@ public:
     LocationConfig m_locationconfig{};
     Response m_response{};
 
-    // request
     std::vector<std::string> m_methodPathVersion{3, ""};
     std::map<std::string, std::string> m_generalHeaders{};
     std::string m_boundaryCode{};
     std::string m_fileName{};
     std::string m_body{};
-
-    // Chunked request
     bool m_isChunked{false};
+    std::string m_rawChunkBody{};
+    std::string m_chunkBody{};
+    std::vector<std::string> m_chunkLine{};
+    int m_totalChunkLength{};
 
     // constructor
     Request(void) = delete;
 
+    // constructor
     Request(Client &client);
 
     // copy constructor
@@ -52,6 +52,9 @@ public:
 
     // destructor
     ~Request(void);
+
+    // outstream operator overload
+    friend std::ostream &operator<<(std::ostream &out, const Request &request);
 
     // getters/setters
     void methodPathVersionSet(void);
@@ -68,9 +71,9 @@ public:
     std::string fileNameParse(const std::map<std::string, std::string> &generalHeaders);
     std::string bodyParse(const std::string &boundaryCode);
     void bodyToDisk(const std::string &path);
+    void isMethodAllowed(void);
     int tokenize(const char *buf, int nbytes);
     int parse(void);
-    void isMethodAllowed(void);
 
     // chunk related
     void chunkHeaderReplace(void);
@@ -79,11 +82,6 @@ public:
     void chunkBodyTokenize(void);
     void chunkBodySet(void);
     int chunkHandler(void);
-
-    std::string m_rawChunkBody{};
-    std::string m_chunkBody{};
-    std::vector<std::string> m_chunkLine{};
-    int m_totalChunkLength{};
 
     // get method related
     int getHandler(void);
@@ -102,13 +100,6 @@ public:
 
     // updated to accept arg
     void updatedLocationConfigSet(const std::string &methodPath);
-
-    //
-
-    // outstream operator overload
-    friend std::ostream &operator<<(std::ostream &out, const Request &request);
 };
-
-bool isImageFormat(const std::string &methodPath);
 
 #endif

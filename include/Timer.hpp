@@ -5,13 +5,13 @@
 #include <sys/timerfd.h>
 
 // #include "Client.hpp" // ! this include generates an error
-#include "Socket.hpp"
+#include "ASocket.hpp"
 
 #include "Logger.hpp"
 
 class Client;
 
-class Timer : public Socket
+class Timer : public ASocket
 {
 public:
     Client &m_client;

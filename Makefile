@@ -3,13 +3,15 @@ NAME		:=	webserv
 CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	obj/main.o \
+				obj/cgi/CGIPipeIn.o \
+				obj/cgi/CGIPipeOut.o \
 				obj/Client.o \
 				obj/Helper.o \
 				obj/Message.o \
 				obj/Request.o \
 				obj/Response.o \
 				obj/Multiplexer.o \
-				obj/Socket.o \
+				obj/ASocket.o \
 				obj/Timer.o \
 				obj/Server.o \
 				obj/InitConfig.o \
@@ -37,16 +39,14 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidUri.o \
 				obj/utils/config/hasRequiredPermissions.o \
 				obj/utils/config/ParserUtils.o \
-				obj/utils/request/RequestUtils.o \
 				obj/request/DirectoryListing.o \
 				obj/request/RequestDelete.o \
 				obj/request/RequestChunk.o \
 				obj/request/RequestGet.o \
 				obj/request/RequestPost.o \
-				obj/cgi/CGIPipeIn.o \
-				obj/cgi/CGIPipeOut.o \
 				obj/Logger.o
 HEADERS		:=	include/CGIPipeIn.hpp \
+				include/Signal.hpp \
 				include/CGIPipeOut.hpp \
 				include/Client.hpp \
 				include/Helper.hpp \
@@ -54,8 +54,8 @@ HEADERS		:=	include/CGIPipeIn.hpp \
 				include/Request.hpp \
 				include/Response.hpp \
 				include/Multiplexer.hpp \
-				include/Socket.hpp \
-				include/StatusCodes.hpp \
+				include/ASocket.hpp \
+				include/StatusCodeException.hpp \
 				include/Server.hpp \
 				include/Timer.hpp \
 				include/Token.hpp \
@@ -118,6 +118,21 @@ docker-pwd:
 	-e CXX="clang++" \
 	-e CXXFLAGS="-Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf" \
 	-e LDFLAGS="-g -gdwarf-4 -gstrict-dwarf" \
+	$(IMAGE) sh -c "cd /pwd; bash"
+
+docker-clean:
+	docker run \
+	-p 8081:8081 \
+	--name $(CONTAINER) \
+	-it \
+	--rm \
+	--init \
+	-v "$$PWD:/pwd" \
+	--cap-add=SYS_PTRACE \
+	--security-opt seccomp=unconfined \
+	-e CXX="clang++" \
+	-e CXXFLAGS="-Wall -Wextra -std=c++20" \
+	-e LDFLAGS="" \
 	$(IMAGE) sh -c "cd /pwd; bash"
 
 docker-build:

@@ -16,7 +16,7 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     if ((rv = getaddrinfo(NULL, m_serverconfig.getPortNb().c_str(), &m_hints, &ai)) != 0)
     {
         std::cerr << "selectserver: " << gai_strerror(rv) << '\n';
-		// Logger::getInstance().error("selectserver: " + gai_strerror(rv)); // TODO fix this
+        // Logger::getInstance().error("selectserver: " + gai_strerror(rv)); // TODO fix this
         throw std::runtime_error("Error: getaddrinfo() failed\n");
     }
 
@@ -66,22 +66,24 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     freeaddrinfo(ai); // All done with this
 
     // Listen
-    if (listen(m_socketFd, BACKLOG) == -1) {
+    if (listen(m_socketFd, BACKLOG) == -1)
+    {
         throw std::runtime_error("Error: listen() failed\n");
-	}
-    if (Helper::setNonBlocking(m_socketFd) == -1) {
+    }
+    if (Helper::setNonBlocking(m_socketFd) == -1)
+    {
         throw std::runtime_error("Error: fcntl() failed\n");
-	}
+    }
 
     // spdlog::debug("{0} constructor called", *this);
-	Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") constructor called");
+    Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") constructor called");
 }
 
 // destructor
 Server::~Server(void)
 {
     // spdlog::debug("{0} destructor called", *this);
-	Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") destructor called");
+    Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") destructor called");
 
     close(m_socketFd);
 }
@@ -101,7 +103,7 @@ void Server::handleNewConnection(void) const
     catch (const std::exception &e)
     {
         // spdlog::critical("Error: couldn't create client\n{}", e.what());
-		Logger::getInstance().error("Error: couldn't create client: " + static_cast<std::string>(e.what()));
+        Logger::getInstance().error("Error: couldn't create client: " + static_cast<std::string>(e.what()));
     }
 }
 

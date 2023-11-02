@@ -8,18 +8,16 @@
 #include <arpa/inet.h>
 #include <map>
 
-#include "Server.hpp"
-#include "Timer.hpp"
-#include "Socket.hpp"
 #include "Request.hpp"
+#include "Timer.hpp"
+#include "ASocket.hpp"
 #include "Message.hpp"
 #include "Multiplexer.hpp"
-
 #include "Logger.hpp"
 
 class Server;
 
-class Client : public Socket
+class Client : public ASocket
 {
 public:
     const Server &m_server;
@@ -34,8 +32,12 @@ public:
     // default constructor
     Client(void) = delete;
 
-    // server constructor
+    // constructor
     Client(const Server &server);
+
+    // copy constructor
+
+    // copy assignment operator
 
     // destructor
     ~Client(void);
@@ -44,7 +46,7 @@ public:
     friend std::ostream &operator<<(std::ostream &out, const Client &client);
 
     // member functions
-    void handleConnectedClient(std::vector<Socket *> &toBeDeleted);
+    void handleConnectedClient(std::vector<ASocket *> &toBeDeleted);
 };
 
 #endif

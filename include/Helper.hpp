@@ -7,7 +7,8 @@
 #include <fstream>
 #include <fcntl.h>
 
-#include "StatusCodes.hpp"
+#include "StatusCodeException.hpp"
+#include "Logger.hpp"
 
 class Helper
 {
@@ -23,6 +24,7 @@ public:
     static std::vector<std::string> split(const std::string &str);
     static std::string fileToStr(const std::string &path);
     static int setNonBlocking(int fd);
+    static bool isImageFormat(const std::string &methodPath);
 };
 
 #endif

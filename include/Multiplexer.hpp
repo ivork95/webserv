@@ -9,10 +9,12 @@
 #include <sys/stat.h>
 
 #include "Server.hpp"
-#include "StatusCodes.hpp"
-#include "Socket.hpp"
+#include "StatusCodeException.hpp"
+#include "ASocket.hpp"
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
+
+class Server;
 
 class Multiplexer
 {
@@ -23,6 +25,8 @@ private:
 public:
     int m_epollfd{};
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
+    std::vector<Server *> m_servers{};
+    bool isRunning{true};
 
     // copy constructor
     Multiplexer(const Multiplexer &) = delete;
@@ -33,16 +37,14 @@ public:
     // destructor
     ~Multiplexer(void);
 
-    // member functions
-    static Multiplexer &getInstance(void);
-    int modifyEpollEvents(Socket *ptr, int events, int fd);
-    int addToEpoll(Socket *ptr, int events, int fd);
-
     // outstream operator overload
     friend std::ostream &
     operator<<(std::ostream &out, const Multiplexer &multiplexer);
 
-	std::string thisToString(void) const;
+    // member functions
+    static Multiplexer &getInstance(void);
+    int modifyEpollEvents(ASocket *ptr, int events, int fd);
+    int addToEpoll(ASocket *ptr, int events, int fd);
 };
 
 #endif

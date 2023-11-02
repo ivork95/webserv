@@ -1,5 +1,6 @@
 #include "CGIPipeIn.hpp"
 
+// constructor
 CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
 {
     if (pipe(m_pipeFd) == -1)
@@ -10,13 +11,24 @@ CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
         throw StatusCodeException(500, "Error: fcntl()");
 }
 
-void CGIPipeIn::dupCloseWrite(std::vector<Socket *> &toBeDeleted)
+// copy constructor
+
+// copy assignment operator
+
+// destructor
+CGIPipeIn::~CGIPipeIn(void)
 {
-    if (dup2(m_pipeFd[READ], STDIN_FILENO) == -1) // Dup the READ end of pipe1 to stdin
+}
+
+// member functions
+void CGIPipeIn::dupCloseWrite(std::vector<ASocket *> &toBeDeleted)
+{
+    if (dup2(m_pipeFd[READ], STDIN_FILENO) == -1)
     {
         close(m_pipeFd[READ]);
         close(m_pipeFd[WRITE]);
         m_socketFd = -1;
+        toBeDeleted.push_back(this);
         throw StatusCodeException(500, "Error: dup2()");
     }
 
@@ -24,6 +36,7 @@ void CGIPipeIn::dupCloseWrite(std::vector<Socket *> &toBeDeleted)
     {
         close(m_pipeFd[WRITE]);
         m_socketFd = -1;
+        toBeDeleted.push_back(this);
         throw StatusCodeException(500, "Error: close()");
     }
 

@@ -11,12 +11,14 @@
 #include "Response.hpp"
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
+#include "Signal.hpp"
+#include <cstdlib> // for std::exit()
 
 #define PARSTER false // change this
 
-void handleRead(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
+void handleRead(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
 {
-	Logger &logger = Logger::getInstance();
+    Logger &logger = Logger::getInstance();
 
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
@@ -27,7 +29,7 @@ void handleRead(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
     else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
     {
         // spdlog::info("cgi out READ ready!");
-		logger.debug("cgi out READ ready!");
+        logger.debug("cgi out READ ready!");
 
         char buf[BUFSIZ]{};
         int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
@@ -48,9 +50,6 @@ void handleRead(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
     }
     else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
     {
-        // spdlog::warn("Timeout expired. Closing: {}", timer->m_client);
-		logger.debug("Timeout expired. Closing: Client(" + std::to_string(timer->m_client.m_socketFd) + ": " + timer->m_client.m_ipver + ": " + timer->m_client.m_ipstr + ": " + std::to_string(timer->m_client.m_port));
-
         close(timer->m_socketFd);
         timer->m_socketFd = -1;
 
@@ -58,9 +57,40 @@ void handleRead(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
         timer->m_client.m_socketFd = -1;
         toBeDeleted.push_back(&(timer->m_client));
     }
+    else if (Signal *signal = dynamic_cast<Signal *>(ePollDataPtr))
+    {
+        logger.warn("Signal");
+
+        struct signalfd_siginfo fdsi
+        {
+        };
+
+        ssize_t s = read(signal->m_socketFd, &fdsi, sizeof(fdsi));
+        if (s != sizeof(fdsi))
+            throw std::runtime_error("Error: read()");
+
+        if (fdsi.ssi_signo == SIGINT)
+        {
+            logger.debug("Got SIGINT");
+
+            for (auto &server : multiplexer.m_servers)
+                delete server;
+
+            for (auto &s : toBeDeleted)
+                delete s;
+            toBeDeleted.clear();
+
+            multiplexer.isRunning = false;
+            // std::exit(0); // terminate and return status code 0 to operating system
+        }
+        else if (fdsi.ssi_signo == SIGQUIT)
+            logger.debug("Got SIGQUIT");
+        else
+            logger.debug("Read unexpected signal");
+    }
 }
 
-void handleWrite(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
+void handleWrite(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
@@ -68,6 +98,8 @@ void handleWrite(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
     {
         if (client->m_request.m_response.sendAll(client->m_socketFd) <= 0)
         {
+            Logger::getInstance().warn("sendAll() failed");
+
             close(client->m_socketFd);
             client->m_socketFd = -1;
             toBeDeleted.push_back(client);
@@ -76,7 +108,7 @@ void handleWrite(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
     else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
     {
         // spdlog::critical("cgi in WRITE ready!");
-		Logger::getInstance().debug("cgi in WRITE ready!");
+        Logger::getInstance().debug("cgi in WRITE ready!");
 
         try
         {
@@ -91,7 +123,7 @@ void handleWrite(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
         catch (const StatusCodeException &e)
         {
             // std::cerr << e.what() << '\n';
-			Logger::getInstance().error(e.what());
+            Logger::getInstance().error(e.what());
             pipein->m_client.m_request.m_response.m_statusCode = e.getStatusCode();
             multiplexer.modifyEpollEvents(&(pipein->m_client), EPOLLOUT, pipein->m_client.m_socketFd);
         }
@@ -100,26 +132,29 @@ void handleWrite(Socket *&ePollDataPtr, std::vector<Socket *> &toBeDeleted)
 
 void run(const Configuration &config)
 {
-	Logger &logger = Logger::getInstance();
-
-    std::vector<Server *> servers{};
-
-    for (auto &serverConfig : config.serversConfig)
-        servers.push_back(new Server{serverConfig});
+    Logger &logger = Logger::getInstance();
 
     Multiplexer &multiplexer = Multiplexer::getInstance();
-    for (auto &server : servers)
+
+    for (auto &serverConfig : config.serversConfig)
+        multiplexer.m_servers.push_back(new Server{serverConfig});
+
+    Signal signal{};
+    if (multiplexer.addToEpoll(&signal, EPOLLIN, signal.m_socketFd))
+        throw std::runtime_error("Error: addToEpoll() failed\n");
+
+    for (auto &server : multiplexer.m_servers)
     {
         if (multiplexer.addToEpoll(server, EPOLLIN | EPOLLRDHUP, server->m_socketFd))
             throw std::runtime_error("Error: addToEpoll() failed\n");
     }
 
-    while (true)
+    std::vector<ASocket *> toBeDeleted{};
+    while (multiplexer.isRunning)
     {
-        std::vector<Socket *> toBeDeleted{};
-
         for (auto &s : toBeDeleted)
             delete s;
+        toBeDeleted.clear();
 
         int epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
         if (epollCount < 0)
@@ -127,7 +162,7 @@ void run(const Configuration &config)
 
         for (int i = 0; i < epollCount; i++) // Loop through ready list
         {
-            Socket *ePollDataPtr = static_cast<Socket *>(multiplexer.m_events[i].data.ptr);
+            ASocket *ePollDataPtr = static_cast<ASocket *>(multiplexer.m_events[i].data.ptr);
 
             if (ePollDataPtr->m_socketFd == -1)
                 continue;
@@ -139,40 +174,45 @@ void run(const Configuration &config)
             else if (multiplexer.m_events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) // Ready to hang up/error
             {
                 // spdlog::info("Ready to hang up/error");
-				logger.debug("Ready to hang up/error");
+                logger.debug("Ready to hang up/error");
 
-                if (Server *server = dynamic_cast<Server *>(ePollDataPtr)) {
+                if (Server *server = dynamic_cast<Server *>(ePollDataPtr))
+                {
                     // spdlog::info("A");
-					logger.debug("A");
-				}
+                    logger.debug("A");
+                }
 
-                if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) {
+                if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
+                {
                     // spdlog::info("B");
-					logger.debug("B");
-				}
+                    logger.debug("B");
+                }
 
-                if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr)) {
+                if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
+                {
                     // spdlog::info("C");
-					logger.debug("C");
-				}
+                    logger.debug("C");
+                }
 
-                if (CGIPipeIn *in = dynamic_cast<CGIPipeIn *>(ePollDataPtr)) {
+                if (CGIPipeIn *in = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
+                {
                     // spdlog::info("D");
-					logger.debug("D");
-				}
+                    logger.debug("D");
+                }
 
-                if (CGIPipeOut *out = dynamic_cast<CGIPipeOut *>(ePollDataPtr)) {
+                if (CGIPipeOut *out = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
+                {
                     // spdlog::info("E");
-					logger.debug("E");
-				}
+                    logger.debug("E");
+                }
 
                 close(ePollDataPtr->m_socketFd);
                 ePollDataPtr->m_socketFd = -1;
                 toBeDeleted.push_back(ePollDataPtr);
             }
             else // Ready for something else
-                // spdlog::critical("Other event ready");
-				logger.warn("Other event ready");
+                 // spdlog::critical("Other event ready");
+                logger.warn("Other event ready");
         }
     }
 }

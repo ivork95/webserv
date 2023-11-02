@@ -5,7 +5,7 @@ import http.client
 
 class TestServerResponse(unittest.TestCase):
     def setUp(self):
-        self.base_url = "http://localhost:80"
+        self.base_url = "http://localhost:8081"
 
     def test_get(self):
         url = f"{self.base_url}"
@@ -29,7 +29,7 @@ class TestServerResponse(unittest.TestCase):
 
     def test_post(self):
         url = f"{self.base_url}/upload"
-        files = {'file': open('tests/Poster.jpg', 'rb')}
+        files = {'file': open('Poster.jpg', 'rb')}
         headers = {'Content-Length': '1046495'}
 
         response = requests.post(url=url, headers=headers, files=files)
@@ -77,7 +77,7 @@ class TestServerResponse(unittest.TestCase):
 
     def test_delete(self):
         filename = 'test.txt'
-        file_path = f"./www/delete/{filename}"
+        file_path = f"../www/delete/{filename}"
         with open(file_path, 'w') as file:
             file.write("Test content")
 

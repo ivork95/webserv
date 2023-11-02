@@ -5,11 +5,9 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-
-
 #include "Logger.hpp"
 
-class Socket
+class ASocket
 {
 public:
     int m_socketFd{};
@@ -20,8 +18,16 @@ public:
     const char *m_ipver{};
     int m_port{};
 
+    // default constructor
+
+    // constructor
+
+    // copy constructor
+
+    // copy assignment operator overload
+
     // destructor
-    virtual ~Socket(void) = 0;
+    virtual ~ASocket(void) = 0;
 };
 
 #endif

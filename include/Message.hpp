@@ -4,10 +4,7 @@
 #include <map>
 #include <string>
 
-
-
-#include "StatusCodes.hpp"
-
+#include "StatusCodeException.hpp"
 #include "Logger.hpp"
 
 class Message
