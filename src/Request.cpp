@@ -36,7 +36,6 @@ std::ostream &operator<<(std::ostream &out, const Request &request)
     out << "m_body = |We're not printing this!|\n";
     out << "m_boundaryCode = |" << request.m_boundaryCode << "|\n";
     out << "m_fileName = |" << request.m_fileName << "|\n";
-    out << "m_statusCode = |" << request.m_statusCode << "|\n";
     out << "m_generalHeaders = [\n";
     for (const auto &elem : request.m_generalHeaders)
     {
@@ -172,26 +171,26 @@ int Request::parse(void)
         // spdlog::warn("DELETE method"); // ? debug
 		logger.debug("DELETE method");
 
-		return deleteHandler(); // ? new
+        return deleteHandler(); // ? new
     }
 
-	// Nasty solution to redirect + get back upload
-	if (m_methodPathVersion[0] == "GET" && isImageFormat(m_methodPathVersion[1]))
-	{
-		return uploadHandler();
-	}
+    // Nasty solution to redirect + get back upload
+    if (m_methodPathVersion[0] == "GET" && isImageFormat(m_methodPathVersion[1]))
+    {
+        return uploadHandler();
+    }
 
-	// locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
-	updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
-	isMethodAllowed();   // For a certain location block, check if the request method is allowed
-	responsePathSet();   // For a certain location block, loops over index files, and checks if one exists
+    // locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
+    updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
+    isMethodAllowed();                                // For a certain location block, check if the request method is allowed
+    responsePathSet();                                // For a certain location block, loops over index files, and checks if one exists
 
     if (m_methodPathVersion[0] == "GET")
     {
         // spdlog::warn("GET method"); // ? debug
 		logger.debug("GET method");
 
-		return getHandler(); // ? new
+        return getHandler(); // ? new
     }
 
     if (m_methodPathVersion[0] == "POST")
@@ -199,27 +198,29 @@ int Request::parse(void)
         // spdlog::warn("POST method"); // ? debug
 		logger.debug("POST method");
 
-		// ? left it here because of the multiplexer
+        // ? left it here because of the multiplexer
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
             // spdlog::critical("POST cgi handler");
 			logger.debug("POST cgi handler");
             // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
             CGIPipeIn *pipein = new CGIPipeIn(m_client);
-            if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
+            if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[WRITE]))
             {
                 close(pipein->m_pipeFd[READ]);
                 close(pipein->m_pipeFd[WRITE]);
-                throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+                pipein->m_socketFd = -1;
+                delete pipein;
+                throw StatusCodeException(500, "Error: addToEpoll()");
             }
             return 2;
         }
 
         if (m_isChunked)
         {
-			return chunkHandler(); // ? new
+            return chunkHandler(); // ? new
         }
 
-		return postHandler(); // ? new
+        return postHandler(); // ? new
     }
 }

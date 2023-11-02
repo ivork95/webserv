@@ -20,6 +20,9 @@ public:
     // constructor
     CGIPipeOut(Client &client, Request &request, Response &response);
 
+    // outstream operator overload
+    friend std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout);
+
     // member functions
     void forkCloseDupExec(std::vector<Socket *> &toBeDeleted);
 };

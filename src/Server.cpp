@@ -16,7 +16,7 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     if ((rv = getaddrinfo(NULL, m_serverconfig.getPortNb().c_str(), &m_hints, &ai)) != 0)
     {
         std::cerr << "selectserver: " << gai_strerror(rv) << '\n';
-		// Logger::getInstance().error("selectserver: " + gai_strerror(rv));
+		// Logger::getInstance().error("selectserver: " + gai_strerror(rv)); // TODO fix this
         throw std::runtime_error("Error: getaddrinfo() failed\n");
     }
 
@@ -84,6 +84,25 @@ Server::~Server(void)
 	Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") destructor called");
 
     close(m_socketFd);
+}
+
+void Server::handleNewConnection(void) const
+{
+    Multiplexer &multiplexer = Multiplexer::getInstance();
+
+    try
+    {
+        Client *client = new Client{*this};
+        if (multiplexer.addToEpoll(client, EPOLLIN | EPOLLRDHUP, client->m_socketFd))
+            throw std::runtime_error("Error: addToEpoll()\n");
+        if (multiplexer.addToEpoll(&(client->m_timer), EPOLLIN | EPOLLRDHUP, client->m_timer.m_socketFd))
+            throw std::runtime_error("Error: addToEpoll()\n");
+    }
+    catch (const std::exception &e)
+    {
+        // spdlog::critical("Error: couldn't create client\n{}", e.what());
+		Logger::getInstance().error("Error: couldn't create client: " + static_cast<std::string>(e.what()));
+    }
 }
 
 // outstream operator overload

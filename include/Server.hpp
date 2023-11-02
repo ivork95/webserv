@@ -50,6 +50,7 @@ public:
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Server &server);
 
+    void handleNewConnection(void) const;
 };
 
 #endif

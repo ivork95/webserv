@@ -4,8 +4,7 @@
 #include <fcntl.h>
 #include <sys/timerfd.h>
 
- // must be included
-
+// #include "Client.hpp" // ! this include generates an error
 #include "Socket.hpp"
 
 #include "Logger.hpp"
