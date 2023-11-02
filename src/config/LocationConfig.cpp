@@ -170,8 +170,8 @@ std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
 	out << "]" << std::endl;
 	if (route.hasCgiInterpreter() && route.hasCgiScript()) {
 		out << "\tcgiScript: " << route.getCgiScript() << " => " << route.getAbsCgiScript() << std::endl;
-		out << "\tabsCgiScript: " << route.getAbsCgiScript() << std::endl;
-		// out << "\tcgiInterpreter: " << route.getCgiInterpreter() << std::endl;
+		// out << "\tabsCgiScript: " << route.getAbsCgiScript() << std::endl;
+		out << "\tcgiInterpreter: " << route.getCgiInterpreter() << std::endl;
 	}
 	out << "\thttpMethod(s): [";
 	for (size_t i = 0; i < route.getHttpMethods().size(); ++i) {
@@ -186,19 +186,19 @@ std::ostream	&operator << (std::ostream &out, const LocationConfig &route) {
  */
 void	LocationConfig::checkMissingDirective(void) {
 	if (!hasRootPath()) {
-		Logger::getInstance().debug("No root path (setting to default)");
+		Logger::getInstance().debug("No root path (setting to default: www/)");
 		setRootPath("www/");
 	}
 	if (!hasClientMaxBodySize()) {
-		Logger::getInstance().debug("No client max body size (setting to default)");
+		Logger::getInstance().debug("No client max body size (setting to default: 1000000)");
 		setClientMaxBodySize(1000000);
 	}
 	if (!hasAutoIndex()) {
-		Logger::getInstance().debug("No auto index (setting to default)");
+		Logger::getInstance().debug("No auto index (setting to default: false)");
 		setAutoIndex(false);
 	}
 	if (!hasIndexFile()) {
-		Logger::getInstance().debug("No index file (setting to default)");
+		Logger::getInstance().debug("No index file (setting to default: index.html)");
 		setIndexFile({"index.html"});
 	}
 }

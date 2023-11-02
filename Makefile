@@ -37,6 +37,7 @@ OBJECTS		:=	obj/main.o \
 				obj/utils/config/isValidUri.o \
 				obj/utils/config/hasRequiredPermissions.o \
 				obj/utils/config/ParserUtils.o \
+				obj/utils/config/PrintConfig.o \
 				obj/utils/request/RequestUtils.o \
 				obj/request/DirectoryListing.o \
 				obj/request/RequestDelete.o \
