@@ -2,9 +2,10 @@ import unittest
 import requests
 import http.client
 
+
 class TestServerResponse(unittest.TestCase):
     def setUp(self):
-        self.base_url = "http://localhost:8081"
+        self.base_url = "http://localhost:80"
 
     def test_get(self):
         url = f"{self.base_url}"
@@ -96,10 +97,10 @@ class TestServerResponse(unittest.TestCase):
         response = requests.delete(url=url)
         self.assertEqual(response.status_code, 500)
 
-	# TO ADD
-	# test UNKNOWN command
-	# ...
-	# ...
+        # TO ADD
+        # test UNKNOWN command
+        # ...
+        # ...
 
     def delete_tests(self):
         self.test_delete()
@@ -118,6 +119,7 @@ class TestServerResponse(unittest.TestCase):
         self.test_get_not_found()
         self.test_get_method_not_allowed()
         self.test_get_autoindex()
+
 
 if __name__ == '__main__':
     unittest.main()

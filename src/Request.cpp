@@ -34,7 +34,6 @@ std::ostream &operator<<(std::ostream &out, const Request &request)
     out << "m_body = |We're not printing this!|\n";
     out << "m_boundaryCode = |" << request.m_boundaryCode << "|\n";
     out << "m_fileName = |" << request.m_fileName << "|\n";
-    out << "m_statusCode = |" << request.m_statusCode << "|\n";
     out << "m_generalHeaders = [\n";
     for (const auto &elem : request.m_generalHeaders)
     {
@@ -187,10 +186,12 @@ int Request::parse(void)
             spdlog::critical("POST cgi handler");
             // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
             CGIPipeIn *pipein = new CGIPipeIn(m_client);
-            if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[1]))
+            if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[WRITE]))
             {
                 close(pipein->m_pipeFd[READ]);
                 close(pipein->m_pipeFd[WRITE]);
+                pipein->m_socketFd = -1;
+                delete pipein;
                 throw StatusCodeException(500, "Error: addToEpoll()");
             }
             return 2;

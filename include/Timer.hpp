@@ -6,6 +6,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h> // must be included
 
+#include "Client.hpp"
 #include "Socket.hpp"
 
 class Client;

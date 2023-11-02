@@ -35,7 +35,6 @@ public:
     std::string m_boundaryCode{};
     std::string m_fileName{};
     std::string m_body{};
-    int m_statusCode{};
 
     // Chunked request
     bool m_isChunked{false};
@@ -77,37 +76,37 @@ public:
     void chunkBodyExtract(void);
     void chunkBodyTokenize(void);
     void chunkBodySet(void);
-	int	chunkHandler(void);
+    int chunkHandler(void);
 
     std::string m_rawChunkBody{};
     std::string m_chunkBody{};
     std::vector<std::string> m_chunkLine{};
     int m_totalChunkLength{};
 
-	// get method related
-	int getHandler(void);
-	int uploadHandler(void);
+    // get method related
+    int getHandler(void);
+    int uploadHandler(void);
 
     // directory listing related
     void directoryListingBodySet(const std::string &dirPath);
     std::string directoryListingParse(void);
 
-	// delete method related
-	int	deleteHandler(void);
-	std::string buildDeleteFilePath(void);
+    // delete method related
+    int deleteHandler(void);
+    std::string buildDeleteFilePath(void);
 
-	// post method related
-	int postHandler(void);
+    // post method related
+    int postHandler(void);
 
-	// updated to accept arg
-	void updatedLocationConfigSet(const std::string &methodPath);
+    // updated to accept arg
+    void updatedLocationConfigSet(const std::string &methodPath);
 
-	//
+    //
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Request &request);
 };
 
-bool	isImageFormat(const std::string &methodPath);
+bool isImageFormat(const std::string &methodPath);
 
 #endif
