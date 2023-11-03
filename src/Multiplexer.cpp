@@ -6,19 +6,19 @@ Multiplexer::Multiplexer(void)
 {
     m_epollfd = epoll_create(1);
     if (m_epollfd == -1)
-    {
-        std::perror("epoll_create() failed");
-        throw std::runtime_error("Error: epoll_create() failed\n");
-    }
-    // spdlog::debug("{} default constructor called", *this);
-	Logger::getInstance().debug("Multiplexer(" + std::to_string(m_epollfd) + ")" + " default constructor called");
+        throw std::runtime_error("Error: epoll_create()");
+
+    if (addToEpoll(&signal, EPOLLIN, signal.m_socketFd))
+        throw std::runtime_error("Error: addToEpoll() failed");
+
+    std::cout << *this << " default constructor called\n";
 }
 
 // destructor
 Multiplexer::~Multiplexer(void)
 {
     // spdlog::debug("{} destructor called", *this);
-	Logger::getInstance().debug("Multiplexer(" + std::to_string(m_epollfd) + ")" + " destructor called");
+    Logger::getInstance().debug("Multiplexer(" + std::to_string(m_epollfd) + ")" + " destructor called");
 
     close(m_epollfd);
 }
@@ -35,6 +35,7 @@ std::ostream &operator<<(std::ostream &out, const Multiplexer &multiplexer)
 Multiplexer &Multiplexer::getInstance(void)
 {
     static Multiplexer instance;
+
     return instance;
 }
 

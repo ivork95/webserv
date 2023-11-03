@@ -1,14 +1,14 @@
 #include "Client.hpp"
 
-// server constructor
+// constructor
 Client::Client(const Server &server) : m_server(server), m_request(*this), m_timer(*this)
 {
     m_socketFd = accept(m_server.m_socketFd, (struct sockaddr *)&m_remoteaddr, &m_addrlen);
     if (m_socketFd == -1)
-        throw std::runtime_error("Error: accept()\n");
+        throw std::runtime_error("Error: accept()");
 
     if (Helper::setNonBlocking(m_socketFd) == -1)
-        throw std::runtime_error("Error: fcntl()\n");
+        throw std::runtime_error("Error: fcntl()");
 
     // different fields in IPv4 and IPv6:
     if (m_remoteaddr.ss_family == AF_INET)

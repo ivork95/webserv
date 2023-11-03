@@ -3,6 +3,7 @@
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
 
+// constructor
 Request::Request(Client &client) : m_client(client)
 {
     // spdlog::debug("Request serverconfig constructor called");

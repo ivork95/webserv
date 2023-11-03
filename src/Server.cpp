@@ -17,32 +17,25 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     {
         std::cerr << "selectserver: " << gai_strerror(rv) << '\n';
         // Logger::getInstance().error("selectserver: " + gai_strerror(rv)); // TODO fix this
-        throw std::runtime_error("Error: getaddrinfo() failed\n");
+        throw std::runtime_error("Error: getaddrinfo()");
     }
 
     for (p = ai; p != NULL; p = p->ai_next)
     {
         m_socketFd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
         if (m_socketFd < 0)
-        {
             continue;
-        }
-
-        // Lose the pesky "address already in use" error message
-        setsockopt(m_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-
+        setsockopt(m_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)); // Lose the pesky "address already in use" error message
         if (bind(m_socketFd, p->ai_addr, p->ai_addrlen) < 0)
         {
             close(m_socketFd);
             continue;
         }
-
         break;
     }
 
-    // If we got here, it means we didn't get bound
-    if (p == NULL)
-        throw std::runtime_error("bind() failed");
+    if (p == NULL) // If we got here, it means we didn't get bound
+        throw std::runtime_error("Error: bind()");
 
     // get the pointer to the address itself,
     // different fields in IPv4 and IPv6:
@@ -60,23 +53,20 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
         m_ipver = "IPv6";
         m_port = ntohs(ipv6->sin6_port);
     }
-    // convert the IP to a string and print it:
-    inet_ntop(p->ai_family, m_addr, m_ipstr, sizeof m_ipstr);
+    inet_ntop(p->ai_family, m_addr, m_ipstr, sizeof m_ipstr); // convert the IP to a string and print it
 
     freeaddrinfo(ai); // All done with this
 
-    // Listen
     if (listen(m_socketFd, BACKLOG) == -1)
-    {
-        throw std::runtime_error("Error: listen() failed\n");
-    }
+        throw std::runtime_error("Error: listen()");
     if (Helper::setNonBlocking(m_socketFd) == -1)
-    {
-        throw std::runtime_error("Error: fcntl() failed\n");
-    }
+        throw std::runtime_error("Error: fcntl()");
 
-    // spdlog::debug("{0} constructor called", *this);
-    Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") constructor called");
+    Multiplexer &multiplexer = Multiplexer::getInstance();
+    if (multiplexer.addToEpoll(this, EPOLLIN | EPOLLRDHUP, m_socketFd))
+        throw std::runtime_error("Error: addToEpoll() failed");
+
+    std::cout << *this << " constructor called\n";
 }
 
 // destructor
@@ -96,9 +86,9 @@ void Server::handleNewConnection(void) const
     {
         Client *client = new Client{*this};
         if (multiplexer.addToEpoll(client, EPOLLIN | EPOLLRDHUP, client->m_socketFd))
-            throw std::runtime_error("Error: addToEpoll()\n");
+            throw std::runtime_error("Error: addToEpoll()");
         if (multiplexer.addToEpoll(&(client->m_timer), EPOLLIN | EPOLLRDHUP, client->m_timer.m_socketFd))
-            throw std::runtime_error("Error: addToEpoll()\n");
+            throw std::runtime_error("Error: addToEpoll()");
     }
     catch (const std::exception &e)
     {

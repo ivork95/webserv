@@ -2,11 +2,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-// request constructor
+// constructor
 Response::Response(void)
 {
     // spdlog::debug("Response constructor called");
-	Logger::getInstance().debug("Response constructor called");
+    Logger::getInstance().debug("Response constructor called");
 }
 
 // copy constructor
@@ -17,7 +17,7 @@ Response::Response(void)
 Response::~Response(void)
 {
     // spdlog::debug("Response destructor called");
-	Logger::getInstance().debug("Response destructor called");
+    Logger::getInstance().debug("Response destructor called");
 }
 
 // outstream operator overload
@@ -58,28 +58,6 @@ std::string Response::responseBuild(void)
     httpResponse += m_body;
 
     return httpResponse;
-}
-
-int sendall(int s, char *buf, int *len)
-{
-    int total = 0;        // how many bytes we've sent
-    int bytesleft = *len; // how many we have left to send
-    int n;
-
-    while (total < *len)
-    {
-        n = send(s, buf + total, bytesleft, 0);
-        if (n == -1)
-        {
-            break;
-        }
-        total += n;
-        bytesleft -= n;
-    }
-
-    *len = total; // return number actually sent here
-
-    return n == -1 ? -1 : 0; // return -1 on failure, 0 on success
 }
 
 std::string generateHtmlString(const std::string &path)
@@ -130,6 +108,7 @@ bool isDirectory(std::string path)
 {
     if (std::filesystem::is_directory(path))
         return true;
+
     return false;
 }
 
@@ -143,7 +122,6 @@ int sendAll(int sockFd, char *buf, int *len, int *total, int *bytesleft)
         *total += nbytes;
         *bytesleft -= nbytes;
     }
-
     if (*bytesleft)
         return 1;
 
@@ -158,7 +136,6 @@ int Response::sendAll(int sockFd)
         m_len = m_buf.size();
         m_bytesleft = m_len;
     }
-
     if (m_total < m_len)
     {
         int nbytes{static_cast<int>(send(sockFd, m_buf.data() + m_total, m_bytesleft, 0))};
@@ -167,7 +144,6 @@ int Response::sendAll(int sockFd)
         m_total += nbytes;
         m_bytesleft -= nbytes;
     }
-
     if (m_bytesleft)
         return 1;
 

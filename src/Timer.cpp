@@ -10,14 +10,9 @@ Timer::Timer(Client &client) : m_client(client)
 
     m_socketFd = timerfd_create(CLOCK_REALTIME, O_NONBLOCK);
     if (m_socketFd == -1)
-    {
-        throw std::runtime_error("Error: timerfd_create() failed\n");
-    }
-
+        throw std::runtime_error("Error: timerfd_create()");
     if (timerfd_settime(m_socketFd, 0, &m_spec, NULL) == -1)
-    {
-        throw std::runtime_error("Error: timerfd_settime failed\n");
-    }
+        throw std::runtime_error("Error: timerfd_settime()");
 
     // spdlog::debug("{} constructor called", *this);
     Logger::getInstance().debug("Timer(" + std::to_string(m_socketFd) + ") constructor called");
