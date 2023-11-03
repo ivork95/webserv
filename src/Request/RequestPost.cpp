@@ -45,7 +45,7 @@ std::string Request::bodyParse(const std::string &boundaryCode)
     {
         requestHeadersEndPos += 4;
         // spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
-		Logger::getInstance().debug("M_BODY NO BOUNDRY " + m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+        Logger::getInstance().debug("M_BODY NO BOUNDRY " + m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
         return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
     }
 
@@ -103,20 +103,21 @@ void Request::boundaryCodeSet(void)
     m_boundaryCode = boundaryCodeParse(m_requestHeaders);
 }
 
-int Request::postHandler(void) {
-	// spdlog::warn("POST handler"); // ? debug
-	Logger::getInstance().debug("POST handler");
+int Request::postHandler(void)
+{
+    // spdlog::warn("POST handler"); // ? debug
+    Logger::getInstance().debug("POST handler");
 
-	if (m_contentLength > m_locationconfig.getClientMaxBodySize())
-		throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+    if (m_contentLength > m_locationconfig.getClientMaxBodySize())
+        throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
 
-	boundaryCodeSet();
-	generalHeadersSet();
-	fileNameSet();
-	bodySet();
-	bodyToDisk("./www/" + m_fileName);
+    boundaryCodeSet();
+    generalHeadersSet();
+    fileNameSet();
+    bodySet();
+    bodyToDisk("./www/" + m_fileName);
 
-	m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
-	m_response.m_statusCode = 303;
-	return 0;
+    m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
+    m_response.m_statusCode = 303;
+    return 0;
 }

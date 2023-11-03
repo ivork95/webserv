@@ -11,6 +11,5 @@
 // destructor
 ASocket::~ASocket(void)
 {
-    // spdlog::debug("ASocket destructor called");
-    Logger::getInstance().debug("ASocket destructor called");
+    std::cout << "ASocket destructor called" << std::endl;
 }

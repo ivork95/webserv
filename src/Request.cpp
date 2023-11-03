@@ -10,17 +10,6 @@ Request::Request(Client &client) : m_client(client)
     Logger::getInstance().debug("Request serverconfig constructor called");
 }
 
-// copy constructor
-
-// copy assignment operator overload
-
-// destructor
-Request::~Request(void)
-{
-    // spdlog::debug("Request destructor called");
-    Logger::getInstance().debug("Request destructor called");
-}
-
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const Request &request)
 {
@@ -56,6 +45,46 @@ void Request::methodPathVersionSet(void)
     size_t requestLineEndPos = m_rawMessage.find("\r\n");
     std::string requestLine = m_rawMessage.substr(0, requestLineEndPos);
     m_methodPathVersion = Helper::split(requestLine);
+}
+
+void Request::updatedLocationConfigSet(const std::string &methodPath)
+{
+    // spdlog::warn("methodPath = {}", methodPath); // ? debug
+    Logger::getInstance().debug("methodPath = " + methodPath);
+
+    bool isLocationFound{false};
+    for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
+    {
+        if (methodPath == location.getRequestURI())
+        {
+            m_locationconfig = location;
+            isLocationFound = true;
+            break;
+        }
+    }
+    if (!isLocationFound) // there's no matching URI
+        throw StatusCodeException(404, "Error: no matching location/path found");
+}
+
+void Request::isMethodAllowed(void)
+{
+    auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
+    if (it == m_locationconfig.getHttpMethods().end())
+        throw StatusCodeException(405, "Warning: method not allowed");
+}
+
+void Request::responsePathSet(void)
+{
+    for (const auto &index : m_locationconfig.getIndexFile())
+    {
+        // spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index); // ? debug
+        Logger::getInstance().debug("rootPath + index = " + m_locationconfig.getRootPath() + index);
+        if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
+        {
+            m_response.m_path = m_locationconfig.getRootPath() + index;
+            break;
+        }
+    }
 }
 
 int Request::tokenize(const char *buf, int nbytes)
@@ -112,62 +141,6 @@ int Request::tokenize(const char *buf, int nbytes)
     return 0;
 }
 
-void Request::locationconfigSet(void)
-{
-    bool isLocationFound{false};
-    for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
-    {
-        if (m_methodPathVersion[1] == location.getRequestURI())
-        {
-            m_locationconfig = location;
-            isLocationFound = true;
-            break;
-        }
-    }
-    if (!isLocationFound) // there's no matching URI
-        throw StatusCodeException(404, "Error: no matching location/path found");
-}
-
-void Request::updatedLocationConfigSet(const std::string &methodPath)
-{
-    // spdlog::warn("methodPath = {}", methodPath); // ? debug
-    Logger::getInstance().debug("methodPath = " + methodPath);
-
-    bool isLocationFound{false};
-    for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
-    {
-        if (methodPath == location.getRequestURI())
-        {
-            m_locationconfig = location;
-            isLocationFound = true;
-            break;
-        }
-    }
-    if (!isLocationFound) // there's no matching URI
-        throw StatusCodeException(404, "Error: no matching location/path found");
-}
-
-void Request::isMethodAllowed(void)
-{
-    auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
-    if (it == m_locationconfig.getHttpMethods().end())
-        throw StatusCodeException(405, "Warning: method not allowed");
-}
-
-void Request::responsePathSet(void)
-{
-    for (const auto &index : m_locationconfig.getIndexFile())
-    {
-        // spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index); // ? debug
-        Logger::getInstance().debug("rootPath + index = " + m_locationconfig.getRootPath() + index);
-        if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
-        {
-            m_response.m_path = m_locationconfig.getRootPath() + index;
-            break;
-        }
-    }
-}
-
 int Request::parse(void)
 {
     Logger &logger = Logger::getInstance();
@@ -200,7 +173,6 @@ int Request::parse(void)
         return uploadHandler();
     }
 
-    // locationconfigSet(); // Loops over location blocks and checks for match between location block and request path
     updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
     isMethodAllowed();                                // For a certain location block, check if the request method is allowed
     responsePathSet();                                // For a certain location block, loops over index files, and checks if one exists

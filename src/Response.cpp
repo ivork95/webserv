@@ -2,24 +2,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-// constructor
-Response::Response(void)
-{
-    // spdlog::debug("Response constructor called");
-    Logger::getInstance().debug("Response constructor called");
-}
-
-// copy constructor
-
-// copy assignment operator overload
-
-// destructor
-Response::~Response(void)
-{
-    // spdlog::debug("Response destructor called");
-    Logger::getInstance().debug("Response destructor called");
-}
-
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const Response &response)
 {
@@ -58,50 +40,6 @@ std::string Response::responseBuild(void)
     httpResponse += m_body;
 
     return httpResponse;
-}
-
-std::string generateHtmlString(const std::string &path)
-{
-    std::stringstream htmlStream;
-    std::string folderPath = "." + path;
-
-    htmlStream << "<html><head><title>File and Directory List</title></head><body>\n";
-    htmlStream << "<h1>Files and Directories in " << folderPath << "</h1>\n";
-    htmlStream << "<ul>\n";
-
-    for (const auto &entry : std::filesystem::directory_iterator(folderPath))
-    {
-        const std::string entryName = entry.path().filename().string();
-        if (std::filesystem::is_directory(entry))
-        {
-            htmlStream << "<li><strong>Directory:</strong> <a href=\"" << path + "/" + entryName << "\">" << entryName << "</a></li>\n";
-        }
-        else if (std::filesystem::is_regular_file(entry))
-        {
-            htmlStream << "<li><strong>File:</strong> " << entryName << " ";
-            htmlStream << "<button onclick=\"deleteFile('" << path + "/" + entryName << "')\">Delete</button></li>\n";
-        }
-    }
-
-    htmlStream << "</ul>\n";
-    htmlStream << "<script>\n";
-    htmlStream << "function deleteFile(fileName) {\n";
-    htmlStream << "    if (confirm('Are you sure you want to delete ' + fileName + '?')) {\n";
-    htmlStream << "        var xhr = new XMLRequest();\n";
-    htmlStream << "        xhr.open('DELETE', fileName, true);\n";
-    htmlStream << "        xhr.onreadystatechange = function() {\n";
-    htmlStream << "            if (xhr.readyState === 4 && xhr.status === 200) {\n";
-    htmlStream << "                alert('File ' + fileName + ' deleted.');\n";
-    htmlStream << "                // Refresh the page or update the file list as needed\n";
-    htmlStream << "            }\n";
-    htmlStream << "        };\n";
-    htmlStream << "        xhr.send();\n";
-    htmlStream << "    }\n";
-    htmlStream << "}\n";
-    htmlStream << "</script>\n";
-    htmlStream << "</body></html>\n";
-
-    return htmlStream.str();
 }
 
 bool isDirectory(std::string path)

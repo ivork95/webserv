@@ -145,11 +145,8 @@ docker-exec:
 basic: all
 	./webserv config-files/valid/basic.conf
 
-py: all
-	./webserv config-files/py.conf
-
 test: all
-	./webserv config-files/valid/multiple-servers.conf
+	valgrind --leak-check=full --show-leak-kinds=all --track-fds=yes ./webserv config-files/test.conf
 
 run: all
 	./webserv config-files/valid/complexe-server.conf
@@ -157,4 +154,4 @@ run: all
 db:
 	lldb webserv -- config-files/valid/multiple-servers.conf
 
-.PHONY	: clean fclean re docker-pwd docker-pwd-val docker-build
+.PHONY	: clean fclean re docker-pwd docker-pwd-val docker-build docker-exec basic test run db

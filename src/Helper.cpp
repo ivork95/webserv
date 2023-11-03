@@ -102,8 +102,7 @@ int Helper::setNonBlocking(int fd)
 
 bool Helper::isImageFormat(const std::string &methodPath)
 {
-    // spdlog::warn("methodPath = {}", methodPath); // ? debug
-    Logger::getInstance().debug("methodPath = " + methodPath);
+    std::cout << "methodPath = " << methodPath << std::endl;
 
     if (methodPath.ends_with("jpg") || methodPath.ends_with("jpeg") || methodPath.ends_with("png"))
         return true;

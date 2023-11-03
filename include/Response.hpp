@@ -11,7 +11,6 @@
 #include "StatusCodeException.hpp"
 #include "ServerConfig.hpp"
 #include "Helper.hpp"
-
 #include "Logger.hpp"
 
 class Response
@@ -28,18 +27,6 @@ public:
     int m_len{};
     int m_total{0};
     int m_bytesleft{};
-
-    // default constructor
-    Response(void);
-
-    // request constrcuctor
-
-    // copy constructor
-
-    // copy assignment operator overload
-
-    // destructor
-    ~Response(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Response &Response);

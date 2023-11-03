@@ -1,6 +1,6 @@
 #include "Timer.hpp"
 
-// client constructor
+// constructor
 Timer::Timer(Client &client) : m_client(client)
 {
     m_spec.it_value.tv_sec = 180;
@@ -14,15 +14,7 @@ Timer::Timer(Client &client) : m_client(client)
     if (timerfd_settime(m_socketFd, 0, &m_spec, NULL) == -1)
         throw std::runtime_error("Error: timerfd_settime()");
 
-    // spdlog::debug("{} constructor called", *this);
-    Logger::getInstance().debug("Timer(" + std::to_string(m_socketFd) + ") constructor called");
-}
-
-// destructor
-Timer::~Timer(void)
-{
-    // spdlog::debug("{} destructor called", *this);
-    Logger::getInstance().debug("Timer(" + std::to_string(m_socketFd) + ") destructor called");
+    std::cout << *this << " constructor called\n";
 }
 
 // outstream operator overload

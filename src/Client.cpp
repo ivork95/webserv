@@ -28,15 +28,7 @@ Client::Client(const Server &server) : m_server(server), m_request(*this), m_tim
     // convert the IP to a string and print it:
     inet_ntop(m_remoteaddr.ss_family, m_addr, m_ipstr, sizeof m_ipstr);
 
-    // spdlog::debug("{0} constructor called", *this);
-    Logger::getInstance().debug("Client(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") constructor called");
-}
-
-// destructor
-Client::~Client(void)
-{
-    // spdlog::debug("{0} destructor called", *this);
-    Logger::getInstance().debug("Client(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") destructor called");
+    std::cout << *this << " constructor called" << std::endl;
 }
 
 // outstream operator overload
@@ -55,11 +47,13 @@ void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
     int nbytes{static_cast<int>(recv(m_socketFd, buf, BUFSIZ - 1, 0))};
     if (nbytes <= 0)
     {
-        close(m_socketFd);
+        if (close(m_socketFd) == -1)
+            throw StatusCodeException(500, "Error: close()");
         m_socketFd = -1;
         toBeDeleted.push_back(this);
 
-        close(m_timer.m_socketFd);
+        if (close(m_timer.m_socketFd) == -1)
+            throw StatusCodeException(500, "Error: close()");
         m_timer.m_socketFd = -1;
 
         return;
@@ -68,7 +62,8 @@ void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
     if (m_request.tokenize(buf, nbytes))
         return;
 
-    close(m_timer.m_socketFd);
+    if (close(m_timer.m_socketFd) == -1)
+        throw StatusCodeException(500, "Error: close()");
     m_timer.m_socketFd = -1;
 
     try
@@ -81,15 +76,11 @@ void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
     }
     catch (const StatusCodeException &e)
     {
-        // spdlog::warn(e.what());
-        Logger::getInstance().debug(e.what());
+        std::cerr << e.what() << '\n';
 
         m_request.m_response.m_statusCode = e.getStatusCode();
         if (multiplexer.modifyEpollEvents(this, EPOLLOUT, this->m_socketFd))
             throw StatusCodeException(500, "Error: modifyEpollEvents()");
     }
-    // spdlog::critical(m_request);
-    std::ostringstream request;
-    request << m_request;
-    Logger::getInstance().debug(request.str()); // TODO fix this
+    std::cout << m_request << std::endl;
 }

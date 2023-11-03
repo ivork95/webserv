@@ -2,7 +2,7 @@
 
 Signal::Signal(void)
 {
-    sigset_t mask;
+    sigset_t mask{};
 
     sigemptyset(&mask);
     sigaddset(&mask, SIGINT);

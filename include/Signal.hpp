@@ -22,7 +22,9 @@ public:
     // destructor
     ~Signal(void);
 
-    struct signalfd_siginfo fdsi;
+    struct signalfd_siginfo fdsi
+    {
+    };
 };
 
 #endif

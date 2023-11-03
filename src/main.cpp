@@ -2,6 +2,7 @@
 #include <fstream>
 #include <filesystem>
 #include <sys/stat.h>
+
 #include "Server.hpp"
 #include "Configuration.hpp"
 #include "Client.hpp"
@@ -117,6 +118,8 @@ void handleWrite(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
 void run(const Configuration &config)
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();
+    int epollCount{};
+    int i{};
 
     for (auto &serverConfig : config.serversConfig)
         multiplexer.m_servers.push_back(new Server{serverConfig});
@@ -128,11 +131,11 @@ void run(const Configuration &config)
             delete s;
         toBeDeleted.clear();
 
-        int epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
+        epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
         if (epollCount < 0)
             throw std::runtime_error("Error: epoll_wait() failed");
 
-        for (int i = 0; i < epollCount; i++) // Loop through ready list
+        for (i = 0; i < epollCount; i++) // Loop through ready list
         {
             ASocket *ePollDataPtr = static_cast<ASocket *>(multiplexer.m_events[i].data.ptr);
 
@@ -147,31 +150,6 @@ void run(const Configuration &config)
             {
                 std::cout << "Ready to hang up/error\n";
 
-                if (Server *server = dynamic_cast<Server *>(ePollDataPtr))
-                {
-                    std::cout << "A\n";
-                }
-
-                if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
-                {
-                    std::cout << "B\n";
-                }
-
-                if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
-                {
-                    std::cout << "C\n";
-                }
-
-                if (CGIPipeIn *in = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
-                {
-                    std::cout << "D\n";
-                }
-
-                if (CGIPipeOut *out = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
-                {
-                    std::cout << "E\n";
-                }
-
                 close(ePollDataPtr->m_socketFd);
                 ePollDataPtr->m_socketFd = -1;
                 toBeDeleted.push_back(ePollDataPtr);
@@ -184,8 +162,6 @@ void run(const Configuration &config)
 
 int main(int argc, char *argv[])
 {
-    // spdlog::set_level(spdlog::level::debug);
-
     if (argc != 2)
         throw std::runtime_error("usage: webserv [path to config]\n\n\n");
 

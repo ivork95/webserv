@@ -46,13 +46,6 @@ public:
     // constructor
     Request(Client &client);
 
-    // copy constructor
-
-    // copy assignment operator overload
-
-    // destructor
-    ~Request(void);
-
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Request &request);
 
@@ -62,7 +55,7 @@ public:
     void generalHeadersSet(void);
     void fileNameSet(void);
     void bodySet(void);
-    void locationconfigSet(void);
+    void updatedLocationConfigSet(const std::string &methodPath);
     void responsePathSet(void);
 
     // methods
@@ -97,9 +90,6 @@ public:
 
     // post method related
     int postHandler(void);
-
-    // updated to accept arg
-    void updatedLocationConfigSet(const std::string &methodPath);
 };
 
 #endif

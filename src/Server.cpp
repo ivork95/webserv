@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-// serverConfig constructor
+// constructor
 Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
 {
     int yes{1}; // For setsockopt() SO_REUSEADDR, below
@@ -72,8 +72,7 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
 // destructor
 Server::~Server(void)
 {
-    // spdlog::debug("{0} destructor called", *this);
-    Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") destructor called");
+    std::cout << *this << " destructor called\n";
 
     close(m_socketFd);
 }

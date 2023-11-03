@@ -35,13 +35,6 @@ public:
     // constructor
     Client(const Server &server);
 
-    // copy constructor
-
-    // copy assignment operator
-
-    // destructor
-    ~Client(void);
-
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Client &client);
 

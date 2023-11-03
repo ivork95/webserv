@@ -15,16 +15,6 @@ public:
     int m_contentLength{};
     bool m_isContentLengthConverted{false};
 
-    // constructor
-    Message(void);
-
-    // copy constructor
-
-    // copy assignment operator overload
-
-    // destructor
-    ~Message(void);
-
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Message &message);
 

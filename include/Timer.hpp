@@ -4,10 +4,7 @@
 #include <fcntl.h>
 #include <sys/timerfd.h>
 
-// #include "Client.hpp" // ! this include generates an error
 #include "ASocket.hpp"
-
-#include "Logger.hpp"
 
 class Client;
 
@@ -24,9 +21,6 @@ public:
 
     // client constructor
     Timer(Client &client);
-
-    // destructor
-    ~Timer(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Timer &timer);

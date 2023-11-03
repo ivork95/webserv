@@ -17,8 +17,7 @@ Multiplexer::Multiplexer(void)
 // destructor
 Multiplexer::~Multiplexer(void)
 {
-    // spdlog::debug("{} destructor called", *this);
-    Logger::getInstance().debug("Multiplexer(" + std::to_string(m_epollfd) + ")" + " destructor called");
+    std::cout << *this << " destructor called\n";
 
     close(m_epollfd);
 }
