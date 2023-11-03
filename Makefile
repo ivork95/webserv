@@ -3,6 +3,7 @@ NAME		:=	webserv
 CXXFLAGS	?=	-Wall -Wextra -Werror -std=c++20
 LDFLAGS		?=
 OBJECTS		:=	obj/main.o \
+				obj/Signal.o \
 				obj/cgi/CGIPipeIn.o \
 				obj/cgi/CGIPipeOut.o \
 				obj/Client.o \

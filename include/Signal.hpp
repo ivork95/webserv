@@ -1,7 +1,14 @@
 #ifndef SIGNAL_HPP
 #define SIGNAL_HPP
 
-#include "sys/signalfd.h"
+#include <vector>
+#include <err.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/signalfd.h>
+#include <unistd.h>
+
 #include "ASocket.hpp"
 
 class Signal : public ASocket
@@ -9,32 +16,13 @@ class Signal : public ASocket
 private:
     /* data */
 public:
-    Signal(/* args */);
-    ~Signal();
+    // default constructor
+    Signal(void);
+
+    // destructor
+    ~Signal(void);
 
     struct signalfd_siginfo fdsi;
 };
-
-Signal::Signal(/* args */)
-{
-    sigset_t mask;
-
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGINT);
-    sigaddset(&mask, SIGQUIT);
-
-    /* Block signals so that they aren't handled
-       according to their default dispositions. */
-    if (sigprocmask(SIG_BLOCK, &mask, NULL) == -1)
-        throw std::runtime_error("Error: sigprocmask()");
-
-    m_socketFd = signalfd(-1, &mask, 0);
-    if (m_socketFd == -1)
-        throw std::runtime_error("Error: signalfd()");
-}
-
-Signal::~Signal()
-{
-}
 
 #endif

@@ -11,6 +11,7 @@
 #include "Server.hpp"
 #include "StatusCodeException.hpp"
 #include "ASocket.hpp"
+#include "Signal.hpp"
 
 #define MAX_EVENTS 10 // The maximum number of events to be returned from epoll_wait()
 
@@ -27,6 +28,7 @@ public:
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
     std::vector<Server *> m_servers{};
     bool isRunning{true};
+    Signal signal;
 
     // copy constructor
     Multiplexer(const Multiplexer &) = delete;
