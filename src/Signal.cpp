@@ -11,11 +11,11 @@ Signal::Signal(void)
     /* Block signals so that they aren't handled
        according to their default dispositions. */
     if (sigprocmask(SIG_BLOCK, &mask, NULL) == -1)
-        throw std::runtime_error("Error: sigprocmask()");
+        throw std::system_error(errno, std::generic_category(), "sigprocmask()");
 
     m_socketFd = signalfd(-1, &mask, 0);
     if (m_socketFd == -1)
-        throw std::runtime_error("Error: signalfd()");
+        throw std::system_error(errno, std::generic_category(), "signalfd()");
 }
 
 Signal::~Signal()

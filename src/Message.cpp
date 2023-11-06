@@ -40,7 +40,7 @@ void Message::contentLengthSet(void)
     }
     catch (...)
     {
-        throw StatusCodeException(400, "Error: invalid Content-Length header1");
+        throw StatusCodeException(400, "Error: invalid Content-Length header");
     }
 }
 

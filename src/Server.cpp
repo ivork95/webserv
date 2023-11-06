@@ -16,8 +16,7 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     if ((rv = getaddrinfo(NULL, m_serverconfig.getPortNb().c_str(), &m_hints, &ai)) != 0)
     {
         std::cerr << "selectserver: " << gai_strerror(rv) << '\n';
-        // Logger::getInstance().error("selectserver: " + gai_strerror(rv)); // TODO fix this
-        throw std::runtime_error("Error: getaddrinfo()");
+        throw std::system_error(errno, std::generic_category(), "getaddrinfo()");
     }
 
     for (p = ai; p != NULL; p = p->ai_next)
@@ -35,7 +34,7 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     }
 
     if (p == NULL) // If we got here, it means we didn't get bound
-        throw std::runtime_error("Error: bind()");
+        throw std::system_error(errno, std::generic_category(), "selectserver: failed to bind");
 
     // get the pointer to the address itself,
     // different fields in IPv4 and IPv6:
@@ -58,13 +57,13 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     freeaddrinfo(ai); // All done with this
 
     if (listen(m_socketFd, BACKLOG) == -1)
-        throw std::runtime_error("Error: listen()");
+        throw std::system_error(errno, std::generic_category(), "listen()");
     if (Helper::setNonBlocking(m_socketFd) == -1)
-        throw std::runtime_error("Error: fcntl()");
+        throw std::system_error(errno, std::generic_category(), "fcntl()");
 
     Multiplexer &multiplexer = Multiplexer::getInstance();
     if (multiplexer.addToEpoll(this, EPOLLIN | EPOLLRDHUP, m_socketFd))
-        throw std::runtime_error("Error: addToEpoll() failed");
+        throw std::system_error(errno, std::generic_category(), "addToEpoll()");
 
     std::cout << *this << " constructor called\n";
 }
@@ -85,14 +84,14 @@ void Server::handleNewConnection(void) const
     {
         Client *client = new Client{*this};
         if (multiplexer.addToEpoll(client, EPOLLIN | EPOLLRDHUP, client->m_socketFd))
-            throw std::runtime_error("Error: addToEpoll()");
+            throw std::system_error(errno, std::generic_category(), "addToEpoll()");
         if (multiplexer.addToEpoll(&(client->m_timer), EPOLLIN | EPOLLRDHUP, client->m_timer.m_socketFd))
-            throw std::runtime_error("Error: addToEpoll()");
+            throw std::system_error(errno, std::generic_category(), "addToEpoll()");
     }
     catch (const std::exception &e)
     {
-        // spdlog::critical("Error: couldn't create client\n{}", e.what());
-        Logger::getInstance().error("Error: couldn't create client: " + static_cast<std::string>(e.what()));
+        std::cout << "Error: couldn't create client\n"
+                  << e.what() << '\n';
     }
 }
 

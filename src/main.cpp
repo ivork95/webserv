@@ -42,7 +42,7 @@ void handleRead(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
         toBeDeleted.push_back(pipeout);
 
         if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
-            throw std::runtime_error("Error: modifyEpollEvents()");
+            throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");
     }
     else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
     {
@@ -61,7 +61,7 @@ void handleRead(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
 
         ssize_t s = read(signal->m_socketFd, &fdsi, sizeof(fdsi));
         if (s != sizeof(fdsi))
-            throw std::runtime_error("Error: read()");
+            throw std::system_error(errno, std::generic_category(), "read()");
         if (fdsi.ssi_signo == SIGINT)
         {
             std::cout << "Got SIGINT" << std::endl;
@@ -101,7 +101,7 @@ void handleWrite(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
 
             CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
             if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[READ]))
-                throw StatusCodeException(500, "Error: epoll_ctl()");
+                throw StatusCodeException(500, "addToEpoll()", errno);
 
             pipeout->forkCloseDupExec(toBeDeleted);
         }
@@ -132,8 +132,8 @@ void run(const Configuration &config)
         toBeDeleted.clear();
 
         epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
-        if (epollCount < 0)
-            throw std::runtime_error("Error: epoll_wait() failed");
+        if (epollCount == -1)
+            throw std::system_error(errno, std::generic_category(), "epoll_wait()");
 
         for (i = 0; i < epollCount; i++) // Loop through ready list
         {

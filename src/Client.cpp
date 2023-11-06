@@ -5,10 +5,10 @@ Client::Client(const Server &server) : m_server(server), m_request(*this), m_tim
 {
     m_socketFd = accept(m_server.m_socketFd, (struct sockaddr *)&m_remoteaddr, &m_addrlen);
     if (m_socketFd == -1)
-        throw std::runtime_error("Error: accept()");
+        throw std::system_error(errno, std::generic_category(), "accept()");
 
     if (Helper::setNonBlocking(m_socketFd) == -1)
-        throw std::runtime_error("Error: fcntl()");
+        throw std::system_error(errno, std::generic_category(), "fcntl()");
 
     // different fields in IPv4 and IPv6:
     if (m_remoteaddr.ss_family == AF_INET)
@@ -48,12 +48,12 @@ void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
     if (nbytes <= 0)
     {
         if (close(m_socketFd) == -1)
-            throw StatusCodeException(500, "Error: close()");
+            throw StatusCodeException(500, "close()", errno);
         m_socketFd = -1;
         toBeDeleted.push_back(this);
 
         if (close(m_timer.m_socketFd) == -1)
-            throw StatusCodeException(500, "Error: close()");
+            throw StatusCodeException(500, "close()", errno);
         m_timer.m_socketFd = -1;
 
         return;
@@ -63,7 +63,7 @@ void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
         return;
 
     if (close(m_timer.m_socketFd) == -1)
-        throw StatusCodeException(500, "Error: close()");
+        throw StatusCodeException(500, "close()", errno);
     m_timer.m_socketFd = -1;
 
     try
@@ -71,7 +71,7 @@ void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
         if (!m_request.parse())
         {
             if (multiplexer.modifyEpollEvents(this, EPOLLOUT, m_socketFd))
-                throw StatusCodeException(500, "Error: delete()");
+                throw StatusCodeException(500, "delete()", errno);
         }
     }
     catch (const StatusCodeException &e)
@@ -80,7 +80,7 @@ void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
 
         m_request.m_response.m_statusCode = e.getStatusCode();
         if (multiplexer.modifyEpollEvents(this, EPOLLOUT, this->m_socketFd))
-            throw StatusCodeException(500, "Error: modifyEpollEvents()");
+            throw StatusCodeException(500, "modifyEpollEvents()", errno);
     }
     std::cout << m_request << std::endl;
 }

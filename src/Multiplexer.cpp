@@ -6,10 +6,10 @@ Multiplexer::Multiplexer(void)
 {
     m_epollfd = epoll_create(1);
     if (m_epollfd == -1)
-        throw std::runtime_error("Error: epoll_create()");
+        throw std::system_error(errno, std::generic_category(), "epoll_create()");
 
     if (addToEpoll(&signal, EPOLLIN, signal.m_socketFd))
-        throw std::runtime_error("Error: addToEpoll() failed");
+        throw std::system_error(errno, std::generic_category(), "addToEpoll()");
 
     std::cout << *this << " default constructor called\n";
 }

@@ -51,7 +51,7 @@ std::string Helper::fileToStr(const std::string &path)
     std::ifstream inf(path);
 
     if (!inf)
-        throw StatusCodeException(404, "Error: fileToStr()");
+        throw StatusCodeException(404, "ifstream", errno);
     std::ostringstream sstr;
     sstr << inf.rdbuf();
 
