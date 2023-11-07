@@ -16,6 +16,8 @@ public:
 
     std::vector<ServerConfig> serversConfig;
     std::vector<std::string> serverSections;
+
+	void printConfig(void);
 };
 
 int initConfig(const std::string &filePath, Configuration &config);
