@@ -11,5 +11,5 @@
 // destructor
 ASocket::~ASocket(void)
 {
-    std::cout << "ASocket destructor called" << std::endl;
+    ;
 }

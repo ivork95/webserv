@@ -83,8 +83,6 @@ void Request::responsePathSet(void)
 
 int Request::tokenize(const char *buf, int nbytes)
 {
-    Logger &logger = Logger::getInstance();
-
     m_rawMessage.append(buf, buf + nbytes);
 
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
