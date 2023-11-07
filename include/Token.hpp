@@ -8,10 +8,6 @@
 
 class Token
 {
-private:
-    ETokenType _type;
-    std::string _word;
-
 public:
     enum ETokenType
     {
@@ -37,6 +33,10 @@ public:
     void setWord(const std::string &word);
 
     friend std::ostream &operator<<(std::ostream &out, const Token &token);
+
+private:
+    ETokenType _type;
+    std::string _word;
 };
 
 #endif

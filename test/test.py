@@ -1,6 +1,7 @@
 import unittest
 import requests
 import http.client
+import httpx
 
 
 class TestServerResponse(unittest.TestCase):
@@ -95,28 +96,21 @@ class TestServerResponse(unittest.TestCase):
         response = requests.delete(url=url)
         self.assertEqual(response.status_code, 500)
 
-        # TO ADD
-        # test UNKNOWN command
-        # ...
-        # ...
+    def test_unknown_method(self):
+        conn = http.client.HTTPConnection("localhost:8081")
+        conn.putrequest("QWERTY", "/upload")
+        conn.putheader("Transfer-Encoding", "chunked")
+        conn.endheaders()
 
-    def delete_tests(self):
-        self.test_delete()
-        self.test_delete_file_does_not_exist()
-        self.test_delete_method_not_allowed()
+        conn.send(b"9\r\nMozilla\r\n11\r\nDeveloper Network\r\n0\r\n\r\n")
+        response = conn.getresponse()
+        conn.close()
+        self.assertEqual(response.status, 405)
 
-    def post_tests(self):
-        self.test_post()
-        self.test_post_bigger_max_client_size()
-        self.test_post_method_not_allowed()
-        self.test_post_chunked()
-        self.test_post_invalid_chunks()
-
-    def get_tests(self):
-        self.test_get()
-        self.test_get_not_found()
-        self.test_get_method_not_allowed()
-        self.test_get_autoindex()
+    # TO ADD
+    # test UNKNOWN command
+    # ...
+    # ...
 
 
 if __name__ == '__main__':

@@ -6,8 +6,7 @@
 // constructor
 Request::Request(Client &client) : m_client(client)
 {
-    // spdlog::debug("Request serverconfig constructor called");
-    Logger::getInstance().debug("Request serverconfig constructor called");
+    std::cout << "Request constructor called\n";
 }
 
 // outstream operator overload
@@ -16,7 +15,6 @@ std::ostream &operator<<(std::ostream &out, const Request &request)
     int i{};
 
     out << "Request {\n";
-
     for (auto item : request.m_methodPathVersion)
     {
         out << "m_methodPathVersion[" << i << "] = |" << item << "|\n";
@@ -49,10 +47,8 @@ void Request::methodPathVersionSet(void)
 
 void Request::updatedLocationConfigSet(const std::string &methodPath)
 {
-    // spdlog::warn("methodPath = {}", methodPath); // ? debug
-    Logger::getInstance().debug("methodPath = " + methodPath);
-
     bool isLocationFound{false};
+
     for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
     {
         if (methodPath == location.getRequestURI())
@@ -77,8 +73,6 @@ void Request::responsePathSet(void)
 {
     for (const auto &index : m_locationconfig.getIndexFile())
     {
-        // spdlog::debug("rootPath + index = {}", m_locationconfig.getRootPath() + index); // ? debug
-        Logger::getInstance().debug("rootPath + index = " + m_locationconfig.getRootPath() + index);
         if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
         {
             m_response.m_path = m_locationconfig.getRootPath() + index;
@@ -91,16 +85,12 @@ int Request::tokenize(const char *buf, int nbytes)
 {
     Logger &logger = Logger::getInstance();
 
-    // spdlog::info("nbytes = {}", nbytes);
-    logger.log("nbytes = " + std::to_string(nbytes));
-
     m_rawMessage.append(buf, buf + nbytes);
 
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
     if (fieldLinesEndPos == std::string::npos)
     {
-        // spdlog::warn("message incomplete [...]");
-        logger.log("message incomplete [...]!");
+        std::cout << "Message incomplete [...]\n";
         return 1;
     }
 
@@ -113,38 +103,31 @@ int Request::tokenize(const char *buf, int nbytes)
             contentLengthSet();
         if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
         {
-            // spdlog::warn("Content-Length not reached [...]");
-            logger.log("Content-Length not reached [...]");
+            std::cout << "Content-length not reached [...]\n";
             return 2;
         }
-        // spdlog::info("Content-Length reached!");
-        logger.log("Content-Length reached!");
+        std::cout << "Content-length reached\n";
     }
-    // Chunked requests
-    else if (m_requestHeaders.contains("Transfer-Encoding"))
+    else if (m_requestHeaders.contains("Transfer-Encoding")) // Chunked request
     {
         if (!m_isChunked)
             m_isChunked = true;
         size_t chunkEndPos = m_rawMessage.find("\r\n0\r\n\r\n");
         if (chunkEndPos == std::string::npos)
         {
-            // spdlog::warn("Chunk EOF not reached [...]");
-            logger.log("Chunk EOF not reached [...]");
+            std::cout << "Chunk EOR not reached [...]\n";
             return 3;
         }
-        // spdlog::info("Chunk EOF not reached!");
-        logger.log("Chunk EOF not reached!");
+        std::cout << "Chunk EOF reached\n";
     }
 
-    // spdlog::info("message complete!");
-    logger.log("message complete!");
+    std::cout << "Message complete!\n";
+
     return 0;
 }
 
 int Request::parse(void)
 {
-    Logger &logger = Logger::getInstance();
-
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
     methodPathVersionSet();
@@ -156,48 +139,25 @@ int Request::parse(void)
         throw StatusCodeException(405, "Warning: method not allowed");
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
-    logger.debug("m_methodPathVersion[1]: " + m_methodPathVersion[1]);
-    // spdlog::critical("m_methodPathVersion[1] : {}", m_methodPathVersion[1]); // ? debug
-
     if (m_methodPathVersion[0] == "DELETE")
-    {
-        // spdlog::warn("DELETE method"); // ? debug
-        logger.debug("DELETE method");
-
-        return deleteHandler(); // ? new
-    }
+        return deleteHandler();
 
     // Nasty solution to redirect + get back upload
     if (m_methodPathVersion[0] == "GET" && Helper::isImageFormat(m_methodPathVersion[1]))
-    {
         return uploadHandler();
-    }
 
-    updatedLocationConfigSet(m_methodPathVersion[1]); // ? new
-    isMethodAllowed();                                // For a certain location block, check if the request method is allowed
-    responsePathSet();                                // For a certain location block, loops over index files, and checks if one exists
+    updatedLocationConfigSet(m_methodPathVersion[1]);
+    isMethodAllowed(); // For a certain location block, check if the request method is allowed
+    responsePathSet(); // For a certain location block, loops over index files, and checks if one exists
 
     if (m_methodPathVersion[0] == "GET")
+        return getHandler();
+    else
     {
-        // spdlog::warn("GET method"); // ? debug
-        logger.debug("GET method");
-
-        return getHandler(); // ? new
-    }
-
-    if (m_methodPathVersion[0] == "POST")
-    {
-        // spdlog::warn("POST method"); // ? debug
-        logger.debug("POST method");
-
-        // ? left it here because of the multiplexer
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
-            // spdlog::critical("POST cgi handler");
-            logger.debug("POST cgi handler");
-            // Hier voegen we de WRITE kant van pipe1 toe aan Epoll
             CGIPipeIn *pipein = new CGIPipeIn(m_client);
-            if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[WRITE]))
+            if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[WRITE])) // Add the WRITE end of pipein to Epoll
             {
                 close(pipein->m_pipeFd[READ]);
                 close(pipein->m_pipeFd[WRITE]);
@@ -207,12 +167,9 @@ int Request::parse(void)
             }
             return 2;
         }
-
         if (m_isChunked)
-        {
-            return chunkHandler(); // ? new
-        }
+            return chunkHandler();
 
-        return postHandler(); // ? new
+        return postHandler();
     }
 }
