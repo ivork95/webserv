@@ -25,13 +25,6 @@ public:
     // constructor
     CGIPipeIn(Client &client);
 
-    // copy constructor
-
-    // copy assignment operator
-
-    // destructor
-    ~CGIPipeIn(void);
-
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const CGIPipeIn &cgipipein);
 

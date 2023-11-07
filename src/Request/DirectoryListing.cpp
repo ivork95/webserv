@@ -10,15 +10,10 @@ static std::string directoryListingGenerate(const std::string &dirPath)
         const std::string entryPath = entry.path().string();
 
         if (std::filesystem::is_directory(entryPath))
-        {
             listing += "<li><a href='" + entryName + "/'>" + entryName + "/</a></li>";
-        }
         else
-        {
             listing += "<li>" + entryName + "</li>";
-        }
     }
-
     listing += "</ul></body></html>";
 
     return listing;
@@ -30,7 +25,6 @@ void Request::directoryListingBodySet(const std::string &dirPath)
     if (directoryListing.empty())
         throw StatusCodeException(500, "Error: directoryListingBodySet");
 
-    // m_response.bodySet(directoryListing); // to change I guess
     m_response.m_body = directoryListing;
     m_response.m_statusCode = 200;
     m_response.m_headers.insert({"Content-Type", "text/html"});
@@ -41,8 +35,7 @@ std::string Request::directoryListingParse(void)
     std::string requestUri = m_methodPathVersion[1];
     std::string dirPath{};
 
-    // Remove leading '/' before appending root
-    if (requestUri[0] == '/')
+    if (requestUri[0] == '/') // Remove leading '/' before appending root
         requestUri = requestUri.substr(1, requestUri.size());
 
     dirPath = m_locationconfig.getRootPath() + requestUri;

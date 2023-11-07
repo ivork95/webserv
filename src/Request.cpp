@@ -63,7 +63,7 @@ void Request::updatedLocationConfigSet(const std::string &methodPath)
         }
     }
     if (!isLocationFound) // there's no matching URI
-        throw StatusCodeException(404, "Error: no matching location/path found");
+        throw StatusCodeException(404, "Warning: no matching location/path found");
 }
 
 void Request::isMethodAllowed(void)
@@ -203,7 +203,7 @@ int Request::parse(void)
                 close(pipein->m_pipeFd[WRITE]);
                 pipein->m_socketFd = -1;
                 delete pipein;
-                throw StatusCodeException(500, "Error: addToEpoll()");
+                throw StatusCodeException(500, "addToEpoll()", errno);
             }
             return 2;
         }

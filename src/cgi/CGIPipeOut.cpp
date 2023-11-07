@@ -3,11 +3,11 @@
 CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m_client(client), m_request(request), m_response(response)
 {
     if (pipe(m_pipeFd) == -1)
-        throw StatusCodeException(500, "Error: pipe()");
+        throw StatusCodeException(500, "pipe()", errno);
     if (Helper::setNonBlocking(m_pipeFd[READ]) == -1)
-        throw StatusCodeException(500, "Error: setNonBlocking()");
+        throw StatusCodeException(500, "setNonBlocking()", errno);
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
-        throw StatusCodeException(500, "Error: setNonBlocking()");
+        throw StatusCodeException(500, "setNonBlocking()", errno);
 }
 
 // outstream operator overload
@@ -20,8 +20,6 @@ std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout)
 
 void CGIPipeOut::forkCloseDupExec(std::vector<ASocket *> &toBeDeleted)
 {
-    Logger &logger = Logger::getInstance();
-
     pid_t cpid1 = fork();
     if (cpid1 == -1)
     {
@@ -29,7 +27,7 @@ void CGIPipeOut::forkCloseDupExec(std::vector<ASocket *> &toBeDeleted)
         close(m_pipeFd[WRITE]);
         m_socketFd = -1;
         toBeDeleted.push_back(this);
-        throw StatusCodeException(500, "Error: fork()");
+        throw StatusCodeException(500, "fork()", errno);
     }
     if (cpid1 == 0)
     {
@@ -38,18 +36,18 @@ void CGIPipeOut::forkCloseDupExec(std::vector<ASocket *> &toBeDeleted)
         char *argv[] = {pythonPath, scriptPath, NULL};
 
         if (close(m_pipeFd[READ]) == -1)
-            throw StatusCodeException(500, "Error: close()");
+            throw StatusCodeException(500, "close()", errno);
         if (dup2(m_pipeFd[WRITE], STDOUT_FILENO) == -1) // Dup the write end of pipe2 to stdout
-            throw StatusCodeException(500, "Error: dup2()");
+            throw StatusCodeException(500, "dup2()", errno);
         if (close(m_pipeFd[WRITE]) == -1)
-            throw StatusCodeException(500, "Error: close()");
+            throw StatusCodeException(500, "close()", errno);
         execve(pythonPath, argv, NULL);
-        throw StatusCodeException(500, "Error: execve()");
+        throw StatusCodeException(500, "execve()", errno);
     }
 
     pid_t cpid2 = fork();
     if (cpid2 == -1)
-        throw StatusCodeException(500, "Error: fork()");
+        throw StatusCodeException(500, "fork()", errno);
     if (cpid2 == 0)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
@@ -63,46 +61,40 @@ void CGIPipeOut::forkCloseDupExec(std::vector<ASocket *> &toBeDeleted)
         wpid = waitpid(-1, &wstatus, WNOHANG);
         if (wpid == cpid1)
         {
-            // spdlog::debug("execve completed!");
-            logger.debug("execve completed!");
+            std::cout << "execve completed\n";
 
             kill(cpid2, SIGKILL);
-
             if (wstatus)
             {
-                // spdlog::warn("execve exited with exception: {}", cpid1, wstatus);
-                logger.debug("execve exited with exception: " + std::to_string(cpid1) + " " + std::to_string(wstatus));
+                std::cout << "execve exited with exception: " << wstatus << "\n";
 
                 close(m_pipeFd[READ]);
                 close(m_pipeFd[WRITE]);
                 m_socketFd = -1;
                 toBeDeleted.push_back(this);
-                throw StatusCodeException(502, "Error: excevce exception");
+                throw StatusCodeException(502, "execve", errno);
             }
-
             if (close(m_pipeFd[WRITE]) == -1)
             {
                 close(m_pipeFd[READ]);
                 m_socketFd = -1;
                 toBeDeleted.push_back(this);
-                throw StatusCodeException(500, "Error: close()");
+                throw StatusCodeException(500, "close()", errno);
             }
             break;
         }
         else if (wpid == cpid2)
         {
-            // spdlog::debug("cpid2 completed!");
-            logger.debug("cpid2 completed!");
+            std::cout << "cpid2 completed\n";
 
             kill(cpid1, SIGKILL);
-
             close(m_pipeFd[READ]);
             close(m_pipeFd[WRITE]);
             m_socketFd = -1;
             toBeDeleted.push_back(this);
-            throw StatusCodeException(504, "Error: killed execve for taking to long");
+            throw StatusCodeException(504, "Killed execve for taking too long");
         }
         else if (wpid == -1)
-            throw StatusCodeException(502, "Error: waitpid()");
+            throw StatusCodeException(502, "waitpid()", errno);
     }
 }

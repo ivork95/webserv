@@ -1,1 +1,0 @@
-Hello World! My content includes a trailing CRLF.

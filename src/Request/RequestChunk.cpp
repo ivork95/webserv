@@ -81,16 +81,12 @@ void Request::chunkBodyTokenize(void)
             m_totalChunkLength += intLen;
         }
         else
-        {
             chunkLine.push_back(token);
-        }
         nbLines++;
     }
 
     if (chunkLine.empty() || chunkLength.empty())
-    {
         throw StatusCodeException(500, "Error: chunkBodyTokenize");
-    }
 
     chunkBodyParse(nbLines, chunkLength, chunkLine);
     m_chunkLine = chunkLine;
@@ -119,34 +115,25 @@ void Request::chunkHeadersParse(void)
     if (it != m_requestHeaders.end())
     {
         if (it->second != "chunked")
-        {
             throw StatusCodeException(500, "Error: invalid Transfer-Encoding form");
-        }
     }
     else
-    {
         throw StatusCodeException(500, "Error: could not find Transfer-Encoding");
-    }
 }
 
 int Request::chunkHandler(void)
 {
-    // spdlog::warn("POST chunk handler"); // ? debug
-    Logger::getInstance().debug("POST chunk handler");
+    std::cout << "POST chunk handler";
 
     chunkHeadersParse();
     chunkBodyExtract();
     chunkBodyTokenize();
     chunkBodySet();
-
-    // spdlog::warn("m_chunkBody = {}", m_chunkBody); // ? debug
-    Logger::getInstance().debug("m_chunkBody = " + m_chunkBody);
+    std::cout << "m_chunkBody = " << m_chunkBody << "\n";
 
     chunkHeaderReplace();
-
-    requestHeadersPrint(m_requestHeaders); // ? debug
-
     m_response.m_body = m_chunkBody;
     m_response.m_statusCode = 200;
+
     return 0;
 }
