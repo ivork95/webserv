@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-// serverConfig constructor
+// constructor
 Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
 {
     int yes{1}; // For setsockopt() SO_REUSEADDR, below
@@ -16,33 +16,25 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     if ((rv = getaddrinfo(NULL, m_serverconfig.getPortNb().c_str(), &m_hints, &ai)) != 0)
     {
         std::cerr << "selectserver: " << gai_strerror(rv) << '\n';
-		// Logger::getInstance().error("selectserver: " + gai_strerror(rv)); // TODO fix this
-        throw std::runtime_error("Error: getaddrinfo() failed\n");
+        throw std::system_error(errno, std::generic_category(), "getaddrinfo()");
     }
 
     for (p = ai; p != NULL; p = p->ai_next)
     {
         m_socketFd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
         if (m_socketFd < 0)
-        {
             continue;
-        }
-
-        // Lose the pesky "address already in use" error message
-        setsockopt(m_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-
+        setsockopt(m_socketFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)); // Lose the pesky "address already in use" error message
         if (bind(m_socketFd, p->ai_addr, p->ai_addrlen) < 0)
         {
             close(m_socketFd);
             continue;
         }
-
         break;
     }
 
-    // If we got here, it means we didn't get bound
-    if (p == NULL)
-        throw std::runtime_error("bind() failed");
+    if (p == NULL) // If we got here, it means we didn't get bound
+        throw std::system_error(errno, std::generic_category(), "selectserver: failed to bind");
 
     // get the pointer to the address itself,
     // different fields in IPv4 and IPv6:
@@ -60,28 +52,26 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
         m_ipver = "IPv6";
         m_port = ntohs(ipv6->sin6_port);
     }
-    // convert the IP to a string and print it:
-    inet_ntop(p->ai_family, m_addr, m_ipstr, sizeof m_ipstr);
+    inet_ntop(p->ai_family, m_addr, m_ipstr, sizeof m_ipstr); // convert the IP to a string and print it
 
     freeaddrinfo(ai); // All done with this
 
-    // Listen
-    if (listen(m_socketFd, BACKLOG) == -1) {
-        throw std::runtime_error("Error: listen() failed\n");
-	}
-    if (Helper::setNonBlocking(m_socketFd) == -1) {
-        throw std::runtime_error("Error: fcntl() failed\n");
-	}
+    if (listen(m_socketFd, BACKLOG) == -1)
+        throw std::system_error(errno, std::generic_category(), "listen()");
+    if (Helper::setNonBlocking(m_socketFd) == -1)
+        throw std::system_error(errno, std::generic_category(), "fcntl()");
 
-    // spdlog::debug("{0} constructor called", *this);
-	Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") constructor called");
+    Multiplexer &multiplexer = Multiplexer::getInstance();
+    if (multiplexer.addToEpoll(this, EPOLLIN | EPOLLRDHUP, m_socketFd))
+        throw std::system_error(errno, std::generic_category(), "addToEpoll()");
+
+    std::cout << *this << " constructor called\n";
 }
 
 // destructor
 Server::~Server(void)
 {
-    // spdlog::debug("{0} destructor called", *this);
-	Logger::getInstance().debug("Server(" + std::to_string(m_socketFd) + ": " + m_ipver + ": " + m_ipstr + ": " + std::to_string(m_port) + ") destructor called");
+    std::cout << *this << " destructor called\n";
 
     close(m_socketFd);
 }
@@ -94,14 +84,14 @@ void Server::handleNewConnection(void) const
     {
         Client *client = new Client{*this};
         if (multiplexer.addToEpoll(client, EPOLLIN | EPOLLRDHUP, client->m_socketFd))
-            throw std::runtime_error("Error: addToEpoll()\n");
+            throw std::system_error(errno, std::generic_category(), "addToEpoll()");
         if (multiplexer.addToEpoll(&(client->m_timer), EPOLLIN | EPOLLRDHUP, client->m_timer.m_socketFd))
-            throw std::runtime_error("Error: addToEpoll()\n");
+            throw std::system_error(errno, std::generic_category(), "addToEpoll()");
     }
     catch (const std::exception &e)
     {
-        // spdlog::critical("Error: couldn't create client\n{}", e.what());
-		Logger::getInstance().error("Error: couldn't create client: " + static_cast<std::string>(e.what()));
+        std::cout << "Error: couldn't create client\n"
+                  << e.what() << '\n';
     }
 }
 

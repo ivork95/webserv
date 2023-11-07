@@ -8,40 +8,23 @@
 #include <iostream>
 #include <filesystem>
 
-
-
-#include "StatusCodes.hpp"
+#include "StatusCodeException.hpp"
 #include "ServerConfig.hpp"
 #include "Helper.hpp"
-
 #include "Logger.hpp"
 
 class Response
 {
 public:
     int m_statusCode{};
-
     std::string m_statusLine{};
     std::string m_path{};
     std::map<std::string, std::string> m_headers{};
     std::string m_body{};
-
     std::string m_buf{};
     int m_len{};
     int m_total{0};
     int m_bytesleft{};
-
-    // default constructor
-    Response(void);
-
-    // request constrcuctor
-
-    // copy constructor
-
-    // copy assignment operator overload
-
-    // destructor
-    ~Response(void);
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Response &Response);
@@ -125,7 +108,6 @@ public:
         {508, "HTTP/1.1 508 Loop Detected"},
         {510, "HTTP/1.1 510 Not Extended"},
         {511, "HTTP/1.1 511 Network Authentication Required"}};
-
 };
 
 #endif

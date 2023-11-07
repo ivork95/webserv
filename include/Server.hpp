@@ -11,19 +11,16 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-
-
 #include <cstring>
 
 #include "Client.hpp"
-#include "Socket.hpp"
+#include "ASocket.hpp"
 #include "ServerConfig.hpp"
-
 #include "Logger.hpp"
 
 #define BACKLOG 150 // how many pending connections queue will hold
 
-class Server : public Socket
+class Server : public ASocket
 {
 public:
     struct addrinfo m_hints
@@ -35,7 +32,7 @@ public:
     // default constructor
     Server(void) = delete;
 
-    // serverConfig constructor
+    // constructor
     Server(const ServerConfig &serverconfig);
 
     // copy constructor

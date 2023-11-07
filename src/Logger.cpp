@@ -3,15 +3,16 @@
 
 /**
  * CONSTRUCTORS / DESTRUCTORS
-*/
+ */
 Logger::Logger() {}
 
 Logger::~Logger() {}
 
 /**
  * STATIC FUNCTIONS
-*/
-static std::string getCurrentTime() {
+ */
+static std::string getCurrentTime()
+{
     auto now = std::time(nullptr);
     auto tm_time = *std::localtime(&now);
 
@@ -27,35 +28,41 @@ static std::string getCurrentTime() {
 
 /**
  * SETTERS / GETTERS
-*/
-Logger &Logger::getInstance() {
-	static Logger instance;
-	return instance;
+ */
+Logger &Logger::getInstance()
+{
+    static Logger instance;
+    return instance;
 }
 
 /**
  * MEMBER FUNCTIONS
-*/
-void Logger::log(const std::string &message) {
-	std::cout << _getTimeStamp() << " [" << GREEN << "INFO" << RC << "] " << message << std::endl;
+ */
+void Logger::log(const std::string &message)
+{
+    std::cout << _getTimeStamp() << " [" << GREEN << "INFO" << RC << "] " << message << std::endl;
 }
 
-void Logger::debug(const std::string &message) {
-	std::cout << _getTimeStamp() << " [" << BLUE << "DEBUG" << RC << "] " << message << std::endl;
+void Logger::debug(const std::string &message)
+{
+    std::cout << _getTimeStamp() << " [" << BLUE << "DEBUG" << RC << "] " << message << std::endl;
 }
 
-void Logger::error(const std::string &message) {
-	std::cout << _getTimeStamp() << " [" << RED << "ERROR" << RC << "] " << message << std::endl;
+void Logger::error(const std::string &message)
+{
+    std::cout << _getTimeStamp() << " [" << RED << "ERROR" << RC << "] " << message << std::endl;
 }
 
-void Logger::warn(const std::string &message) {
-	std::cout << _getTimeStamp() << " [" << YELLOW << "WARN" << RC << "] " << message << std::endl;
+void Logger::warn(const std::string &message)
+{
+    std::cout << _getTimeStamp() << " [" << YELLOW << "WARN" << RC << "] " << message << std::endl;
 }
 
-std::string Logger::_getTimeStamp() const {
-	std::string timeStamp = "[";
-	std::string currentTime = getCurrentTime();
-	timeStamp.append(currentTime);
-	timeStamp.append("]");
-	return timeStamp;
+std::string Logger::_getTimeStamp() const
+{
+    std::string timeStamp = "[";
+    std::string currentTime = getCurrentTime();
+    timeStamp.append(currentTime);
+    timeStamp.append("]");
+    return timeStamp;
 }

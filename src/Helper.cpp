@@ -7,6 +7,7 @@ char Helper::hexToChar(const std::string &hex)
 
     ss << std::hex << hex;
     ss >> value;
+
     return static_cast<char>(value);
 }
 
@@ -51,9 +52,10 @@ std::string Helper::fileToStr(const std::string &path)
     std::ifstream inf(path);
 
     if (!inf)
-        throw StatusCodeException(404, "Error: fileToStr()");
+        throw StatusCodeException(404, "ifstream", errno);
     std::ostringstream sstr;
     sstr << inf.rdbuf();
+
     return sstr.str();
 }
 
@@ -79,6 +81,7 @@ int Helper::hexToInt(const std::string &hex)
 
     ss << std::hex << hex;
     ss >> value;
+
     return static_cast<int>(value);
 }
 
@@ -90,12 +93,20 @@ int Helper::setNonBlocking(int fd)
     flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1)
         return -1;
-
     flags |= O_NONBLOCK;
-
     result = fcntl(fd, F_SETFL, flags);
     if (result == -1)
         return -1;
 
     return 0;
+}
+
+bool Helper::isImageFormat(const std::string &methodPath)
+{
+    std::cout << "methodPath = " << methodPath << std::endl;
+
+    if (methodPath.ends_with("jpg") || methodPath.ends_with("jpeg") || methodPath.ends_with("png"))
+        return true;
+
+    return false;
 }

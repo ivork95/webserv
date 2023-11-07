@@ -14,10 +14,13 @@ private:
     std::string _filePath;
 
 public:
+    // default constructor
     ErrorPageConfig(void);
-    ErrorPageConfig(const std::vector<int> &errorCode, const std::string &filePath);
-    ~ErrorPageConfig(void);
 
+    // constructor
+    ErrorPageConfig(const std::vector<int> &errorCode, const std::string &filePath);
+
+    // getters/setters
     const std::vector<int> &getErrorCodes(void) const;
     const std::string &getFilePath(void) const;
 

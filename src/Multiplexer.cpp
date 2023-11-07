@@ -6,19 +6,18 @@ Multiplexer::Multiplexer(void)
 {
     m_epollfd = epoll_create(1);
     if (m_epollfd == -1)
-    {
-        std::perror("epoll_create() failed");
-        throw std::runtime_error("Error: epoll_create() failed\n");
-    }
-    // spdlog::debug("{} default constructor called", *this);
-	Logger::getInstance().debug("Multiplexer(" + std::to_string(m_epollfd) + ")" + " default constructor called");
+        throw std::system_error(errno, std::generic_category(), "epoll_create()");
+
+    if (addToEpoll(&signal, EPOLLIN, signal.m_socketFd))
+        throw std::system_error(errno, std::generic_category(), "addToEpoll()");
+
+    std::cout << *this << " default constructor called\n";
 }
 
 // destructor
 Multiplexer::~Multiplexer(void)
 {
-    // spdlog::debug("{} destructor called", *this);
-	Logger::getInstance().debug("Multiplexer(" + std::to_string(m_epollfd) + ")" + " destructor called");
+    std::cout << *this << " destructor called\n";
 
     close(m_epollfd);
 }
@@ -35,10 +34,11 @@ std::ostream &operator<<(std::ostream &out, const Multiplexer &multiplexer)
 Multiplexer &Multiplexer::getInstance(void)
 {
     static Multiplexer instance;
+
     return instance;
 }
 
-int Multiplexer::modifyEpollEvents(Socket *ptr, int events, int fd)
+int Multiplexer::modifyEpollEvents(ASocket *ptr, int events, int fd)
 {
     struct epoll_event ev
     {
@@ -49,7 +49,7 @@ int Multiplexer::modifyEpollEvents(Socket *ptr, int events, int fd)
     return epoll_ctl(m_epollfd, EPOLL_CTL_MOD, fd, &ev);
 }
 
-int Multiplexer::addToEpoll(Socket *ptr, int events, int fd)
+int Multiplexer::addToEpoll(ASocket *ptr, int events, int fd)
 {
     struct epoll_event ev
     {

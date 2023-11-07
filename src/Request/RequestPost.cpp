@@ -10,13 +10,11 @@ std::string Request::generalHeadersParse(const std::string &boundaryCode)
 
     size_t BoundaryStartPos = m_rawMessage.find(boundaryStart);
     if (BoundaryStartPos == std::string::npos)
-    {
-        throw StatusCodeException(400, "Error: invalid Content-Length header2");
-    }
+        throw StatusCodeException(400, "Error: couldn't find boundary code");
 
     size_t generalHeadersEndPos = m_rawMessage.find(generalHeadersEnd, BoundaryStartPos + boundaryStart.length());
     if (generalHeadersEndPos == std::string::npos)
-        throw StatusCodeException(400, "Error: invalid Content-Length header3");
+        throw StatusCodeException(400, "Error: couldn't find general headers");
 
     return m_rawMessage.substr(BoundaryStartPos + boundaryStart.length(), (generalHeadersEndPos + generalHeadersEnd.length()) - (BoundaryStartPos + boundaryStart.length()));
 }
@@ -30,8 +28,9 @@ void Request::generalHeadersSet(void)
 void Request::bodyToDisk(const std::string &path)
 {
     std::ofstream outf{path};
+
     if (!outf)
-        throw StatusCodeException(400, "Error: ofstream");
+        throw StatusCodeException(400, "ofstream");
     outf << m_body;
 }
 
@@ -44,8 +43,6 @@ std::string Request::bodyParse(const std::string &boundaryCode)
     if (boundaryCode.empty())
     {
         requestHeadersEndPos += 4;
-        // spdlog::debug("M_BODY NO BOUNDRY {}", m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
-		Logger::getInstance().debug("M_BODY NO BOUNDRY " + m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
         return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
     }
 
@@ -103,20 +100,20 @@ void Request::boundaryCodeSet(void)
     m_boundaryCode = boundaryCodeParse(m_requestHeaders);
 }
 
-int Request::postHandler(void) {
-	// spdlog::warn("POST handler"); // ? debug
-	Logger::getInstance().debug("POST handler");
+int Request::postHandler(void)
+{
+    std::cout << "POST handler\n";
 
-	if (m_contentLength > m_locationconfig.getClientMaxBodySize())
-		throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+    if (m_contentLength > m_locationconfig.getClientMaxBodySize())
+        throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");
+    boundaryCodeSet();
+    generalHeadersSet();
+    fileNameSet();
+    bodySet();
+    bodyToDisk("./www/" + m_fileName);
 
-	boundaryCodeSet();
-	generalHeadersSet();
-	fileNameSet();
-	bodySet();
-	bodyToDisk("./www/" + m_fileName);
+    m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
+    m_response.m_statusCode = 303;
 
-	m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
-	m_response.m_statusCode = 303;
-	return 0;
+    return 0;
 }
