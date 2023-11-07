@@ -19,6 +19,12 @@ public:
     // default constructor
     Signal(void);
 
+    // copy constructor
+    Signal(const Signal &source) = delete;
+
+    // copy assignment operator overload
+    Signal &operator=(const Signal &source) = delete;
+
     // destructor
     ~Signal(void);
 

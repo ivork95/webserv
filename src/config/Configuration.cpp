@@ -3,15 +3,8 @@
 
 /**
  * CONSTRUCTORS / DESTRUCTORS
-*/
-Configuration::Configuration(void) : serversConfig(), serverSections() {
-	Logger::getInstance().debug("Configuration default constructor called");
+ */
+Configuration::Configuration(void) : serversConfig(), serverSections()
+{
+    std::cout << "Configuration default constructor called\n";
 }
-
-Configuration::~Configuration(void) {
-	Logger::getInstance().debug("Configuration destructor called");
-}
-
-/**
- * MEMBER FUNCTIONS
-*/

@@ -35,6 +35,12 @@ public:
     // constructor
     Server(const ServerConfig &serverconfig);
 
+    // copy constructor
+    Server(const Server &source) = delete;
+
+    // copy assignment operator overload
+    Server &operator=(const Server &source) = delete;
+
     // destructor
     ~Server(void);
 

@@ -33,8 +33,8 @@ private:
     void _parseLimitExcept(std::vector<Token> tokens, size_t *i, LocationConfig &route);
 
 public:
+    // default constructor
     Parser(void);
-    ~Parser(void);
 
     static ServerConfig parseTokens(ServerConfig server);
 };

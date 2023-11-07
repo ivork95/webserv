@@ -25,12 +25,6 @@ public:
     // constructor
     CGIPipeOut(Client &client, Request &request, Response &response);
 
-    // copy constructor
-
-    // copy assignment operator
-
-    // destructor
-
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout);
 

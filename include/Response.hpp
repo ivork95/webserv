@@ -17,12 +17,10 @@ class Response
 {
 public:
     int m_statusCode{};
-
     std::string m_statusLine{};
     std::string m_path{};
     std::map<std::string, std::string> m_headers{};
     std::string m_body{};
-
     std::string m_buf{};
     int m_len{};
     int m_total{0};

@@ -19,8 +19,8 @@ private:
     static void _splitLine(std::vector<Token> *tokens, std::string &line);
 
 public:
+    // default constructor
     Lexer(void);
-    ~Lexer(void);
 
     static std::vector<std::string> splitServers(std::ifstream &configFile);
     static std::vector<ServerConfig> createServers(Configuration *config);

@@ -34,9 +34,11 @@ private:
     std::vector<Token> _tokens;
 
 public:
+    // default constructor
     ServerConfig(void);
+
+    // constructor
     ServerConfig(const unsigned int index, const std::string rawData);
-    ~ServerConfig(void);
 
     const unsigned int &getIndex(void) const;
 

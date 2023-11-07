@@ -11,8 +11,8 @@
 class Configuration
 {
 public:
+    // default constructor
     Configuration(void);
-    ~Configuration(void);
 
     std::vector<ServerConfig> serversConfig;
     std::vector<std::string> serverSections;

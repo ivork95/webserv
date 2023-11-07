@@ -41,9 +41,11 @@ private:
     bool _hasHttpMethods{false};
 
 public:
+    // default constructor
     LocationConfig(void);
+
+    // constructor
     LocationConfig(const std::string &requestURI);
-    ~LocationConfig(void);
 
     const std::string &getRequestURI(void) const;
     const std::string &getRootPath(void) const;

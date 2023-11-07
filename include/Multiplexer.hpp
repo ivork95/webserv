@@ -31,10 +31,10 @@ public:
     Signal signal;
 
     // copy constructor
-    Multiplexer(const Multiplexer &) = delete;
+    Multiplexer(const Multiplexer &source) = delete;
 
     // copy assignment operator overload
-    Multiplexer &operator=(const Multiplexer &) = delete;
+    Multiplexer &operator=(const Multiplexer &source) = delete;
 
     // destructor
     ~Multiplexer(void);

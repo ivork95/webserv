@@ -7,6 +7,7 @@ char Helper::hexToChar(const std::string &hex)
 
     ss << std::hex << hex;
     ss >> value;
+
     return static_cast<char>(value);
 }
 

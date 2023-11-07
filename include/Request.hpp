@@ -28,7 +28,6 @@ public:
     Client &m_client;
     LocationConfig m_locationconfig{};
     Response m_response{};
-
     std::vector<std::string> m_methodPathVersion{3, ""};
     std::map<std::string, std::string> m_generalHeaders{};
     std::string m_boundaryCode{};

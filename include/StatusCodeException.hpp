@@ -3,7 +3,6 @@
 
 #include <stdexcept>
 #include <exception>
-#include <map>
 #include <system_error>
 
 class StatusCodeException : public std::system_error
