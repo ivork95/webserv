@@ -1,7 +1,6 @@
 import unittest
 import requests
 import http.client
-import httpx
 
 
 class TestServerResponse(unittest.TestCase):

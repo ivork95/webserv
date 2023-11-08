@@ -127,10 +127,6 @@ void run(const Configuration &config)
     std::vector<ASocket *> toBeDeleted{};
     while (multiplexer.isRunning)
     {
-        for (auto &s : toBeDeleted)
-            delete s;
-        toBeDeleted.clear();
-
         epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
         if (epollCount == -1)
             throw std::system_error(errno, std::generic_category(), "epoll_wait()");
@@ -141,6 +137,10 @@ void run(const Configuration &config)
 
             if (ePollDataPtr->m_socketFd == -1)
                 continue;
+
+            for (auto &s : toBeDeleted)
+                delete s;
+            toBeDeleted.clear();
 
             if (multiplexer.m_events[i].events & EPOLLIN) // Ready to read
                 handleRead(ePollDataPtr, toBeDeleted);
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-	config.printConfig();
+    config.printConfig();
 
 #if (PARSTER) // To run only the parser and display the output
     return 0;
