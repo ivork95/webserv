@@ -1,5 +1,7 @@
 #include "Multiplexer.hpp"
 #include "Response.hpp"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 // default constructor
 Multiplexer::Multiplexer(void)
@@ -11,14 +13,12 @@ Multiplexer::Multiplexer(void)
     if (addToEpoll(&signal, EPOLLIN, signal.m_socketFd))
         throw std::system_error(errno, std::generic_category(), "addToEpoll()");
 
-    std::cout << *this << " default constructor called\n";
+    spdlog::debug("Multiplexer constructor called");
 }
 
 // destructor
 Multiplexer::~Multiplexer(void)
 {
-    std::cout << *this << " destructor called\n";
-
     close(m_epollfd);
 }
 

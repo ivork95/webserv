@@ -31,7 +31,6 @@ bool	isValidIpv4(const std::string &str) {
     std::string			octet;
 	int					dotCount = countDots(str);
     while (std::getline(iss, octet, '.')) {
-		// std::cout << "octet: " << octet << std::endl; // ? debug
         try {
             const int value = std::stoi(octet);
             if (value < 0 || value > 255)

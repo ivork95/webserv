@@ -6,12 +6,10 @@
  */
 Token::Token(Token::ETokenType &type) : _type(type), _word("")
 {
-    std::cout << "Token type constructor called\n";
 }
 
 Token::Token(std::string &word) : _type(Token::WORD), _word(word)
 {
-    std::cout << "Token word constructor called\n";
 }
 
 /**

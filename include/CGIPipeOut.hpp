@@ -6,11 +6,16 @@
 #include <unistd.h>
 #include <iostream>
 
-#include "Client.hpp"
-#include "Request.hpp"
+#include "ASocket.hpp"
+#include "Helper.hpp"
+#include "StatusCodeException.hpp"
 
 #define READ 0
 #define WRITE 1
+
+class Client;
+class Request;
+class Response;
 
 class CGIPipeOut : public ASocket
 {
@@ -21,15 +26,19 @@ public:
     int m_pipeFd[2]{};
 
     // default constructor
+    CGIPipeOut(void) = delete;
 
     // constructor
     CGIPipeOut(Client &client, Request &request, Response &response);
 
+    ~CGIPipeOut(void);
+
     // outstream operator overload
-    friend std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout);
+    friend std::ostream &
+    operator<<(std::ostream &out, const CGIPipeOut &cgipipeout);
 
     // member functions
-    void forkCloseDupExec(std::vector<ASocket *> &toBeDeleted);
+    void forkCloseDupExec(void);
 };
 
 #endif

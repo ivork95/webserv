@@ -8,7 +8,6 @@
  */
 Parser::Parser(void)
 {
-    std::cout << "Parser default constructor called\n";
 }
 
 /**
@@ -32,7 +31,6 @@ ServerConfig Parser::parseTokens(ServerConfig server)
 
     for (size_t i = 0; i < server.getTokens().size(); i++)
     {
-        // std::cout << "[" << i << "] " << server.getTokens().at(i) << std::endl; // ? debug
         parser._parseServerContext(&server, server.getTokens(), &i);
     }
 

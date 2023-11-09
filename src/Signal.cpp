@@ -2,7 +2,6 @@
 
 Signal::Signal(void)
 {
-    std::cout << "Signal default constructor called\n";
 
     sigset_t mask{};
 
@@ -22,7 +21,5 @@ Signal::Signal(void)
 
 Signal::~Signal()
 {
-    std::cout << "Signal destructor called" << std::endl;
-
     close(m_socketFd);
 }

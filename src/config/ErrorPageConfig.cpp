@@ -6,12 +6,10 @@
  */
 ErrorPageConfig::ErrorPageConfig(void) : _errorCodes{}, _filePath{}
 {
-    std::cout << "ErrorPageConfig default constructor called\n";
 }
 
 ErrorPageConfig::ErrorPageConfig(const std::vector<int> &errorCode, const std::string &filePath) : _errorCodes(errorCode), _filePath(filePath)
 {
-    std::cout << "ErrorPageConfig constructor called\n";
 }
 
 /**

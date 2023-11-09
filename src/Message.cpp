@@ -79,7 +79,6 @@ void Message::requestHeadersPrint(const std::map<std::string, std::string> &head
 
     for (const auto &elem : headers)
     {
-        std::cout << "[" << i << "] = (" << elem.first << ", " << elem.second << ")" << std::endl;
         i++;
     }
 }

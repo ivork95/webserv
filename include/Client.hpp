@@ -13,7 +13,6 @@
 #include "ASocket.hpp"
 #include "Message.hpp"
 #include "Multiplexer.hpp"
-#include "Logger.hpp"
 
 class Server;
 
@@ -35,11 +34,13 @@ public:
     // constructor
     Client(const Server &server);
 
+    ~Client(void);
+
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Client &client);
 
     // member functions
-    void handleConnectedClient(std::vector<ASocket *> &toBeDeleted);
+    void handleConnectedClient();
 };
 
 #endif

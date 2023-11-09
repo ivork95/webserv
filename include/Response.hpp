@@ -11,7 +11,6 @@
 #include "StatusCodeException.hpp"
 #include "ServerConfig.hpp"
 #include "Helper.hpp"
-#include "Logger.hpp"
 
 class Response
 {

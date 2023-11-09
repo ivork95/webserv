@@ -16,8 +16,8 @@
 #include "Helper.hpp"
 #include "ServerConfig.hpp"
 #include "Response.hpp"
-
-#include "Logger.hpp"
+#include "CGIPipeIn.hpp"
+#include "CGIPipeOut.hpp"
 
 class Response;
 class Client;
@@ -26,8 +26,10 @@ class Request : public Message
 {
 public:
     Client &m_client;
-    LocationConfig m_locationconfig{};
     Response m_response{};
+    CGIPipeIn m_pipein;
+    CGIPipeOut m_pipeout;
+    LocationConfig m_locationconfig{};
     std::vector<std::string> m_methodPathVersion{3, ""};
     std::map<std::string, std::string> m_generalHeaders{};
     std::string m_boundaryCode{};

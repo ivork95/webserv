@@ -123,13 +123,11 @@ void Request::chunkHeadersParse(void)
 
 int Request::chunkHandler(void)
 {
-    std::cout << "POST chunk handler";
 
     chunkHeadersParse();
     chunkBodyExtract();
     chunkBodyTokenize();
     chunkBodySet();
-    std::cout << "m_chunkBody = " << m_chunkBody << "\n";
 
     chunkHeaderReplace();
     m_response.m_body = m_chunkBody;

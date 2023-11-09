@@ -7,10 +7,12 @@
 #include "ASocket.hpp"
 #include "StatusCodeException.hpp"
 #include "Helper.hpp"
-#include "Client.hpp"
+#include "CGIPipeOut.hpp"
 
 #define READ 0
 #define WRITE 1
+
+class Client;
 
 class CGIPipeIn : public ASocket
 {
@@ -25,11 +27,14 @@ public:
     // constructor
     CGIPipeIn(Client &client);
 
+    ~CGIPipeIn(void);
+
     // outstream operator overload
-    friend std::ostream &operator<<(std::ostream &out, const CGIPipeIn &cgipipein);
+    friend std::ostream &
+    operator<<(std::ostream &out, const CGIPipeIn &cgipipein);
 
     // member functions
-    void dupCloseWrite(std::vector<ASocket *> &toBeDeleted);
+    void dupCloseWrite(void);
 };
 
 #endif

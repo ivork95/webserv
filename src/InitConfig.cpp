@@ -24,14 +24,11 @@ static int parseTokens(Configuration *config)
         }
         catch (const std::exception &e)
         {
-            Logger::getInstance().error("Error: Parsing server " + std::to_string(i));
-            Logger::getInstance().error(e.what());
             return 1;
         }
         const std::string portNb = config->serversConfig[i].getPortNb();
         if (checkDuplicatePortNumbers(usedPorts, portNb))
         {
-            Logger::getInstance().error("Error: Duplicate port number: " + portNb);
             return 1;
         }
     }
@@ -49,8 +46,6 @@ static int tokenizeServers(Configuration *config)
         }
         catch (const std::exception &e)
         {
-            Logger::getInstance().error("Error: Tokenizing server: " + std::to_string(i));
-            Logger::getInstance().error(e.what());
             return 1;
         }
     }
@@ -66,8 +61,6 @@ static int createServers(Configuration *config)
     }
     catch (const std::exception &e)
     {
-        Logger::getInstance().error("Error: Creating server config");
-        Logger::getInstance().error(e.what());
         return 1;
     }
 
@@ -82,8 +75,6 @@ static int readFile(std::ifstream &configFile, Configuration *config)
     }
     catch (const std::exception &e)
     {
-        Logger::getInstance().error("Error: Splitting server blocks");
-        Logger::getInstance().error(e.what());
         return 1;
     }
 
@@ -95,7 +86,6 @@ static int openFile(std::ifstream &configFile, const std::string &filePath)
     configFile.open(filePath);
     if (!configFile.is_open())
     {
-        Logger::getInstance().error("Error: Opening file: " + filePath);
         return 1;
     }
 
@@ -108,7 +98,6 @@ static bool isValidConfigExtension(const std::string &str)
 
     if (inputFileExtension != ".conf")
     {
-        Logger::getInstance().error("Error: Invalid config file extension: " + inputFileExtension + " (expected .conf)");
         return false;
     }
 

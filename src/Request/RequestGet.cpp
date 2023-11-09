@@ -5,7 +5,6 @@
 
 int Request::uploadHandler(void)
 {
-    std::cout << "GET upload handler\n";
 
     m_response.bodySet("./www" + m_methodPathVersion[1]);
     m_response.m_statusCode = 200;
@@ -15,7 +14,6 @@ int Request::uploadHandler(void)
 
 int Request::getHandler(void)
 {
-    std::cout << "GET handler\n";
 
     // Can't find an index file, check if directory listing
     if (m_response.m_path.empty())

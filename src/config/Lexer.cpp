@@ -6,7 +6,6 @@
  */
 Lexer::Lexer(void)
 {
-    std::cout << "Lexer default constructor called\n";
 }
 
 /**
@@ -79,7 +78,6 @@ std::vector<Token> Lexer::tokenizeServer(const std::string &rawData)
 
     while (std::getline(linesStream, line))
     {
-        // std::cout << "[" << line << "]" << std::endl; // ? debug
         if (line.empty())
         {
             continue;
@@ -100,7 +98,6 @@ std::vector<ServerConfig> Lexer::createServers(Configuration *config)
     if (config->serverSections.empty())
     {
         throw NoServerSectionException();
-        // std::cout << "Error: No server sections found" << std::endl;
         // return std::vector<ServerConfig>();
     }
     for (size_t i = 0; i < config->serverSections.size(); ++i)

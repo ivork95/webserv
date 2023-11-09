@@ -2,7 +2,6 @@
 #include "UtilsConfig.hpp"
 
 bool	isValidCgiInterpreter(const std::string &str) {
-	// std::cout << "isValidCgiInterpreter: " << str << std::endl; // ? debug
 
 	const std::filesystem::path cgiInterpreter(str);
 

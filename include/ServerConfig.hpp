@@ -8,8 +8,6 @@
 #include "Token.hpp"
 #include "LocationConfig.hpp"
 #include "ErrorPageConfig.hpp"
-#include "Logger.hpp"
-
 class ServerConfig
 {
 private:

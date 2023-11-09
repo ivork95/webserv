@@ -8,7 +8,6 @@
 #include <fcntl.h>
 
 #include "StatusCodeException.hpp"
-#include "Logger.hpp"
 
 class Helper
 {

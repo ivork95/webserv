@@ -3,9 +3,9 @@
 
 #include <map>
 #include <string>
+#include <iostream>
 
 #include "StatusCodeException.hpp"
-#include "Logger.hpp"
 
 class Message
 {

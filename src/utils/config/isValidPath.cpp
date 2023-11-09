@@ -2,7 +2,6 @@
 #include "UtilsConfig.hpp"
 
 bool	isValidPath(const std::string &str, const bool &isDirectory) {
-	// std::cout << "isValidPath: " << str << std::endl; // ? debug
 
 	if (str.empty())
 		return false;

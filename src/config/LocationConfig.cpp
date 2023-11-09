@@ -6,13 +6,11 @@
 LocationConfig::LocationConfig(void) : _requestURI{}, _rootPath{}, _clientMaxBodySize{}, _autoIndex(false),
                                        _indexFile{}, _cgiScript{}, _cgiInterpreter{}, _absCgiScript{}, _httpMethods{}
 {
-    std::cout << "LocationConfig default constructor called\n";
 }
 
 LocationConfig::LocationConfig(const std::string &requestURI) : _requestURI(requestURI), _hasRequestURI(true), _rootPath{}, _clientMaxBodySize{},
                                                                 _autoIndex(false), _indexFile{}, _cgiScript{}, _cgiInterpreter{}, _absCgiScript{}, _httpMethods{}
 {
-    std::cout << "LocationConfig parametric constructor called\n";
 }
 
 /**
@@ -213,22 +211,18 @@ void LocationConfig::checkMissingDirective(void)
 {
     if (!hasRootPath())
     {
-        Logger::getInstance().debug("No root path (setting to default: www/)");
         setRootPath("www/");
     }
     if (!hasClientMaxBodySize())
     {
-        Logger::getInstance().debug("No client max body size (setting to default: 1000000)");
         setClientMaxBodySize(1000000);
     }
     if (!hasAutoIndex())
     {
-        Logger::getInstance().debug("No auto index (setting to default: false)");
         setAutoIndex(false);
     }
     if (!hasIndexFile())
     {
-        Logger::getInstance().debug("No index file (setting to default: index.html)");
         setIndexFile({"index.html"});
     }
 }

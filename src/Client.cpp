@@ -1,4 +1,6 @@
 #include "Client.hpp"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 // constructor
 Client::Client(const Server &server) : m_server(server), m_request(*this), m_timer(*this)
@@ -28,7 +30,12 @@ Client::Client(const Server &server) : m_server(server), m_request(*this), m_tim
     // convert the IP to a string and print it:
     inet_ntop(m_remoteaddr.ss_family, m_addr, m_ipstr, sizeof m_ipstr);
 
-    std::cout << *this << " constructor called" << std::endl;
+    spdlog::debug("Client constructor called");
+}
+
+Client::~Client(void)
+{
+    close(m_socketFd);
 }
 
 // outstream operator overload
@@ -39,7 +46,7 @@ std::ostream &operator<<(std::ostream &out, const Client &client)
     return out;
 }
 
-void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
+void Client::handleConnectedClient()
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
@@ -47,24 +54,20 @@ void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
     int nbytes{static_cast<int>(recv(m_socketFd, buf, BUFSIZ - 1, 0))};
     if (nbytes <= 0)
     {
-        if (close(m_socketFd) == -1)
-            throw StatusCodeException(500, "close()", errno);
-        m_socketFd = -1;
-        toBeDeleted.push_back(this);
-
-        if (close(m_timer.m_socketFd) == -1)
-            throw StatusCodeException(500, "close()", errno);
-        m_timer.m_socketFd = -1;
-
+        multiplexer.modifyEpollEvents(nullptr, 0, m_socketFd);
+        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_socketFd, NULL);
+        multiplexer.modifyEpollEvents(nullptr, 0, m_timer.m_socketFd);
+        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_timer.m_socketFd, NULL);
+        delete this;
         return;
     }
 
     if (m_request.tokenize(buf, nbytes))
         return;
 
-    if (close(m_timer.m_socketFd) == -1)
-        throw StatusCodeException(500, "close()", errno);
-    m_timer.m_socketFd = -1;
+    epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_timer.m_socketFd, NULL);
+    // if (close(m_timer.m_socketFd) == -1)
+    //     throw StatusCodeException(500, "close()", errno);
 
     try
     {
@@ -82,5 +85,4 @@ void Client::handleConnectedClient(std::vector<ASocket *> &toBeDeleted)
         if (multiplexer.modifyEpollEvents(this, EPOLLOUT, this->m_socketFd))
             throw StatusCodeException(500, "modifyEpollEvents()", errno);
     }
-    std::cout << m_request << std::endl;
 }

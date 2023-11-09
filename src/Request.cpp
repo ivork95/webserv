@@ -2,11 +2,12 @@
 #include "Multiplexer.hpp"
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 // constructor
-Request::Request(Client &client) : m_client(client)
+Request::Request(Client &client) : m_client(client), m_pipein(client), m_pipeout(client, *this, m_response)
 {
-    std::cout << "Request constructor called\n";
 }
 
 // outstream operator overload
@@ -73,6 +74,7 @@ void Request::responsePathSet(void)
 {
     for (const auto &index : m_locationconfig.getIndexFile())
     {
+        spdlog::info("m_locationconfig.getRootPath() + index = {}", m_locationconfig.getRootPath() + index);
         if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
         {
             m_response.m_path = m_locationconfig.getRootPath() + index;
@@ -88,7 +90,6 @@ int Request::tokenize(const char *buf, int nbytes)
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
     if (fieldLinesEndPos == std::string::npos)
     {
-        std::cout << "Message incomplete [...]\n";
         return 1;
     }
 
@@ -101,10 +102,8 @@ int Request::tokenize(const char *buf, int nbytes)
             contentLengthSet();
         if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
         {
-            std::cout << "Content-length not reached [...]\n";
             return 2;
         }
-        std::cout << "Content-length reached\n";
     }
     else if (m_requestHeaders.contains("Transfer-Encoding")) // Chunked request
     {
@@ -113,13 +112,11 @@ int Request::tokenize(const char *buf, int nbytes)
         size_t chunkEndPos = m_rawMessage.find("\r\n0\r\n\r\n");
         if (chunkEndPos == std::string::npos)
         {
-            std::cout << "Chunk EOR not reached [...]\n";
             return 3;
         }
-        std::cout << "Chunk EOF reached\n";
     }
 
-    std::cout << "Message complete!\n";
+    spdlog::debug("HTTP Message complete:\n{}", m_rawMessage);
 
     return 0;
 }
@@ -154,15 +151,8 @@ int Request::parse(void)
     {
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
-            CGIPipeIn *pipein = new CGIPipeIn(m_client);
-            if (multiplexer.addToEpoll(pipein, EPOLLOUT, pipein->m_pipeFd[WRITE])) // Add the WRITE end of pipein to Epoll
-            {
-                close(pipein->m_pipeFd[READ]);
-                close(pipein->m_pipeFd[WRITE]);
-                pipein->m_socketFd = -1;
-                delete pipein;
+            if (multiplexer.addToEpoll(&m_pipein, EPOLLOUT, m_pipein.m_pipeFd[WRITE])) // Add the WRITE end of pipein to Epoll
                 throw StatusCodeException(500, "addToEpoll()", errno);
-            }
             return 2;
         }
         if (m_isChunked)

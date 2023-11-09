@@ -2,7 +2,6 @@
 #include "UtilsConfig.hpp"
 
 bool	isValidPortNumber(const std::string &str) {
-	// std::cout << "isValidPortNumber: " << str << std::endl; // ? debug
 
 	if (str.size() > 5)
 		return false;

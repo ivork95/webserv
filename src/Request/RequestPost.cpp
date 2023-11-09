@@ -102,7 +102,6 @@ void Request::boundaryCodeSet(void)
 
 int Request::postHandler(void)
 {
-    std::cout << "POST handler\n";
 
     if (m_contentLength > m_locationconfig.getClientMaxBodySize())
         throw StatusCodeException(413, "Warning: contentLength larger than max_body_size");

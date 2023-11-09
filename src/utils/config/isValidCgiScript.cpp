@@ -2,7 +2,6 @@
 #include "UtilsConfig.hpp"
 
 bool	isValidCgiScript(const std::string &str) {
-	// std::cout << "isValidCgiScript: " << str << std::endl; // ? debug
 
 	const std::filesystem::path cgiScript(str);
 

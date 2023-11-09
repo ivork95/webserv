@@ -45,8 +45,7 @@ OBJECTS		:=	obj/main.o \
 				obj/request/RequestDelete.o \
 				obj/request/RequestChunk.o \
 				obj/request/RequestGet.o \
-				obj/request/RequestPost.o \
-				obj/Logger.o
+				obj/request/RequestPost.o
 HEADERS		:=	include/CGIPipeIn.hpp \
 				include/Signal.hpp \
 				include/CGIPipeOut.hpp \
@@ -68,8 +67,9 @@ HEADERS		:=	include/CGIPipeIn.hpp \
 				include/LocationConfig.hpp \
 				include/ErrorPageConfig.hpp \
 				include/UtilsConfig.hpp \
-				include/Permissions.hpp \
-				include/Logger.hpp
+				include/Permissions.hpp
+SPDLOGLIB	:=	./spdlog/build/libspdlog.a
+SPDLOGINCL	:=	-DSPDLOG_COMPILED_LIB -I./spdlog/include
 CONTAINER	:=	webserv-container
 IMAGE		:=	ubuntu-c-plus
 INCLUDE		:= -I./include
@@ -77,11 +77,11 @@ INCLUDE		:= -I./include
 all : $(NAME)
 
 $(NAME) : $(OBJECTS)
-	$(CXX) $(LDFLAGS) -o $@ $^
+	$(CXX) $(LDFLAGS) -o $@ $^ $(SPDLOGLIB)
 
 obj/%.o : %.cpp $(HEADERS)
 	@mkdir -p $(dir $@)
-	$(CXX) -c $(CXXFLAGS) $(INCLUDE) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(INCLUDE) $(SPDLOGINCL) -o $@ $<
 
 clean :
 	$(RM) -r obj
@@ -110,6 +110,8 @@ docker-pwd-san:
 docker-pwd:
 	docker run \
 	-p 8081:8081 \
+	-p 8082:8082 \
+	-p 8083:8083 \
 	--name $(CONTAINER) \
 	-it \
 	--rm \

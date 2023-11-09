@@ -11,14 +11,12 @@
  * MEMBER FUNCTIONS
 */
 void	Parser::_parseServerClientMaxBodySize(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// Logger::getInstance().debug("Parsing client_max_body_size directive"); // ? debug
 
 	const std::string rawValue = tokens.at(*i).getWord();
 	server->setClientMaxBodySize(parseClientMaxBodySize(rawValue));
 }
 
 void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// Logger::getInstance().debug("Parsing error_page directive"); // ? debug
 
 	size_t				j = *i;
 	std::vector<int>	errorCodes;
@@ -52,7 +50,6 @@ void	Parser::_parseErrorPage(ServerConfig *server, std::vector<Token> tokens, si
 
 // TODO valid server_name??
 void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// Logger::getInstance().debug("Parsing server_name directive"); // ? debug
 
 	size_t						j = *i;
 	std::vector<std::string>	serverNames;
@@ -75,7 +72,6 @@ void	Parser::_parseServerName(ServerConfig *server, std::vector<Token> tokens, s
 }
 
 void	Parser::_parseListen(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// Logger::getInstance().debug("Parsing listen directive"); // ? debug
 
 	const std::string	portNumber = tokens.at(*i).getWord();
 	if (!isValidPortNumber(portNumber))
@@ -85,7 +81,6 @@ void	Parser::_parseListen(ServerConfig *server, std::vector<Token> tokens, size_
 }
 
 void	Parser::_parseServerContext(ServerConfig *server, std::vector<Token> tokens, size_t *i) {
-	// Logger::getInstance().debug("Parsing server context"); // ? debug
 
 	void (Parser::*pf_serverContextDirectives[5])(ServerConfig *server, std::vector<Token> tokens, size_t *i) = {
 		&Parser::_parseListen, 

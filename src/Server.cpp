@@ -1,4 +1,6 @@
 #include "Server.hpp"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 // constructor
 Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
@@ -65,14 +67,12 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     if (multiplexer.addToEpoll(this, EPOLLIN | EPOLLRDHUP, m_socketFd))
         throw std::system_error(errno, std::generic_category(), "addToEpoll()");
 
-    std::cout << *this << " constructor called\n";
+    spdlog::debug("Server constructor called");
 }
 
 // destructor
 Server::~Server(void)
 {
-    std::cout << *this << " destructor called\n";
-
     close(m_socketFd);
 }
 
@@ -90,8 +90,7 @@ void Server::handleNewConnection(void) const
     }
     catch (const std::exception &e)
     {
-        std::cout << "Error: couldn't create client\n"
-                  << e.what() << '\n';
+        ;
     }
 }
 

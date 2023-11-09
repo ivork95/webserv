@@ -7,13 +7,11 @@
 ServerConfig::ServerConfig(void) : _index{}, _portNb{}, _serverName{}, _clientMaxBodySize{},
                                    _errorPagesConfig{}, _locationsConfig{}, _rawData{}
 {
-    std::cout << "ServerConfig default constructor called\n";
 }
 
 ServerConfig::ServerConfig(unsigned int index, std::string rawData) : _index(index), _portNb{}, _serverName{}, _clientMaxBodySize{},
                                                                       _errorPagesConfig{}, _locationsConfig{}, _rawData(rawData)
 {
-    std::cout << "ServerConfig parametric constructor called\n";
 }
 
 /**
@@ -189,17 +187,14 @@ void ServerConfig::checkMissingDirective(void)
 {
     if (!hasPortNb())
     {
-        Logger::getInstance().debug("No port number (setting to default: 80)");
         setPortNb("80");
     }
     if (!hasServerName())
     {
-        Logger::getInstance().debug("No server name (setting to default: "")");
         setServerName({""});
     }
     if (!hasClientMaxBodySize())
     {
-        Logger::getInstance().debug("No client max body size (setting to default: 1000000)");
         setClientMaxBodySize(1000000);
     }
 }

@@ -13,15 +13,17 @@
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
 #include "Signal.hpp"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 #define PARSTER false // change this
 
-void handleRead(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
+void handleRead(ASocket *&ePollDataPtr)
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // Client is ready to read, handle incoming data
-        client->handleConnectedClient(toBeDeleted);
+        client->handleConnectedClient();
     else if (Server *server = dynamic_cast<Server *>(ePollDataPtr)) // Server is ready to read, handle new connection
         server->handleNewConnection();
     else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
@@ -37,21 +39,19 @@ void handleRead(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
             pipeout->m_response.m_statusCode = 200;
         }
 
-        close(pipeout->m_pipeFd[READ]);
-        pipeout->m_socketFd = -1;
-        toBeDeleted.push_back(pipeout);
+        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL);
+        // close(pipeout->m_pipeFd[READ]);
 
         if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
             throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");
     }
     else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
     {
-        close(timer->m_socketFd);
-        timer->m_socketFd = -1;
-
-        close(timer->m_client.m_socketFd);
-        timer->m_client.m_socketFd = -1;
-        toBeDeleted.push_back(&(timer->m_client));
+        multiplexer.modifyEpollEvents(nullptr, 0, timer->m_socketFd);
+        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_socketFd, NULL);
+        multiplexer.modifyEpollEvents(nullptr, 0, timer->m_client.m_socketFd);
+        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_client.m_socketFd, NULL);
+        delete &timer->m_client;
     }
     else if (Signal *signal = dynamic_cast<Signal *>(ePollDataPtr))
     {
@@ -64,46 +64,41 @@ void handleRead(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
             throw std::system_error(errno, std::generic_category(), "read()");
         if (fdsi.ssi_signo == SIGINT)
         {
-            std::cout << "Got SIGINT" << std::endl;
-
             for (auto &server : multiplexer.m_servers)
                 delete server;
-            for (auto &s : toBeDeleted)
-                delete s;
-            toBeDeleted.clear();
             multiplexer.isRunning = false;
         }
         else if (fdsi.ssi_signo == SIGQUIT)
-            std::cout << "Got SIGQUIT" << std::endl;
+            ;
         else
-            std::cout << "Read unexpected signal" << std::endl;
+            ;
     }
 }
 
-void handleWrite(ASocket *&ePollDataPtr, std::vector<ASocket *> &toBeDeleted)
+void handleWrite(ASocket *&ePollDataPtr)
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
     {
+        spdlog::debug("response = \n{}", client->m_request.m_response);
         if (client->m_request.m_response.sendAll(client->m_socketFd) <= 0)
         {
-            close(client->m_socketFd);
-            client->m_socketFd = -1;
-            toBeDeleted.push_back(client);
+            multiplexer.modifyEpollEvents(nullptr, 0, client->m_socketFd);
+            epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, client->m_socketFd, NULL);
+            delete client;
         }
     }
     else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
     {
         try
         {
-            pipein->dupCloseWrite(toBeDeleted);
+            pipein->dupCloseWrite();
 
-            CGIPipeOut *pipeout = new CGIPipeOut(pipein->m_client, pipein->m_client.m_request, pipein->m_client.m_request.m_response);
-            if (multiplexer.addToEpoll(pipeout, EPOLLIN, pipeout->m_pipeFd[READ]))
+            if (multiplexer.addToEpoll(&(pipein->m_client.m_request.m_pipeout), EPOLLIN, pipein->m_client.m_request.m_pipeout.m_pipeFd[READ]))
                 throw StatusCodeException(500, "addToEpoll()", errno);
 
-            pipeout->forkCloseDupExec(toBeDeleted);
+            pipein->m_client.m_request.m_pipeout.forkCloseDupExec();
         }
         catch (const StatusCodeException &e)
         {
@@ -124,7 +119,6 @@ void run(const Configuration &config)
     for (auto &serverConfig : config.serversConfig)
         multiplexer.m_servers.push_back(new Server{serverConfig});
 
-    std::vector<ASocket *> toBeDeleted{};
     while (multiplexer.isRunning)
     {
         epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
@@ -135,40 +129,46 @@ void run(const Configuration &config)
         {
             ASocket *ePollDataPtr = static_cast<ASocket *>(multiplexer.m_events[i].data.ptr);
 
-            if (ePollDataPtr->m_socketFd == -1)
+            if (ePollDataPtr == nullptr)
+            {
+                spdlog::critical("INTERESTING");
                 continue;
-
-            for (auto &s : toBeDeleted)
-                delete s;
-            toBeDeleted.clear();
+            }
 
             if (multiplexer.m_events[i].events & EPOLLIN) // Ready to read
-                handleRead(ePollDataPtr, toBeDeleted);
+                handleRead(ePollDataPtr);
             else if (multiplexer.m_events[i].events & EPOLLOUT) // Ready to write
-                handleWrite(ePollDataPtr, toBeDeleted);
-            else if (multiplexer.m_events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) // Ready to hang up/error
+                handleWrite(ePollDataPtr);
+            else if (multiplexer.m_events[i].events & EPOLLRDHUP) // Ready to hang up/error
             {
-                std::cout << "Ready to hang up/error\n";
-
-                close(ePollDataPtr->m_socketFd);
-                ePollDataPtr->m_socketFd = -1;
-                toBeDeleted.push_back(ePollDataPtr);
+                spdlog::warn("EPOLLERR");
+            }
+            else if (multiplexer.m_events[i].events & (EPOLLHUP)) // Ready to hang up/error
+            {
+                spdlog::warn("EPOLLERR");
+            }
+            else if (multiplexer.m_events[i].events & (EPOLLERR)) // Ready to hang up/error
+            {
+                spdlog::warn("EPOLLERR");
             }
             else // Ready for something else
-                std::cout << "Other event ready\n";
+            {
+                spdlog::info("SOMETHING ELSE");
+            }
         }
     }
 }
 
 int main(int argc, char *argv[])
 {
+    spdlog::set_level(spdlog::level::debug);
+
     if (argc != 2)
         throw std::runtime_error("usage: webserv [path to config]\n\n\n");
 
     Configuration config{};
     if (initConfig(argv[1], config))
     {
-        std::cout << "Config failure" << std::endl;
         return 1;
     }
 
