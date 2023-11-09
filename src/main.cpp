@@ -116,8 +116,16 @@ void run(const Configuration &config)
     int epollCount{};
     int i{};
 
-    for (auto &serverConfig : config.serversConfig)
-        multiplexer.m_servers.push_back(new Server{serverConfig});
+    try
+    {
+        for (auto &serverConfig : config.serversConfig)
+            multiplexer.m_servers.push_back(new Server{serverConfig});
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+        return;
+    }
 
     while (multiplexer.isRunning)
     {

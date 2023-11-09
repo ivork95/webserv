@@ -36,7 +36,10 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     }
 
     if (p == NULL) // If we got here, it means we didn't get bound
+    {
+        freeaddrinfo(ai); // All done with this
         throw std::system_error(errno, std::generic_category(), "selectserver: failed to bind");
+    }
 
     // get the pointer to the address itself,
     // different fields in IPv4 and IPv6:
