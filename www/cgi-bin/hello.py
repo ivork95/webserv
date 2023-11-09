@@ -7,7 +7,7 @@ import sys
 #     data = sys.stdin.read()
 #     print(data)
 
-# while (1):
-#     continue
+while (1):
+    continue
 
-print("Helldgdo")
+# print("Helldgdo")
