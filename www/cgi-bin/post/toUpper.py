@@ -1,4 +1,3 @@
-import os
 import sys
 
 if sys.stdin.isatty():
@@ -9,4 +8,4 @@ for line in sys.stdin:
     if not line:
         break
     line = line.strip()
-    print(line)
+    print(line.upper())
