@@ -13,13 +13,15 @@ Multiplexer::Multiplexer(void)
     if (addToEpoll(&signal, EPOLLIN, signal.m_socketFd))
         throw std::system_error(errno, std::generic_category(), "addToEpoll()");
 
-    spdlog::debug("Multiplexer constructor called");
+    spdlog::debug("{} constructor", *this);
 }
 
 // destructor
 Multiplexer::~Multiplexer(void)
 {
     close(m_epollfd);
+
+    spdlog::debug("{} destructor", *this);
 }
 
 // outstream operator overload

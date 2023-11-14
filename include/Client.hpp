@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <map>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "Request.hpp"
 #include "Timer.hpp"

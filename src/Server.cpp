@@ -70,13 +70,15 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     if (multiplexer.addToEpoll(this, EPOLLIN | EPOLLRDHUP, m_socketFd))
         throw std::system_error(errno, std::generic_category(), "addToEpoll()");
 
-    spdlog::debug("Server constructor called");
+    spdlog::debug("{} constructor", *this);
 }
 
 // destructor
 Server::~Server(void)
 {
     close(m_socketFd);
+
+    spdlog::debug("{} destructor", *this);
 }
 
 void Server::handleNewConnection(void) const

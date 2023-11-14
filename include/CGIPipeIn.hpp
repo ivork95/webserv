@@ -3,6 +3,8 @@
 
 #include <cstring>
 #include <unistd.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "ASocket.hpp"
 #include "StatusCodeException.hpp"

@@ -1,6 +1,4 @@
 #include "Client.hpp"
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
 
 // constructor
 Client::Client(const Server &server) : m_server(server), m_request(*this), m_timer(*this)
@@ -30,12 +28,14 @@ Client::Client(const Server &server) : m_server(server), m_request(*this), m_tim
     // convert the IP to a string and print it:
     inet_ntop(m_remoteaddr.ss_family, m_addr, m_ipstr, sizeof m_ipstr);
 
-    spdlog::debug("Client constructor called");
+    spdlog::debug("{} constructor", *this);
 }
 
 Client::~Client(void)
 {
     close(m_socketFd);
+
+    spdlog::debug("{} destructor", *this);
 }
 
 // outstream operator overload

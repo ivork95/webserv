@@ -10,6 +10,8 @@ CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
         throw StatusCodeException(500, "fcntl()", errno);
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "fcntl()", errno);
+
+    spdlog::debug("{} constructor", *this);
 }
 
 CGIPipeIn::~CGIPipeIn(void)
@@ -18,6 +20,16 @@ CGIPipeIn::~CGIPipeIn(void)
         close(m_pipeFd[READ]);
     if (m_pipeFd[WRITE] != -1)
         close(m_pipeFd[WRITE]);
+
+    spdlog::debug("{} destructor", *this);
+}
+
+// outstream operator overload
+std::ostream &operator<<(std::ostream &out, const CGIPipeIn &cgipipein)
+{
+    out << "CGIPipeIn(" << cgipipein.m_pipeFd[READ] << ": " << cgipipein.m_pipeFd[WRITE] << ")";
+
+    return out;
 }
 
 // member functions

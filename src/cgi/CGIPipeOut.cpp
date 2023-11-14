@@ -8,6 +8,8 @@ CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m
         throw StatusCodeException(500, "setNonBlocking()", errno);
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "setNonBlocking()", errno);
+
+    spdlog::debug("{} constructor", *this);
 }
 
 CGIPipeOut::~CGIPipeOut(void)
@@ -16,12 +18,14 @@ CGIPipeOut::~CGIPipeOut(void)
         close(m_pipeFd[READ]);
     if (m_pipeFd[WRITE] != -1)
         close(m_pipeFd[WRITE]);
+
+    spdlog::debug("{} destructor", *this);
 }
 
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout)
 {
-    out << "cgipipeout(" << cgipipeout.m_socketFd << cgipipeout.m_pipeFd[READ] << ": " << cgipipeout.m_pipeFd[WRITE] << ")";
+    out << "CGIPipeOut(" << cgipipeout.m_pipeFd[READ] << ": " << cgipipeout.m_pipeFd[WRITE] << ")";
 
     return out;
 }

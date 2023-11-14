@@ -5,6 +5,8 @@
 #include <thread>
 #include <unistd.h>
 #include <iostream>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "ASocket.hpp"
 #include "Helper.hpp"
