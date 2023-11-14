@@ -47,6 +47,7 @@ public:
     static Multiplexer &getInstance(void);
     int modifyEpollEvents(ASocket *ptr, int events, int fd);
     int addToEpoll(ASocket *ptr, int events, int fd);
+    int removeFromEpoll(int fd);
 };
 
 #endif
