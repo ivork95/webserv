@@ -1,6 +1,7 @@
 #include "CGIPipeIn.hpp"
 #include "Client.hpp"
-
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 // constructor
 CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
 {
@@ -10,6 +11,8 @@ CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
         throw StatusCodeException(500, "fcntl()", errno);
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "fcntl()", errno);
+    // spdlog::error("pipein constructor {}", m_pipeFd[WRITE]);
+    // m_socketFd = 100;
 }
 
 CGIPipeIn::~CGIPipeIn(void)
@@ -31,10 +34,11 @@ void CGIPipeIn::dupCloseWrite(void)
     m_pipeFd[READ] = -1;
 
     // int nbytes{static_cast<int>(write(m_pipeFd[WRITE], m_client.m_request.m_body.c_str(), m_client.m_request.m_body.length()))}; // Write to stdin
+    Multiplexer &multiplexer = Multiplexer::getInstance();
     if (m_client.m_request.m_body.length() == 0)
     {
-        Multiplexer &multiplexer = Multiplexer::getInstance();
-        int nbytes{static_cast<int>(write(m_pipeFd[WRITE], "No input provided.", 18))}; // Write to stdin
+        int nbytes{static_cast<int>(write(m_pipeFd[WRITE], "No input provided...", 20))}; // Write to stdin
+        multiplexer.removeFromEpoll(m_pipeFd[WRITE]);
         if (close(m_pipeFd[WRITE]) == -1)
             throw StatusCodeException(500, "close()", errno);
         m_pipeFd[WRITE] = -1;
@@ -43,6 +47,7 @@ void CGIPipeIn::dupCloseWrite(void)
         return ;
     }
     int nbytes{static_cast<int>(write(m_pipeFd[WRITE], m_client.m_request.m_body.c_str(), m_client.m_request.m_body.length()))}; // Write to stdin
+    multiplexer.removeFromEpoll(m_pipeFd[WRITE]);
     if (close(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "close()", errno);
     m_pipeFd[WRITE] = -1;

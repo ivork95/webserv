@@ -28,6 +28,8 @@ void handleRead(ASocket *&ePollDataPtr)
         server->handleNewConnection();
     else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
     {
+        // spdlog::error("pipeout->m_pipefd[1]: {}", pipeout->m_pipeFd[WRITE]);
+        // spdlog::error("pipeout->m_pipefd[0]: {}", pipeout->m_pipeFd[READ]);
         char buf[BUFSIZ]{};
 
         int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
@@ -39,7 +41,8 @@ void handleRead(ASocket *&ePollDataPtr)
             pipeout->m_response.m_statusCode = 200;
         }
 
-        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL);
+        if(epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL) == -1)
+            throw std::system_error(errno, std::generic_category(), "epoll_ctl()");
         // close(pipeout->m_pipeFd[READ]);
 
         if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
@@ -93,6 +96,7 @@ void handleWrite(ASocket *&ePollDataPtr)
     {
         try
         {
+            // spdlog::error("pipein->m_pipefd: {}", pipein->m_pipeFd[WRITE]);
             pipein->dupCloseWrite();
 
             if (multiplexer.addToEpoll(&(pipein->m_client.m_request.m_pipeout), EPOLLIN, pipein->m_client.m_request.m_pipeout.m_pipeFd[READ]))
@@ -149,11 +153,14 @@ void run(const Configuration &config)
                 handleWrite(ePollDataPtr);
             else if (multiplexer.m_events[i].events & EPOLLRDHUP) // Ready to hang up/error
             {
-                spdlog::warn("EPOLLERR");
+                spdlog::warn("EPOLLRDHUP");
             }
             else if (multiplexer.m_events[i].events & (EPOLLHUP)) // Ready to hang up/error
             {
-                spdlog::warn("EPOLLERR");
+                spdlog::warn("EPOLLHUP");
+                // spdlog::error("ePollDataPtr->m_socketFd: {}", ePollDataPtr->m_socketFd);
+                // multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
+                // throw std::runtime_error("EPHOLLHUP");
             }
             else if (multiplexer.m_events[i].events & (EPOLLERR)) // Ready to hang up/error
             {
