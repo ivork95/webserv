@@ -46,10 +46,29 @@ void Request::methodPathVersionSet(void)
     m_methodPathVersion = Helper::split(requestLine);
 }
 
-void Request::updatedLocationConfigSet(const std::string &methodPath)
+void Request::updatedLocationConfigSet(const std::string &originalMethodPath)
 {
-    bool isLocationFound{false};
+    std::string methodPath;
+    std::string queryString;
 
+    bool isLocationFound{false};
+    std::string::size_type pos = originalMethodPath.find('?');
+    if (pos == std::string::npos)
+    {
+        methodPath = originalMethodPath;
+    }
+    else
+    {
+        methodPath = originalMethodPath.substr(0, pos);
+        queryString = originalMethodPath.substr(pos + 1);
+        std::stringstream ss(queryString);
+        while(ss.good())
+        {
+            std::string substr;
+            getline(ss, substr, '&');
+            m_query.push_back( substr );
+        }
+    }
     for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
     {
         if (methodPath == location.getRequestURI())
@@ -146,11 +165,21 @@ int Request::parse(void)
     responsePathSet(); // For a certain location block, loops over index files, and checks if one exists
 
     if (m_methodPathVersion[0] == "GET")
+    {
+        if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
+        {
+            if (multiplexer.addToEpoll(&m_pipeout, EPOLLIN, m_pipeout.m_pipeFd[READ]))
+                throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
+            m_pipeout.forkCloseDupExec();
+            return 2;
+        }
         return getHandler();
+    }
     else
     {
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
+            m_client.m_request.bodySet();
             if (multiplexer.addToEpoll(&m_pipein, EPOLLOUT, m_pipein.m_pipeFd[WRITE])) // Add the WRITE end of pipein to Epoll
                 throw StatusCodeException(500, "addToEpoll()", errno);
             return 2;

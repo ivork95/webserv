@@ -1,4 +1,5 @@
 #include "CGIPipeOut.hpp"
+#include "Request.hpp"
 
 CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m_client(client), m_request(request), m_response(response)
 {
@@ -33,18 +34,48 @@ void CGIPipeOut::forkCloseDupExec(void)
         throw StatusCodeException(500, "fork()", errno);
     if (cpid1 == 0)
     {
-        char *pythonPath = "/usr/bin/python3";     // Path to the Python interpreter
-        char *scriptPath = "www/cgi-bin/hello.py"; // Path to the Python script
+        char *pythonPath = strdup(m_request.m_locationconfig.getCgiInterpreter().c_str());
+        if (pythonPath == NULL)
+            throw StatusCodeException(500, "Error: strdup)");
+        char *scriptPath = strdup(m_request.m_locationconfig.getAbsCgiScript().c_str());
+        if (scriptPath == NULL)
+        {
+            delete[] pythonPath;
+            throw StatusCodeException(500, "Error: strdup)");
+        }
         char *argv[] = {pythonPath, scriptPath, NULL};
-
+        char **env = NULL;
+        if (!m_request.m_query.empty())
+        {
+            size_t i = m_request.m_query.size();
+            env = new char*[i + 1];
+            env[i] = NULL;
+            i = 0;
+            for (const auto &query: m_request.m_query)
+            {
+                env[i] = strdup(query.c_str());
+                if (scriptPath == NULL)
+                {
+                    delete[] pythonPath;
+                    delete[] scriptPath;
+                    throw StatusCodeException(500, "Error: strdup)");
+                }
+                i++;
+            }
+        }
         if (close(m_pipeFd[READ]) == -1)
-            throw StatusCodeException(500, "close()", errno);
+            throw StatusCodeException(500, "Error: close())");
         if (dup2(m_pipeFd[WRITE], STDOUT_FILENO) == -1) // Dup the write end of pipe2 to stdout
-            throw StatusCodeException(500, "dup2()", errno);
+            throw StatusCodeException(500, "Error: dup2() 1");
         if (close(m_pipeFd[WRITE]) == -1)
-            throw StatusCodeException(500, "close()", errno);
-        execve(pythonPath, argv, NULL);
-        throw StatusCodeException(500, "execve()", errno);
+            throw StatusCodeException(500, "Error: close()");
+        execve(pythonPath, argv, env);
+        delete[] pythonPath;
+        delete[] scriptPath;
+        for (size_t i = 0; i < m_request.m_query.size(); i++)
+            free(env[i]);
+        delete[] env;
+        throw StatusCodeException(500, "Error: execve()");
     }
 
     pid_t cpid2 = fork();
