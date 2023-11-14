@@ -30,8 +30,7 @@ public:
     ~CGIPipeIn(void);
 
     // outstream operator overload
-    friend std::ostream &
-    operator<<(std::ostream &out, const CGIPipeIn &cgipipein);
+    friend std::ostream &operator<<(std::ostream &out, const CGIPipeIn &cgipipein);
 
     // member functions
     void dupCloseWrite(void);

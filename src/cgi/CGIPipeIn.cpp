@@ -11,8 +11,9 @@ CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
         throw StatusCodeException(500, "fcntl()", errno);
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "fcntl()", errno);
-    // spdlog::error("pipein constructor {}", m_pipeFd[WRITE]);
-    // m_socketFd = 100;
+
+    m_socketFd = m_pipeFd[WRITE];
+    spdlog::critical("CGIPipeIn: {}", *this);
 }
 
 CGIPipeIn::~CGIPipeIn(void)
@@ -53,4 +54,10 @@ void CGIPipeIn::dupCloseWrite(void)
     m_pipeFd[WRITE] = -1;
     if (nbytes == -1)
         throw StatusCodeException(500, "write()", errno);
+}
+
+std::ostream &operator<<(std::ostream &out, const CGIPipeIn &cgipipein)
+{
+    out << "READ = " << cgipipein.m_pipeFd[READ] << " | WRITE = " << cgipipein.m_pipeFd[WRITE] << "\nsocketFD = " << cgipipein.m_socketFd << "\n";
+    return out;
 }

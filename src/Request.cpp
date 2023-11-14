@@ -168,6 +168,7 @@ int Request::parse(void)
     {
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
+            std::cerr << "ADDING PIPEOUT FD TO EPOLLIN: " << m_pipeout.m_pipeFd[READ] << std::endl;
             if (multiplexer.addToEpoll(&m_pipeout, EPOLLIN, m_pipeout.m_pipeFd[READ]))
                 throw StatusCodeException(500, "Error: EPOLL_CTL_MOD failed");
             m_pipeout.forkCloseDupExec();
@@ -180,6 +181,7 @@ int Request::parse(void)
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
             m_client.m_request.bodySet();
+            std::cerr << "ADDING PIPEIN FD TO EPOLLOUT: " << m_pipein.m_pipeFd[WRITE] << std::endl;
             if (multiplexer.addToEpoll(&m_pipein, EPOLLOUT, m_pipein.m_pipeFd[WRITE])) // Add the WRITE end of pipein to Epoll
                 throw StatusCodeException(500, "addToEpoll()", errno);
             return 2;

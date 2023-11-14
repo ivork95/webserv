@@ -34,8 +34,7 @@ public:
     ~CGIPipeOut(void);
 
     // outstream operator overload
-    friend std::ostream &
-    operator<<(std::ostream &out, const CGIPipeOut &cgipipeout);
+    friend std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout);
 
     // member functions
     void forkCloseDupExec(void);

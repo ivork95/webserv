@@ -41,9 +41,16 @@ void handleRead(ASocket *&ePollDataPtr)
             pipeout->m_response.m_statusCode = 200;
         }
 
+        std::cerr << "BEFORE fd to be delted by epoll_ctl(): " << pipeout->m_pipeFd[READ] << std::endl;
+        std::cerr << "BEFORE SOCKETfd to be delted by epoll_ctl(): " << pipeout->m_socketFd << std::endl;
         if(epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL) == -1)
             throw std::system_error(errno, std::generic_category(), "epoll_ctl()");
-        // close(pipeout->m_pipeFd[READ]);
+        if (close(pipeout->m_pipeFd[READ]) == -1)
+            throw std::system_error(errno, std::generic_category(), "close()");
+        pipeout->m_pipeFd[READ] = -1;
+        pipeout->m_socketFd = -1;
+        std::cerr << "AFTER fd to be delted by epoll_ctl(): " << pipeout->m_pipeFd[READ] << std::endl;
+        std::cerr << "AFTER SOCKETfd to be delted by epoll_ctl(): " << pipeout->m_socketFd << std::endl;
 
         if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
             throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");
@@ -98,7 +105,7 @@ void handleWrite(ASocket *&ePollDataPtr)
         {
             // spdlog::error("pipein->m_pipefd: {}", pipein->m_pipeFd[WRITE]);
             pipein->dupCloseWrite();
-
+            std::cerr << "ADDING PIPEOUT FD TO EPOLLIN: " << pipein->m_client.m_request.m_pipeout.m_pipeFd[READ] << std::endl;
             if (multiplexer.addToEpoll(&(pipein->m_client.m_request.m_pipeout), EPOLLIN, pipein->m_client.m_request.m_pipeout.m_pipeFd[READ]))
                 throw StatusCodeException(500, "addToEpoll()", errno);
 
@@ -158,8 +165,17 @@ void run(const Configuration &config)
             else if (multiplexer.m_events[i].events & (EPOLLHUP)) // Ready to hang up/error
             {
                 spdlog::warn("EPOLLHUP");
-                // spdlog::error("ePollDataPtr->m_socketFd: {}", ePollDataPtr->m_socketFd);
-                // multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
+                if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
+                {
+                    spdlog::error("pipeout");
+                }
+                if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
+                {
+
+                    spdlog::error("pipein");
+                }
+                spdlog::error("ePollDataPtr->m_socketFd: {}", ePollDataPtr->m_socketFd);
+                multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
                 // throw std::runtime_error("EPHOLLHUP");
             }
             else if (multiplexer.m_events[i].events & (EPOLLERR)) // Ready to hang up/error

@@ -11,8 +11,9 @@ CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m
         throw StatusCodeException(500, "setNonBlocking()", errno);
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "setNonBlocking()", errno);
-    // m_socketFd = m_pipeFd[READ];
-    // spdlog::error("pipeout constructor: {}", m_pipeFd[READ]);
+    
+    m_socketFd = m_pipeFd[READ];
+    spdlog::critical("CGIpipeOut: {}", *this);
 }
 
 CGIPipeOut::~CGIPipeOut(void)
@@ -26,10 +27,16 @@ CGIPipeOut::~CGIPipeOut(void)
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout)
 {
-    out << "cgipipeout(" << cgipipeout.m_socketFd << cgipipeout.m_pipeFd[READ] << ": " << cgipipeout.m_pipeFd[WRITE] << ")";
-
+    out << "READ = " << cgipipeout.m_pipeFd[READ] << " | WRITE = " << cgipipeout.m_pipeFd[WRITE] << "\nsocketFD = " << cgipipeout.m_socketFd << "\n";
     return out;
 }
+
+// std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout)
+// {
+//     out << "cgipipeout(" << cgipipeout.m_socketFd << cgipipeout.m_pipeFd[READ] << ": " << cgipipeout.m_pipeFd[WRITE] << ")";
+
+//     return out;
+// }
 
 void CGIPipeOut::forkCloseDupExec(void)
 {
