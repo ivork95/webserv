@@ -33,22 +33,17 @@
         <a href="http://nginx.com/">nginx.com</a>.
     </p>
 
-    <form action="/cgi-bin" method="POST">
-        <input type="submit" value="CGI POST!" />
-    </form>
-
-
-    
     <form action="/cgi-bin/post" method="post">
         <label for="name">Post CGI:</label>
         <input type="text" id="name" name="name" required><br><br>
 
         <input type="submit" value="CGI post">
     </form>
+
     <form action="/cgi-bin/get" method="get">
         <label for="name">Get CGI:</label>
         <input type="text" id="name" name="name" required><br><br>
-        <input type="submit" value="To Upper">
+        <input type="submit" value="CGI get">
     </form>
     <p><em>Thank you for using ft_webserv.</em></p>
 </body>
