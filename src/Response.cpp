@@ -30,8 +30,25 @@ void Response::statusLineSet(void)
 }
 
 // methods
-std::string Response::responseBuild(void)
+std::string Response::responseBuild(std::vector<ErrorPageConfig> errorPages)
 {
+    for (const auto &errorPageConfig : errorPages)
+    {
+        for (const auto &errorCode : errorPageConfig.getErrorCodes())
+        {
+            if (errorCode == m_statusCode)
+            {
+                try // try catch in case error page doesnt exist. Is it possible to check all files during parsing?
+                {
+                    m_body = Helper::fileToStr(errorPageConfig.getFilePath());
+                }
+                catch (const std::exception &e)
+                {
+                    std::cerr << e.what() << '\n';
+                }
+            }
+        }
+    }
     statusLineSet();
     std::string httpResponse = m_statusLine + "\r\n";
     for (const auto &pair : m_headers)
@@ -66,11 +83,11 @@ int sendAll(int sockFd, char *buf, int *len, int *total, int *bytesleft)
     return 0;
 }
 
-int Response::sendAll(int sockFd)
+int Response::sendAll(int sockFd, std::vector<ErrorPageConfig> errorPages)
 {
     if (m_buf.empty())
     {
-        m_buf = responseBuild();
+        m_buf = responseBuild(errorPages);
         m_len = m_buf.size();
         m_bytesleft = m_len;
     }

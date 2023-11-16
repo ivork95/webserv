@@ -92,7 +92,7 @@ void handleWrite(ASocket *&ePollDataPtr)
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
     {
         spdlog::debug("response = \n{}", client->m_request.m_response);
-        if (client->m_request.m_response.sendAll(client->m_socketFd) <= 0)
+        if (client->m_request.m_response.sendAll(client->m_socketFd, client->m_server.m_serverconfig.getErrorPagesConfig()) <= 0)
         {
             multiplexer.modifyEpollEvents(nullptr, 0, client->m_socketFd);
             epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, client->m_socketFd, NULL);
@@ -167,16 +167,16 @@ void run(const Configuration &config)
                 spdlog::warn("EPOLLHUP");
                 if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
                 {
-                    spdlog::error("pipeout");
+                    if (multiplexer.removeFromEpoll(pipeout->m_pipeFd[READ]) == -1)
+                        spdlog::error("removeFromEpoll()");
+                    if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd) == -1)
+                        spdlog::error("modifyEpollEvents()");
+                    pipeout->m_client.m_request.m_response.m_statusCode = 500;
                 }
                 if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
                 {
-
                     spdlog::error("pipein");
                 }
-                spdlog::error("ePollDataPtr->m_socketFd: {}", ePollDataPtr->m_socketFd);
-                multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
-                // throw std::runtime_error("EPHOLLHUP");
             }
             else if (multiplexer.m_events[i].events & (EPOLLERR)) // Ready to hang up/error
             {
