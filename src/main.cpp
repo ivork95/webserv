@@ -28,11 +28,10 @@ void handleRead(ASocket *&ePollDataPtr)
         server->handleNewConnection();
     else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
     {
-        spdlog::critical("Step 3\n");
-
-        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL);
-
-        /* dit kan op pipeout class */
+        if(epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL) == -1)
+            throw std::system_error(errno, std::generic_category(), "epoll_ctl()");//status code err
+        if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
+            throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");
         char buf[BUFSIZ]{};
         int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
         if (nbytes <= 0)
@@ -42,14 +41,6 @@ void handleRead(ASocket *&ePollDataPtr)
             pipeout->m_response.m_body = buf;
             pipeout->m_response.m_statusCode = 200;
         }
-        if(epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL) == -1)
-            throw std::system_error(errno, std::generic_category(), "epoll_ctl()");
-        if (close(pipeout->m_pipeFd[READ]) == -1)
-            throw std::system_error(errno, std::generic_category(), "close()");
-        pipeout->m_pipeFd[READ] = -1;
-        pipeout->m_socketFd = -1;
-        if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
-            throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");
     }
     else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
     {

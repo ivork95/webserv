@@ -32,13 +32,6 @@ std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout)
     return out;
 }
 
-// std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout)
-// {
-//     out << "cgipipeout(" << cgipipeout.m_socketFd << cgipipeout.m_pipeFd[READ] << ": " << cgipipeout.m_pipeFd[WRITE] << ")";
-
-//     return out;
-// }
-
 void CGIPipeOut::forkCloseDupExec(void)
 {
     pid_t cpid1 = fork();

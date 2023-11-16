@@ -51,9 +51,3 @@ void CGIPipeIn::dupCloseWrite(void)
     if (nbytes == -1)
         throw StatusCodeException(500, "write()", errno);
 }
-
-std::ostream &operator<<(std::ostream &out, const CGIPipeIn &cgipipein)
-{
-    out << "READ = " << cgipipein.m_pipeFd[READ] << " | WRITE = " << cgipipein.m_pipeFd[WRITE] << "\nsocketFD = " << cgipipein.m_socketFd << "\n";
-    return out;
-}
