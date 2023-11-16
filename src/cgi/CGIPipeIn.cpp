@@ -11,6 +11,7 @@ CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
         throw StatusCodeException(500, "fcntl()", errno);
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "fcntl()", errno);
+    m_socketFd = m_pipeFd[WRITE];
 }
 
 CGIPipeIn::~CGIPipeIn(void)

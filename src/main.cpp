@@ -28,8 +28,6 @@ void handleRead(ASocket *&ePollDataPtr)
         server->handleNewConnection();
     else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
     {
-        // spdlog::error("pipeout->m_pipefd[1]: {}", pipeout->m_pipeFd[WRITE]);
-        // spdlog::error("pipeout->m_pipefd[0]: {}", pipeout->m_pipeFd[READ]);
         char buf[BUFSIZ]{};
 
         int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
@@ -40,18 +38,12 @@ void handleRead(ASocket *&ePollDataPtr)
             pipeout->m_response.m_body = buf;
             pipeout->m_response.m_statusCode = 200;
         }
-
-        std::cerr << "BEFORE fd to be delted by epoll_ctl(): " << pipeout->m_pipeFd[READ] << std::endl;
-        std::cerr << "BEFORE SOCKETfd to be delted by epoll_ctl(): " << pipeout->m_socketFd << std::endl;
         if(epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL) == -1)
             throw std::system_error(errno, std::generic_category(), "epoll_ctl()");
         if (close(pipeout->m_pipeFd[READ]) == -1)
             throw std::system_error(errno, std::generic_category(), "close()");
         pipeout->m_pipeFd[READ] = -1;
         pipeout->m_socketFd = -1;
-        std::cerr << "AFTER fd to be delted by epoll_ctl(): " << pipeout->m_pipeFd[READ] << std::endl;
-        std::cerr << "AFTER SOCKETfd to be delted by epoll_ctl(): " << pipeout->m_socketFd << std::endl;
-
         if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
             throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");
     }
@@ -114,7 +106,6 @@ void handleWrite(ASocket *&ePollDataPtr)
         catch (const StatusCodeException &e)
         {
             std::cerr << e.what() << '\n';
-
             pipein->m_client.m_request.m_response.m_statusCode = e.getStatusCode();
             multiplexer.modifyEpollEvents(&(pipein->m_client), EPOLLOUT, pipein->m_client.m_socketFd);
         }
@@ -158,33 +149,13 @@ void run(const Configuration &config)
                 handleRead(ePollDataPtr);
             else if (multiplexer.m_events[i].events & EPOLLOUT) // Ready to write
                 handleWrite(ePollDataPtr);
-            else if (multiplexer.m_events[i].events & EPOLLRDHUP) // Ready to hang up/error
+            else if (multiplexer.m_events[i].events & (EPOLLRDHUP) || (EPOLLHUP) || (EPOLLER) ) // Ready to hang up/error
             {
-                spdlog::warn("EPOLLRDHUP");
-            }
-            else if (multiplexer.m_events[i].events & (EPOLLHUP)) // Ready to hang up/error
-            {
-                spdlog::warn("EPOLLHUP");
-                if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
-                {
-                    if (multiplexer.removeFromEpoll(pipeout->m_pipeFd[READ]) == -1)
-                        spdlog::error("removeFromEpoll()");
-                    if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd) == -1)
-                        spdlog::error("modifyEpollEvents()");
-                    pipeout->m_client.m_request.m_response.m_statusCode = 500;
-                }
-                if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
-                {
-                    spdlog::error("pipein");
-                }
-            }
-            else if (multiplexer.m_events[i].events & (EPOLLERR)) // Ready to hang up/error
-            {
-                spdlog::warn("EPOLLERR");
-            }
-            else // Ready for something else
-            {
-                spdlog::info("SOMETHING ELSE");
+                if (multiplexer.removeFromEpoll(pipeout->m_pipeFd[READ]) == -1)
+                    spdlog::error("removeFromEpoll()");
+                if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd) == -1)
+                    spdlog::error("modifyEpollEvents()");
+                pipeout->m_client.m_request.m_response.m_statusCode = 500;
             }
         }
     }
