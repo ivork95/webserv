@@ -28,8 +28,12 @@ void handleRead(ASocket *&ePollDataPtr)
         server->handleNewConnection();
     else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
     {
-        char buf[BUFSIZ]{};
+        spdlog::critical("Step 3\n");
 
+        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL);
+
+        /* dit kan op pipeout class */
+        char buf[BUFSIZ]{};
         int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
         if (nbytes <= 0)
             pipeout->m_response.m_statusCode = 500;
@@ -39,9 +43,6 @@ void handleRead(ASocket *&ePollDataPtr)
             pipeout->m_response.m_statusCode = 200;
         }
 
-        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL);
-        // close(pipeout->m_pipeFd[READ]);
-
         if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
             throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");
     }
@@ -49,15 +50,11 @@ void handleRead(ASocket *&ePollDataPtr)
     {
         multiplexer.modifyEpollEvents(nullptr, 0, timer->m_socketFd);
         epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_socketFd, NULL);
+
         multiplexer.modifyEpollEvents(nullptr, 0, timer->m_client.m_socketFd);
         epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_client.m_socketFd, NULL);
 
-        auto it = std::find_if(multiplexer.m_clients.begin(), multiplexer.m_clients.end(), [timer](Client *client)
-                               { return client->m_socketFd == timer->m_client.m_socketFd; });
-        if (it != multiplexer.m_clients.end())
-            multiplexer.m_clients.erase(it);
-        else
-            spdlog::error("Could not find client in m_clients");
+        multiplexer.removeClientBySocketFd(timer->m_client.m_socketFd);
 
         delete &timer->m_client;
     }
@@ -99,22 +96,21 @@ void handleWrite(ASocket *&ePollDataPtr)
             multiplexer.modifyEpollEvents(nullptr, 0, client->m_socketFd);
             epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, client->m_socketFd, NULL);
 
-            auto it = std::find_if(multiplexer.m_clients.begin(), multiplexer.m_clients.end(), [client](Client *i)
-                                   { return i->m_socketFd == client->m_socketFd; });
-            if (it != multiplexer.m_clients.end())
-                multiplexer.m_clients.erase(it);
-            else
-                spdlog::error("Could not find client in m_clients");
+            multiplexer.removeClientBySocketFd(client->m_socketFd);
             delete client;
         }
     }
     else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
     {
+        spdlog::critical("Step 2\n");
+
         try
         {
+            epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipein->m_pipeFd[WRITE], NULL);
+
             pipein->dupCloseWrite();
 
-            if (multiplexer.addToEpoll(&(pipein->m_client.m_request.m_pipeout), EPOLLIN, pipein->m_client.m_request.m_pipeout.m_pipeFd[READ]))
+            if (multiplexer.addToEpoll(&(pipein->m_client.m_request.m_pipeout), EPOLLIN, pipein->m_client.m_request.m_pipeout.m_pipeFd[READ]) == -1)
                 throw StatusCodeException(500, "addToEpoll()", errno);
 
             pipein->m_client.m_request.m_pipeout.forkCloseDupExec();
@@ -168,13 +164,21 @@ void run(const Configuration &config)
                 handleWrite(ePollDataPtr);
             else if (multiplexer.m_events[i].events & EPOLLRDHUP) // Ready to hang up/error
             {
-                spdlog::warn("EPOLLERR");
+                spdlog::warn("EPOLLRDHUP");
             }
-            else if (multiplexer.m_events[i].events & (EPOLLHUP)) // Ready to hang up/error
+            else if (multiplexer.m_events[i].events & EPOLLHUP) // Ready to hang up/error
             {
-                spdlog::warn("EPOLLERR");
+                spdlog::warn("EPOLLHUP");
+
+                if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
+                {
+                    epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL);
+                    pipeout->m_response.m_statusCode = 502;
+                    if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
+                        throw StatusCodeException(500, "modifyEpollEvents()", errno);
+                }
             }
-            else if (multiplexer.m_events[i].events & (EPOLLERR)) // Ready to hang up/error
+            else if (multiplexer.m_events[i].events & EPOLLERR) // Ready to hang up/error
             {
                 spdlog::warn("EPOLLERR");
             }
@@ -195,11 +199,9 @@ int main(int argc, char *argv[])
 
     Configuration config{};
     if (initConfig(argv[1], config))
-    {
         return 1;
-    }
 
-    config.printConfig();
+        // config.printConfig();
 
 #if (PARSTER) // To run only the parser and display the output
     return 0;

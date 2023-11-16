@@ -61,3 +61,14 @@ int Multiplexer::addToEpoll(ASocket *ptr, int events, int fd)
 
     return epoll_ctl(m_epollfd, EPOLL_CTL_ADD, fd, &ev);
 }
+
+void Multiplexer::removeClientBySocketFd(int socketFd)
+{
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [socketFd](Client *client)
+                           { return client->m_socketFd == socketFd; });
+
+    if (it != m_clients.end())
+        m_clients.erase(it);
+    else
+        spdlog::error("Could not find client in m_clients");
+}

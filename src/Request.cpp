@@ -151,8 +151,11 @@ int Request::parse(void)
     {
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
+            spdlog::critical("Step 1\n");
+
             if (multiplexer.addToEpoll(&m_pipein, EPOLLOUT, m_pipein.m_pipeFd[WRITE])) // Add the WRITE end of pipein to Epoll
                 throw StatusCodeException(500, "addToEpoll()", errno);
+
             return 2;
         }
         if (m_isChunked)

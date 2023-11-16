@@ -1,13 +1,6 @@
 import os
 import sys
+import fileinput
 
-# if sys.stdin.isatty():
-# print(os.environ)
-# else:
-#     data = sys.stdin.read()
-#     print(data)
-
-while (1):
-    continue
-
-# print("Helldgdo")
+for line in fileinput.input():
+    print(line)
