@@ -58,6 +58,14 @@ void Client::handleConnectedClient()
         epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_socketFd, NULL);
         multiplexer.modifyEpollEvents(nullptr, 0, m_timer.m_socketFd);
         epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_timer.m_socketFd, NULL);
+
+        auto it = std::find_if(multiplexer.m_clients.begin(), multiplexer.m_clients.end(), [this](Client *client)
+                               { return client->m_socketFd == this->m_socketFd; });
+        if (it != multiplexer.m_clients.end())
+            multiplexer.m_clients.erase(it);
+        else
+            spdlog::error("Could not find client in m_clients");
+
         delete this;
         return;
     }

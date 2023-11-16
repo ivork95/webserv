@@ -51,6 +51,14 @@ void handleRead(ASocket *&ePollDataPtr)
         epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_socketFd, NULL);
         multiplexer.modifyEpollEvents(nullptr, 0, timer->m_client.m_socketFd);
         epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_client.m_socketFd, NULL);
+
+        auto it = std::find_if(multiplexer.m_clients.begin(), multiplexer.m_clients.end(), [timer](Client *client)
+                               { return client->m_socketFd == timer->m_client.m_socketFd; });
+        if (it != multiplexer.m_clients.end())
+            multiplexer.m_clients.erase(it);
+        else
+            spdlog::error("Could not find client in m_clients");
+
         delete &timer->m_client;
     }
     else if (Signal *signal = dynamic_cast<Signal *>(ePollDataPtr))
@@ -66,6 +74,10 @@ void handleRead(ASocket *&ePollDataPtr)
         {
             for (auto &server : multiplexer.m_servers)
                 delete server;
+
+            for (auto &client : multiplexer.m_clients)
+                delete client;
+
             multiplexer.isRunning = false;
         }
         else if (fdsi.ssi_signo == SIGQUIT)
@@ -86,6 +98,13 @@ void handleWrite(ASocket *&ePollDataPtr)
         {
             multiplexer.modifyEpollEvents(nullptr, 0, client->m_socketFd);
             epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, client->m_socketFd, NULL);
+
+            auto it = std::find_if(multiplexer.m_clients.begin(), multiplexer.m_clients.end(), [client](Client *i)
+                                   { return i->m_socketFd == client->m_socketFd; });
+            if (it != multiplexer.m_clients.end())
+                multiplexer.m_clients.erase(it);
+            else
+                spdlog::error("Could not find client in m_clients");
             delete client;
         }
     }

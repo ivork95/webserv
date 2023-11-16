@@ -24,6 +24,7 @@ private:
     Multiplexer(void);
 
 public:
+    std::vector<Client *> m_clients{};
     int m_epollfd{};
     std::array<struct epoll_event, MAX_EVENTS> m_events{};
     std::vector<Server *> m_servers{};
