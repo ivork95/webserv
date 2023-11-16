@@ -149,13 +149,77 @@ void run(const Configuration &config)
                 handleRead(ePollDataPtr);
             else if (multiplexer.m_events[i].events & EPOLLOUT) // Ready to write
                 handleWrite(ePollDataPtr);
-            else if (multiplexer.m_events[i].events & (EPOLLRDHUP) || (EPOLLHUP) || (EPOLLER) ) // Ready to hang up/error
+            else if (multiplexer.m_events[i].events & EPOLLRDHUP) // Ready to hang up/error
             {
-                if (multiplexer.removeFromEpoll(pipeout->m_pipeFd[READ]) == -1)
-                    spdlog::error("removeFromEpoll()");
-                if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd) == -1)
-                    spdlog::error("modifyEpollEvents()");
-                pipeout->m_client.m_request.m_response.m_statusCode = 500;
+                if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
+                {
+                    if (multiplexer.removeFromEpoll(client->m_socketFd) == -1)
+                        spdlog::error("removeFromEpoll()");
+                }
+                else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
+                {
+                    if (multiplexer.removeFromEpoll(pipeout->m_pipeFd[READ]) == -1)
+                        spdlog::error("removeFromEpoll()");
+                    if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd) == -1)
+                        spdlog::error("modifyEpollEvents()");
+                    pipeout->m_client.m_request.m_response.m_statusCode = 500;
+                }
+                else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
+                {
+                    if (multiplexer.removeFromEpoll(pipein->m_pipeFd[WRITE]) == -1)
+                        spdlog::error("removeFromEpoll()");
+                    if (multiplexer.modifyEpollEvents(&pipein->m_client, EPOLLOUT, pipein->m_client.m_socketFd) == -1)
+                        spdlog::error("modifyEpollEvents()");
+                    pipein->m_client.m_request.m_response.m_statusCode = 500;
+                }
+            }
+            else if (multiplexer.m_events[i].events & EPOLLHUP) // Ready to hang up/error
+            {
+                if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
+                {
+                    if (multiplexer.removeFromEpoll(client->m_socketFd) == -1)
+                        spdlog::error("removeFromEpoll()");
+                }
+                else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
+                {
+                    if (multiplexer.removeFromEpoll(pipeout->m_pipeFd[READ]) == -1)
+                        spdlog::error("removeFromEpoll()");
+                    if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd) == -1)
+                        spdlog::error("modifyEpollEvents()");
+                    pipeout->m_client.m_request.m_response.m_statusCode = 500;
+                }
+                else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
+                {
+                    if (multiplexer.removeFromEpoll(pipein->m_pipeFd[WRITE]) == -1)
+                        spdlog::error("removeFromEpoll()");
+                    if (multiplexer.modifyEpollEvents(&pipein->m_client, EPOLLOUT, pipein->m_client.m_socketFd) == -1)
+                        spdlog::error("modifyEpollEvents()");
+                    pipein->m_client.m_request.m_response.m_statusCode = 500;
+                }
+            }
+            else if (multiplexer.m_events[i].events & EPOLLERR) // Ready to hang up/error
+            {
+                if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
+                {
+                    if (multiplexer.removeFromEpoll(client->m_socketFd) == -1)
+                        spdlog::error("removeFromEpoll()");
+                }
+                else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
+                {
+                    if (multiplexer.removeFromEpoll(pipeout->m_pipeFd[READ]) == -1)
+                        spdlog::error("removeFromEpoll()");
+                    if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd) == -1)
+                        spdlog::error("modifyEpollEvents()");
+                    pipeout->m_client.m_request.m_response.m_statusCode = 500;
+                }
+                else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
+                {
+                    if (multiplexer.removeFromEpoll(pipein->m_pipeFd[WRITE]) == -1)
+                        spdlog::error("removeFromEpoll()");
+                    if (multiplexer.modifyEpollEvents(&pipein->m_client, EPOLLOUT, pipein->m_client.m_socketFd) == -1)
+                        spdlog::error("modifyEpollEvents()");
+                    pipein->m_client.m_request.m_response.m_statusCode = 500;
+                }
             }
         }
     }
