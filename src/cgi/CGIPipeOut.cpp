@@ -11,9 +11,6 @@ CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m
         throw StatusCodeException(500, "setNonBlocking()", errno);
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "setNonBlocking()", errno);
-    
-    m_socketFd = m_pipeFd[READ];
-    spdlog::critical("CGIpipeOut: {}", *this);
 }
 
 CGIPipeOut::~CGIPipeOut(void)
