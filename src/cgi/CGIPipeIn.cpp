@@ -1,6 +1,7 @@
 #include "CGIPipeIn.hpp"
 #include "Client.hpp"
-
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 // constructor
 CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
 {
@@ -10,8 +11,7 @@ CGIPipeIn::CGIPipeIn(Client &client) : m_client(client)
         throw StatusCodeException(500, "fcntl()", errno);
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "fcntl()", errno);
-
-    spdlog::debug("{} constructor", *this);
+    m_socketFd = m_pipeFd[WRITE];
 }
 
 CGIPipeIn::~CGIPipeIn(void)
@@ -42,10 +42,18 @@ void CGIPipeIn::dupCloseWrite(void)
         throw StatusCodeException(500, "close()", errno);
     m_pipeFd[READ] = -1;
 
+    Multiplexer &multiplexer = Multiplexer::getInstance();
     int nbytes{static_cast<int>(write(m_pipeFd[WRITE], m_client.m_request.m_body.c_str(), m_client.m_request.m_body.length()))}; // Write to stdin
+    multiplexer.removeFromEpoll(m_pipeFd[WRITE]);
     if (close(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "close()", errno);
     m_pipeFd[WRITE] = -1;
     if (nbytes == -1)
         throw StatusCodeException(500, "write()", errno);
+}
+
+std::ostream &operator<<(std::ostream &out, const CGIPipeIn &cgipipein)
+{
+    out << "READ = " << cgipipein.m_pipeFd[READ] << " | WRITE = " << cgipipein.m_pipeFd[WRITE] << "\nsocketFD = " << cgipipein.m_socketFd << "\n";
+    return out;
 }

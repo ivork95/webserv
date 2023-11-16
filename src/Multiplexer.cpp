@@ -62,6 +62,11 @@ int Multiplexer::addToEpoll(ASocket *ptr, int events, int fd)
     return epoll_ctl(m_epollfd, EPOLL_CTL_ADD, fd, &ev);
 }
 
+int Multiplexer::removeFromEpoll(int fd)
+{
+    return epoll_ctl(m_epollfd, EPOLL_CTL_DEL, fd, NULL);
+}
+
 void Multiplexer::removeClientBySocketFd(int socketFd)
 {
     auto it = std::find_if(m_clients.begin(), m_clients.end(), [socketFd](Client *client)

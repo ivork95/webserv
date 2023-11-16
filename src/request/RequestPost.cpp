@@ -2,6 +2,8 @@
 #include "Multiplexer.hpp"
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 std::string Request::generalHeadersParse(const std::string &boundaryCode)
 {
@@ -42,8 +44,9 @@ std::string Request::bodyParse(const std::string &boundaryCode)
 
     if (boundaryCode.empty())
     {
-        requestHeadersEndPos += 4;
-        return (m_rawMessage.substr(requestHeadersEndPos + 4, m_contentLength));
+        if (requestHeadersEndPos == m_rawMessage.size() - 4)
+            return "";
+        return (m_rawMessage.substr(requestHeadersEndPos + 9));
     }
 
     const std::string boundaryEnd = "\r\n--" + boundaryCode + "--\r\n";

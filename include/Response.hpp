@@ -33,12 +33,8 @@ public:
     void statusLineSet(void);
 
     // methods
-    std::string responseBuild(void);
-    void getHandle(void);
-    void postHandle(void);
-    void deleteHandle(void);
-    void responseHandle(void);
-    int sendAll(int sockFd);
+    std::string responseBuild(std::vector<ErrorPageConfig> errorPages);
+    int sendAll(int sockFd, std::vector<ErrorPageConfig> errorPages);
 
     std::map<int, std::string> m_statusCodes{
         {100, "HTTP/1.1 100 Continue"},

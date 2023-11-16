@@ -27,6 +27,7 @@ class Request : public Message
 public:
     Client &m_client;
     Response m_response{};
+    std::vector<std::string> m_query{};
     CGIPipeIn m_pipein;
     CGIPipeOut m_pipeout;
     LocationConfig m_locationconfig{};
