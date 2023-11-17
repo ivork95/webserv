@@ -113,7 +113,7 @@ void handleWrite(ASocket *&ePollDataPtr)
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
     {
-        if (client->m_request.getResponse().sendAll(client->m_socketFd, client->m_server.m_serverconfig.getErrorPagesConfig()) <= 0)
+        if (client->getRequest().getResponse().sendAll(client->m_socketFd, client->getServer().m_serverconfig.getErrorPagesConfig()) <= 0)
         {
             multiplexer.modifyEpollEvents(nullptr, 0, client->m_socketFd);
             epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, client->m_socketFd, NULL);
@@ -132,15 +132,15 @@ void handleWrite(ASocket *&ePollDataPtr)
 
             pipein->dupCloseWrite();
 
-            if (multiplexer.addToEpoll(&(pipein->m_client.m_request.getPipeOut()), EPOLLIN, pipein->m_client.m_request.getPipeOut().m_pipeFd[READ]) == -1)
+            if (multiplexer.addToEpoll(&(pipein->m_client.getRequest().getPipeOut()), EPOLLIN, pipein->m_client.getRequest().getPipeOut().m_pipeFd[READ]) == -1)
                 throw StatusCodeException(500, "addToEpoll()", errno);
 
-            pipein->m_client.m_request.getPipeOut().forkCloseDupExec();
+            pipein->m_client.getRequest().getPipeOut().forkCloseDupExec();
         }
         catch (const StatusCodeException &e)
         {
             std::cerr << e.what() << '\n';
-            pipein->m_client.m_request.getResponse().statusCodeSet(e.getStatusCode());
+            pipein->m_client.getRequest().getResponse().statusCodeSet(e.getStatusCode());
             multiplexer.modifyEpollEvents(&(pipein->m_client), EPOLLOUT, pipein->m_client.m_socketFd);
         }
     }
