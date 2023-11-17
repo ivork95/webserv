@@ -24,24 +24,26 @@ class Client;
 
 class Request : public Message
 {
-public:
+private:
     Client &m_client;
     Response m_response{};
-    std::vector<std::string> m_query{};
     CGIPipeIn m_pipein;
     CGIPipeOut m_pipeout;
     LocationConfig m_locationconfig{};
-    std::vector<std::string> m_methodPathVersion{3, ""};
+
     std::map<std::string, std::string> m_generalHeaders{};
+    std::vector<std::string> m_methodPathVersion{3, ""};
+    std::vector<std::string> m_query{};
+    std::vector<std::string> m_chunkLine{};
     std::string m_boundaryCode{};
     std::string m_fileName{};
     std::string m_body{};
-    bool m_isChunked{false};
     std::string m_rawChunkBody{};
     std::string m_chunkBody{};
-    std::vector<std::string> m_chunkLine{};
+    bool m_isChunked{false};
     int m_totalChunkLength{};
 
+public:
     // constructor
     Request(void) = delete;
 
@@ -52,6 +54,12 @@ public:
     friend std::ostream &operator<<(std::ostream &out, const Request &request);
 
     // getters/setters
+    Response &getResponse(void) { return m_response; }
+    CGIPipeOut &getPipeOut(void) { return m_pipeout; }
+    std::string &getBody(void) { return m_body; }
+    LocationConfig &getLocationConfig(void) { return m_locationconfig; }
+    std::vector<std::string> &getQuery(void) { return m_query; }
+
     void methodPathVersionSet(void);
     void boundaryCodeSet(void);
     void generalHeadersSet(void);

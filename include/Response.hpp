@@ -26,17 +26,16 @@ private:
     int m_bytesleft{};
 
 public:
-    void statusCodeSet(int statusCode) { m_statusCode = statusCode; }
-
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Response &Response);
 
     // getters/setters
-    void bodySet(std::string body) { m_body = body; }
+    void statusCodeSet(int statusCode) { m_statusCode = statusCode; }
     void statusLineSet(void);
     void pathSet(std::string path) { m_path = path; }
-    void headersSet(std::map<std::string, std::string> headers) { m_headers = headers; }
     const std::string &pathGet(void) const { return m_path; }
+    void headersSet(std::map<std::string, std::string> headers) { m_headers = headers; }
+    void bodySet(std::string body) { m_body = body; }
 
     // methods
     std::string responseBuild(std::vector<ErrorPageConfig> errorPages);

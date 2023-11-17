@@ -131,7 +131,7 @@ void Client::handleConnectedClient()
     {
         std::cerr << e.what() << '\n';
 
-        m_request.m_response.statusCodeSet(e.getStatusCode());
+        m_request.getResponse().statusCodeSet(e.getStatusCode());
         if (multiplexer.modifyEpollEvents(this, EPOLLOUT, this->m_socketFd))
             throw StatusCodeException(500, "modifyEpollEvents()", errno);
     }
