@@ -54,39 +54,18 @@ void Client::handleConnectedClient()
     int nbytes{static_cast<int>(recv(m_socketFd, buf, BUFSIZ - 1, 0))};
     if (nbytes <= 0)
     {
-        multiplexer.modifyEpollEvents(nullptr, 0, m_socketFd);
-        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_socketFd, NULL);
-
-        multiplexer.modifyEpollEvents(nullptr, 0, m_timer.m_socketFd);
-        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_timer.m_socketFd, NULL);
-
-        multiplexer.removeClientBySocketFd(this->m_socketFd);
-        delete this;
-
+        multiplexer.removeFromEpoll(m_socketFd);
+        multiplexer.removeFromEpoll(m_timer.m_socketFd);
+        multiplexer.removeClientBySocketFd(this);
         return;
     }
-
     if (m_request.tokenize(buf, nbytes))
         return;
 
-    epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_timer.m_socketFd, NULL);
-    // if (close(m_timer.m_socketFd) == -1)
-    //     throw StatusCodeException(500, "close()", errno);
-
-    try
+    multiplexer.removeFromEpoll(m_timer.m_socketFd);
+    if (!m_request.parse())
     {
-        if (!m_request.parse())
-        {
-            if (multiplexer.modifyEpollEvents(this, EPOLLOUT, m_socketFd))
-                throw StatusCodeException(500, "delete()", errno);
-        }
-    }
-    catch (const StatusCodeException &e)
-    {
-        std::cerr << e.what() << '\n';
-
-        m_request.m_response.m_statusCode = e.getStatusCode();
-        if (multiplexer.modifyEpollEvents(this, EPOLLOUT, this->m_socketFd))
-            throw StatusCodeException(500, "modifyEpollEvents()", errno);
+        if (multiplexer.modifyEpollEvents(this, EPOLLOUT, m_socketFd))
+            throw StatusCodeException(500, "delete()", errno);
     }
 }

@@ -62,18 +62,22 @@ int Multiplexer::addToEpoll(ASocket *ptr, int events, int fd)
     return epoll_ctl(m_epollfd, EPOLL_CTL_ADD, fd, &ev);
 }
 
-int Multiplexer::removeFromEpoll(int fd)
+void Multiplexer::removeFromEpoll(int fd)
 {
-    return epoll_ctl(m_epollfd, EPOLL_CTL_DEL, fd, NULL);
+    if (modifyEpollEvents(nullptr, 0, fd) == -1)
+        throw StatusCodeException(500, "modifyEpollEvents()", errno);
+    if (epoll_ctl(m_epollfd, EPOLL_CTL_DEL, fd, NULL) == -1)
+        throw StatusCodeException(500, "modifyEpollEvents()", errno);
 }
 
-void Multiplexer::removeClientBySocketFd(int socketFd)
+void Multiplexer::removeClientBySocketFd(Client *clientWanted)
 {
-    auto it = std::find_if(m_clients.begin(), m_clients.end(), [socketFd](Client *client)
-                           { return client->m_socketFd == socketFd; });
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [clientWanted](Client *client)
+                           { return client->m_socketFd == clientWanted->m_socketFd; });
 
     if (it != m_clients.end())
         m_clients.erase(it);
     else
         spdlog::error("Could not find client in m_clients");
+    delete clientWanted;
 }

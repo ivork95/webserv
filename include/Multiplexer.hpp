@@ -48,8 +48,8 @@ public:
     static Multiplexer &getInstance(void);
     int modifyEpollEvents(ASocket *ptr, int events, int fd);
     int addToEpoll(ASocket *ptr, int events, int fd);
-    int removeFromEpoll(int fd);
-    void removeClientBySocketFd(int socketFd);
+    void removeFromEpoll(int fd);
+    void removeClientBySocketFd(Client *client);
 };
 
 #endif

@@ -2,6 +2,7 @@
 #include "Request.hpp"
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
+#include "Multiplexer.hpp"
 
 CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m_client(client), m_request(request), m_response(response)
 {
@@ -115,4 +116,20 @@ void CGIPipeOut::forkCloseDupExec(void)
         else if (wpid == -1)
             throw StatusCodeException(502, "waitpid()", errno);
     }
+}
+
+void CGIPipeOut::readFromPipe(void)
+{
+    char buf[BUFSIZ]{};
+    int nbytes{static_cast<int>(read(m_pipeFd[READ], &buf, BUFSIZ - 1))};
+    if (nbytes <= 0)
+        throw StatusCodeException(500, "Couldn't read from pipe", errno);
+    else
+        m_response.m_body = buf;
+
+    Multiplexer &multiplexer = Multiplexer::getInstance();
+
+    multiplexer.removeFromEpoll(m_pipeFd[READ]);
+    if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
+        throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");// refactor
 }

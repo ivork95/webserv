@@ -23,25 +23,22 @@ void handleHangUp(ASocket *&ePollDataPtr)
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
-    {
-        if (multiplexer.removeFromEpoll(client->m_socketFd) == -1)
-            spdlog::error("removeFromEpoll()");
-    }
+        multiplexer.removeFromEpoll(client->m_socketFd);
     else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
     {
-        if (multiplexer.removeFromEpoll(pipeout->m_pipeFd[READ]) == -1)
-            spdlog::error("removeFromEpoll()");
+        multiplexer.removeFromEpoll(pipeout->m_pipeFd[READ]);
         if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd) == -1)
             spdlog::error("modifyEpollEvents()");
         pipeout->m_client.m_request.m_response.m_statusCode = 500;
+        //refactor 
     }
     else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
     {
-        if (multiplexer.removeFromEpoll(pipein->m_pipeFd[WRITE]) == -1)
-            spdlog::error("removeFromEpoll()");
+        multiplexer.removeFromEpoll(pipein->m_pipeFd[WRITE]);
         if (multiplexer.modifyEpollEvents(&pipein->m_client, EPOLLOUT, pipein->m_client.m_socketFd) == -1)
             spdlog::error("modifyEpollEvents()");
         pipein->m_client.m_request.m_response.m_statusCode = 500;
+        //refactor
     };
 }
 
@@ -54,32 +51,12 @@ void handleRead(ASocket *&ePollDataPtr)
     else if (Server *server = dynamic_cast<Server *>(ePollDataPtr)) // Server is ready to read, handle new connection
         server->handleNewConnection();
     else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
-    {
-        if (epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipeout->m_pipeFd[READ], NULL) == -1)
-            throw std::system_error(errno, std::generic_category(), "epoll_ctl()"); // status code err
-        if (multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd))
-            throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");
-        char buf[BUFSIZ]{};
-        int nbytes{static_cast<int>(read(pipeout->m_pipeFd[READ], &buf, BUFSIZ - 1))};
-        if (nbytes <= 0)
-            pipeout->m_response.m_statusCode = 500;
-        else
-        {
-            pipeout->m_response.m_body = buf;
-            pipeout->m_response.m_statusCode = 200;
-        }
-    }
+        pipeout->readFromPipe();
     else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
     {
-        multiplexer.modifyEpollEvents(nullptr, 0, timer->m_socketFd);
-        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_socketFd, NULL);
-
-        multiplexer.modifyEpollEvents(nullptr, 0, timer->m_client.m_socketFd);
-        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_client.m_socketFd, NULL);
-
-        multiplexer.removeClientBySocketFd(timer->m_client.m_socketFd);
-
-        delete &timer->m_client;
+        multiplexer.removeFromEpoll(timer->m_socketFd);
+        multiplexer.removeFromEpoll(timer->m_client.m_socketFd);
+        multiplexer.removeClientBySocketFd(&timer->m_client);
     }
     else if (Signal *signal = dynamic_cast<Signal *>(ePollDataPtr))
         signal->readAndDelete();
@@ -97,8 +74,7 @@ void handleWrite(ASocket *&ePollDataPtr)
             multiplexer.modifyEpollEvents(nullptr, 0, client->m_socketFd);
             epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, client->m_socketFd, NULL);
 
-            multiplexer.removeClientBySocketFd(client->m_socketFd);
-            delete client;
+            multiplexer.removeClientBySocketFd(client);
         }
     }
     else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
@@ -179,11 +155,24 @@ void run(const Configuration &config)
                     break;
                 }
             }
-            catch (const std::exception &e)
+            catch (const StatusCodeException &e)
             {
-                // statuc code err
-                // runtime err
-                std::cerr << e.what() << '\n';
+                if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
+                {
+                    std::cerr << e.what() << '\n';
+                    client->m_request.m_response.m_statusCode = e.getStatusCode();
+                    multiplexer.modifyEpollEvents(client, EPOLLOUT, client->m_socketFd);
+                }
+                else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
+                {
+                }
+                else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
+                {
+                }
+                else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
+                {
+                    // no response needed.
+                }
             }
         }
     }
