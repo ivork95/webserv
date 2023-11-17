@@ -5,9 +5,8 @@
 
 int Request::uploadHandler(void)
 {
-
-    m_response.bodySet("./www" + m_methodPathVersion[1]);
-    m_response.m_statusCode = 200;
+    m_response.bodySet(Helper::fileToStr("./www" + m_methodPathVersion[1]));
+    m_response.statusCodeSet(200);
 
     return 0;
 }
@@ -16,7 +15,7 @@ int Request::getHandler(void)
 {
 
     // Can't find an index file, check if directory listing
-    if (m_response.m_path.empty())
+    if (m_response.pathGet().empty())
     {
         const std::string dirPath = directoryListingParse();
         if (dirPath.empty())
@@ -32,8 +31,8 @@ int Request::getHandler(void)
             return 0;
         }
     }
-    m_response.bodySet(m_response.m_path);
-    m_response.m_statusCode = 200;
+    m_response.bodySet(Helper::fileToStr(m_response.pathGet()));
+    m_response.statusCodeSet(200);
 
     return 0;
 }

@@ -14,7 +14,7 @@
 
 class Response
 {
-public:
+private:
     int m_statusCode{};
     std::string m_statusLine{};
     std::string m_path{};
@@ -25,12 +25,18 @@ public:
     int m_total{0};
     int m_bytesleft{};
 
+public:
+    void statusCodeSet(int statusCode) { m_statusCode = statusCode; }
+
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Response &Response);
 
     // getters/setters
-    void bodySet(const std::string &path);
+    void bodySet(std::string body) { m_body = body; }
     void statusLineSet(void);
+    void pathSet(std::string path) { m_path = path; }
+    void headersSet(std::map<std::string, std::string> headers) { m_headers = headers; }
+    const std::string &pathGet(void) const { return m_path; }
 
     // methods
     std::string responseBuild(std::vector<ErrorPageConfig> errorPages);

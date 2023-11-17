@@ -62,11 +62,11 @@ void Request::updatedLocationConfigSet(const std::string &originalMethodPath)
         methodPath = originalMethodPath.substr(0, pos);
         queryString = originalMethodPath.substr(pos + 1);
         std::stringstream ss(queryString);
-        while(ss.good())
+        while (ss.good())
         {
             std::string substr;
             getline(ss, substr, '&');
-            m_query.push_back( substr );
+            m_query.push_back(substr);
         }
     }
     for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
@@ -96,7 +96,7 @@ void Request::responsePathSet(void)
         spdlog::info("m_locationconfig.getRootPath() + index = {}", m_locationconfig.getRootPath() + index);
         if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
         {
-            m_response.m_path = m_locationconfig.getRootPath() + index;
+            m_response.pathSet(m_locationconfig.getRootPath() + index);
             break;
         }
     }

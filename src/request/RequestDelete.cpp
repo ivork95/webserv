@@ -38,7 +38,7 @@ int Request::deleteHandler(void)
     const std::string filePath = buildDeleteFilePath();
     deleteFile(filePath);
     m_body = "Success: File deleted";
-    m_response.m_statusCode = 200;
+    m_response.statusCodeSet(200);
 
     return 0;
 }
