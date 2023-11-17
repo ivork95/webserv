@@ -55,29 +55,7 @@ void handleRead(ASocket *&ePollDataPtr)
         delete &timer->m_client;
     }
     else if (Signal *signal = dynamic_cast<Signal *>(ePollDataPtr))
-    {
-        struct signalfd_siginfo fdsi
-        {
-        };
-
-        ssize_t s = read(signal->m_socketFd, &fdsi, sizeof(fdsi));
-        if (s != sizeof(fdsi))
-            throw std::system_error(errno, std::generic_category(), "read()");
-        if (fdsi.ssi_signo == SIGINT)
-        {
-            for (auto &server : multiplexer.m_servers)
-                delete server;
-
-            for (auto &client : multiplexer.m_clients)
-                delete client;
-
-            multiplexer.isRunning = false;
-        }
-        else if (fdsi.ssi_signo == SIGQUIT)
-            ;
-        else
-            ;
-    }
+        signal->readAndDelete();
 }
 
 void handleWrite(ASocket *&ePollDataPtr)

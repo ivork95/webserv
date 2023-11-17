@@ -1,4 +1,5 @@
 #include "Signal.hpp"
+#include "Multiplexer.hpp"
 
 Signal::Signal(void)
 {
@@ -22,4 +23,31 @@ Signal::Signal(void)
 Signal::~Signal()
 {
     close(m_socketFd);
+}
+
+void Signal::readAndDelete(void) const
+{
+    Multiplexer &multiplexer = Multiplexer::getInstance();
+
+    struct signalfd_siginfo fdsi
+    {
+    };
+
+    ssize_t s = read(m_socketFd, &fdsi, sizeof(fdsi));
+    if (s != sizeof(fdsi))
+        throw std::system_error(errno, std::generic_category(), "read()");
+    if (fdsi.ssi_signo == SIGINT)
+    {
+        for (auto &server : multiplexer.m_servers)
+            delete server;
+
+        for (auto &client : multiplexer.m_clients)
+            delete client;
+
+        multiplexer.isRunning = false;
+    }
+    else if (fdsi.ssi_signo == SIGQUIT)
+        ;
+    else
+        ;
 }

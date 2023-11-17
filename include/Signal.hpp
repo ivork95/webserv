@@ -28,6 +28,8 @@ public:
     // destructor
     ~Signal(void);
 
+    void readAndDelete(void) const;
+
     struct signalfd_siginfo fdsi
     {
     };
