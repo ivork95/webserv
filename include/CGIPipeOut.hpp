@@ -39,6 +39,7 @@ public:
     friend std::ostream &operator<<(std::ostream &out, const CGIPipeOut &cgipipeout);
 
     // member functions
+    void readFromPipe(void);
     void forkCloseDupExec(void);
 };
 
