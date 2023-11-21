@@ -69,7 +69,7 @@ void Request::updatedLocationConfigSet(const std::string &originalMethodPath)
             m_query.push_back(substr);
         }
     }
-    for (const auto &location : m_client.getServer().m_serverconfig.getLocationsConfig())
+    for (const auto &location : m_client.getServer().getServerConfig().getLocationsConfig())
     {
         if (methodPath == location.getRequestURI())
         {

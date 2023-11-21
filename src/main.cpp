@@ -113,7 +113,7 @@ void handleWrite(ASocket *&ePollDataPtr)
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
     {
-        if (client->getRequest().getResponse().sendAll(client->m_socketFd, client->getServer().m_serverconfig.getErrorPagesConfig()) <= 0)
+        if (client->getRequest().getResponse().sendAll(client->m_socketFd, client->getServer().getServerConfig().getErrorPagesConfig()) <= 0)
         {
             multiplexer.modifyEpollEvents(nullptr, 0, client->m_socketFd);
             epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, client->m_socketFd, NULL);

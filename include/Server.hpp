@@ -21,13 +21,13 @@
 
 class Server : public ASocket
 {
-public:
+private:
     struct addrinfo m_hints
     {
     };
-
     const ServerConfig &m_serverconfig;
 
+public:
     // default constructor
     Server(void) = delete;
 
@@ -47,6 +47,7 @@ public:
     friend std::ostream &operator<<(std::ostream &out, const Server &server);
 
     void handleNewConnection(void) const;
+    const ServerConfig &getServerConfig(void) const { return m_serverconfig; }
 };
 
 #endif

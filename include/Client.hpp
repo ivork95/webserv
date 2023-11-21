@@ -42,7 +42,7 @@ public:
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Client &client);
 
-    const Server &getServer(void) { return m_server; }
+    const Server &getServer(void) const { return m_server; }
     Request &getRequest(void) { return m_request; }
     Timer &getTimer(void) { return m_timer; }
 
