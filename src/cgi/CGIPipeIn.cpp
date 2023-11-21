@@ -44,7 +44,7 @@ void CGIPipeIn::dupCloseWrite(void)
 
     Multiplexer &multiplexer = Multiplexer::getInstance();
     int nbytes{static_cast<int>(write(m_pipeFd[WRITE], m_client.m_request.m_body.c_str(), m_client.m_request.m_body.length()))}; // Write to stdin
-    multiplexer.removeFromEpoll(m_pipeFd[WRITE]);
+    // multiplexer.removeFromEpoll(m_pipeFd[WRITE]);
     if (close(m_pipeFd[WRITE]) == -1)
         throw StatusCodeException(500, "close()", errno);
     m_pipeFd[WRITE] = -1;

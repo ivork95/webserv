@@ -65,7 +65,7 @@ void Client::handleConnectedClient()
     multiplexer.removeFromEpoll(m_timer.m_socketFd);
     if (!m_request.parse())
     {
-        if (multiplexer.modifyEpollEvents(this, EPOLLOUT, m_socketFd))
+        if (multiplexer.modifyEpollEvents(this, EPOLLOUT, m_socketFd)) // does this ever go of
             throw StatusCodeException(500, "delete()", errno);
     }
 }

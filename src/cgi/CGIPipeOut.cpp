@@ -131,5 +131,5 @@ void CGIPipeOut::readFromPipe(void)
 
     multiplexer.removeFromEpoll(m_pipeFd[READ]);
     if (multiplexer.modifyEpollEvents(&m_client, EPOLLOUT, m_client.m_socketFd))
-        throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");// refactor
+        throw std::system_error(errno, std::generic_category(), "modifyEpollEvents()");
 }

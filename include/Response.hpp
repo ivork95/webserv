@@ -15,7 +15,7 @@
 class Response
 {
 public:
-    int m_statusCode{};
+    int m_statusCode{200};
     std::string m_statusLine{};
     std::string m_path{};
     std::map<std::string, std::string> m_headers{};
