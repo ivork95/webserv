@@ -1,13 +1,12 @@
 
 #include "Parser.hpp"
 
-#include <filesystem>
-
 /**
  * CONSTRUCTORS / DESTRUCTORS
  */
 Parser::Parser(void)
 {
+	// std::cout << "Parser default constructor called\n";
 }
 
 /**
@@ -15,11 +14,11 @@ Parser::Parser(void)
  */
 static int checkDuplicateRequestUri(std::vector<std::string> &usedRequestUris, const std::string &requestUri)
 {
-    if (std::find(usedRequestUris.begin(), usedRequestUris.end(), requestUri) != usedRequestUris.end())
-        return 1;
+	if (std::find(usedRequestUris.begin(), usedRequestUris.end(), requestUri) != usedRequestUris.end())
+		return 1;
 
-    usedRequestUris.push_back(requestUri);
-    return 0;
+	usedRequestUris.push_back(requestUri);
+	return 0;
 }
 
 /**
@@ -27,24 +26,27 @@ static int checkDuplicateRequestUri(std::vector<std::string> &usedRequestUris, c
  */
 ServerConfig Parser::parseTokens(ServerConfig server)
 {
-    Parser parser;
+	Parser parser;
 
-    for (size_t i = 0; i < server.getTokens().size(); i++)
-    {
-        parser._parseServerContext(&server, server.getTokens(), &i);
-    }
+	for (size_t i = 0; i < server.getTokens().size(); i++)
+	{
+		parser._parseServerContext(&server, server.getTokens(), &i);
+	}
 
-    server.checkMissingDirective();
+	server.checkMissingDirective();
 
-    std::vector<std::string> usedRequestUris;
-    for (size_t i = 0; i < server.getLocationsConfig().size(); i++)
-    {
-        const std::string requestUri = server.getLocationsConfig()[i].getRequestURI();
-        if (checkDuplicateRequestUri(usedRequestUris, requestUri))
-        {
-            throw DuplicateRequestUriException(requestUri);
-        }
-    }
+	std::vector<std::string> usedRequestUris;
+	for (size_t i = 0; i < server.getLocationsConfig().size(); i++)
+	{
+		const std::string requestUri = server.getLocationsConfig()[i].getRequestURI();
+		if (checkDuplicateRequestUri(usedRequestUris, requestUri))
+		{
+			server.clearData();
+			throw DuplicateRequestUriException(requestUri);
+		}
+	}
 
-    return (server);
+	server.clearData();
+	
+	return (server);
 }

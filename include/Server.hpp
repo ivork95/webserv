@@ -15,19 +15,19 @@
 
 #include "Client.hpp"
 #include "ASocket.hpp"
-#include "ServerConfig.hpp"
+#include "ConfigServer.hpp"
 
 #define BACKLOG 150 // how many pending connections queue will hold
 
 class Server : public ASocket
 {
-public:
+private:
     struct addrinfo m_hints
     {
     };
-
     const ServerConfig &m_serverconfig;
 
+public:
     // default constructor
     Server(void) = delete;
 
@@ -47,6 +47,7 @@ public:
     friend std::ostream &operator<<(std::ostream &out, const Server &server);
 
     void handleNewConnection(void) const;
+    const ServerConfig &getServerConfig(void) const { return m_serverconfig; }
 };
 
 #endif

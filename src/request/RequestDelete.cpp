@@ -3,17 +3,28 @@
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
 
+static bool isValidPath(const std::string &str)
+{
+	if (str.empty())
+		return false;
+	if (!std::filesystem::exists(str))
+		return false;
+	if (!std::filesystem::is_regular_file(str))
+		return false;
+	return true;
+}
+
 static void deleteFile(const std::string &filePath)
 {
 
-    std::error_code ec{};
+	if (!isValidPath(filePath))
+	{
+		throw StatusCodeException(404, "Error: File not found for DELETE request");
+	}
 
-    if (!std::filesystem::remove(filePath, ec))
+    if (!std::filesystem::remove(filePath))
     {
-        if (ec == std::errc::no_such_file_or_directory)
-            throw StatusCodeException(404, "Error: File not found for DELETE request");
-        else
-            throw StatusCodeException(500, "Error: Failed to delete file");
+		throw StatusCodeException(500, "Error: Failed to delete file");
     }
 }
 
@@ -33,12 +44,12 @@ int Request::deleteHandler(void)
     std::filesystem::path requestPath(m_methodPathVersion[1]);
     std::filesystem::path requestParentPath = requestPath.remove_filename();
 
-    updatedLocationConfigSet(requestParentPath);
+    locationConfigSet(requestParentPath);
     isMethodAllowed();
     const std::string filePath = buildDeleteFilePath();
     deleteFile(filePath);
     m_body = "Success: File deleted";
-    m_response.m_statusCode = 200;
+    m_response.statusCodeSet(200);
 
     return 0;
 }

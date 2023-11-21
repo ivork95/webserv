@@ -13,7 +13,7 @@ Request::Request(Client &client) : m_client(client), m_pipein(client), m_pipeout
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const Request &request)
 {
-    int i{};
+	int i{};
 
     out << "Request {\n";
     for (auto item : request.m_methodPathVersion)
@@ -34,19 +34,19 @@ std::ostream &operator<<(std::ostream &out, const Request &request)
     out << "]\n";
     out << "}\n";
 
-    out << "m_response = " << request.m_response;
+	out << "m_response = " << request.m_response;
 
-    return out;
+	return out;
 }
 
 void Request::methodPathVersionSet(void)
 {
-    size_t requestLineEndPos = m_rawMessage.find("\r\n");
-    std::string requestLine = m_rawMessage.substr(0, requestLineEndPos);
-    m_methodPathVersion = Helper::split(requestLine);
+	size_t requestLineEndPos = m_rawMessage.find("\r\n");
+	std::string requestLine = m_rawMessage.substr(0, requestLineEndPos);
+	m_methodPathVersion = Helper::split(requestLine);
 }
 
-void Request::updatedLocationConfigSet(const std::string &originalMethodPath)
+void Request::locationConfigSet(const std::string &originalMethodPath)
 {
     std::string methodPath;
     std::string queryString;
@@ -62,14 +62,14 @@ void Request::updatedLocationConfigSet(const std::string &originalMethodPath)
         methodPath = originalMethodPath.substr(0, pos);
         queryString = originalMethodPath.substr(pos + 1);
         std::stringstream ss(queryString);
-        while(ss.good())
+        while (ss.good())
         {
             std::string substr;
             getline(ss, substr, '&');
-            m_query.push_back( substr );
+            m_query.push_back(substr);
         }
     }
-    for (const auto &location : m_client.m_server.m_serverconfig.getLocationsConfig())
+    for (const auto &location : m_client.getServer().getServerConfig().getLocationsConfig())
     {
         if (methodPath == location.getRequestURI())
         {
@@ -84,9 +84,9 @@ void Request::updatedLocationConfigSet(const std::string &originalMethodPath)
 
 void Request::isMethodAllowed(void)
 {
-    auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
-    if (it == m_locationconfig.getHttpMethods().end())
-        throw StatusCodeException(405, "Warning: method not allowed");
+	auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
+	if (it == m_locationconfig.getHttpMethods().end())
+		throw StatusCodeException(405, "Warning: method not allowed");
 }
 
 void Request::responsePathSet(void)
@@ -96,7 +96,7 @@ void Request::responsePathSet(void)
         spdlog::info("m_locationconfig.getRootPath() + index = {}", m_locationconfig.getRootPath() + index);
         if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
         {
-            m_response.m_path = m_locationconfig.getRootPath() + index;
+            m_response.pathSet(m_locationconfig.getRootPath() + index);
             break;
         }
     }
@@ -112,8 +112,8 @@ int Request::tokenize(const char *buf, int nbytes)
         return 1;
     }
 
-    if (m_requestHeaders.empty())
-        requestHeadersSet();
+	if (m_requestHeaders.empty())
+		requestHeadersSet();
 
     if (m_requestHeaders.contains("Content-Length"))
     {
@@ -160,7 +160,7 @@ int Request::parse(void)
     if (m_methodPathVersion[0] == "GET" && Helper::isImageFormat(m_methodPathVersion[1]))
         return uploadHandler();
 
-    updatedLocationConfigSet(m_methodPathVersion[1]);
+    locationConfigSet(m_methodPathVersion[1]);
     isMethodAllowed(); // For a certain location block, check if the request method is allowed
     responsePathSet(); // For a certain location block, loops over index files, and checks if one exists
 
@@ -180,7 +180,7 @@ int Request::parse(void)
     {
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
-            m_client.m_request.bodySet();
+            m_client.getRequest().bodySet();
             std::cerr << "ADDING PIPEIN FD TO EPOLLOUT: " << m_pipein.m_pipeFd[WRITE] << std::endl;
             if (multiplexer.addToEpoll(&m_pipein, EPOLLOUT, m_pipein.m_pipeFd[WRITE])) // Add the WRITE end of pipein to Epoll
                 throw StatusCodeException(500, "addToEpoll()", errno);

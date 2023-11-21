@@ -25,9 +25,9 @@ void Request::directoryListingBodySet(const std::string &dirPath)
     if (directoryListing.empty())
         throw StatusCodeException(500, "Error: directoryListingBodySet");
 
-    m_response.m_body = directoryListing;
-    m_response.m_statusCode = 200;
-    m_response.m_headers.insert({"Content-Type", "text/html"});
+    m_response.bodySet(directoryListing);
+    m_response.statusCodeSet(200);
+    m_response.headersSet({{"Content-Type", "text/html"}});
 }
 
 std::string Request::directoryListingParse(void)

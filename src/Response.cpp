@@ -14,12 +14,6 @@ std::ostream &operator<<(std::ostream &out, const Response &response)
     return out;
 }
 
-// getters/setters
-void Response::bodySet(const std::string &path)
-{
-    m_body = Helper::fileToStr(path);
-}
-
 void Response::statusLineSet(void)
 {
     auto it = m_statusCodes.find(m_statusCode);

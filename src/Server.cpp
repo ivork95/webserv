@@ -91,7 +91,7 @@ void Server::handleNewConnection(void) const
         multiplexer.m_clients.push_back(client);
         if (multiplexer.addToEpoll(client, EPOLLIN | EPOLLRDHUP, client->m_socketFd))
             throw std::system_error(errno, std::generic_category(), "addToEpoll()");
-        if (multiplexer.addToEpoll(&(client->m_timer), EPOLLIN | EPOLLRDHUP, client->m_timer.m_socketFd))
+        if (multiplexer.addToEpoll(&(client->getTimer()), EPOLLIN | EPOLLRDHUP, client->getTimer().m_socketFd))
             throw std::system_error(errno, std::generic_category(), "addToEpoll()");
     }
     catch (const std::exception &e)

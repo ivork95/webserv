@@ -20,7 +20,7 @@
 
 void handleRead(ASocket *&ePollDataPtr)
 {
-    Multiplexer &multiplexer = Multiplexer::getInstance();
+	Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // Client is ready to read, handle incoming data
         client->handleConnectedClient();
@@ -40,12 +40,11 @@ void handleRead(ASocket *&ePollDataPtr)
 
 void handleWrite(ASocket *&ePollDataPtr)
 {
-    Multiplexer &multiplexer = Multiplexer::getInstance();
+	Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
     {
-        spdlog::debug("response = \n{}", client->m_request.m_response);
-        if (client->m_request.m_response.sendAll(client->m_socketFd, client->m_server.m_serverconfig.getErrorPagesConfig()) <= 0)
+        if (client->getRequest().getResponse().sendAll(client->m_socketFd, client->getServer().getServerConfig().getErrorPagesConfig()) <= 0)
         {
             multiplexer.removeFromEpoll(client->m_socketFd); //refactor what if we throw error here do we get a loop?
             multiplexer.removeClientBySocketFd(client);
@@ -82,11 +81,11 @@ void run(const Configuration &config)
         return;
     }
 
-    while (multiplexer.isRunning)
-    {
-        epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
-        if (epollCount == -1)
-            throw std::system_error(errno, std::generic_category(), "epoll_wait()");
+	while (multiplexer.isRunning)
+	{
+		epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
+		if (epollCount == -1)
+			throw std::system_error(errno, std::generic_category(), "epoll_wait()");
 
         for (i = 0; i < epollCount; i++) // Loop through ready list
         {
@@ -146,12 +145,41 @@ int main(int argc, char *argv[])
     if (argc != 2)
         throw std::runtime_error("usage: webserv [path to config]\n\n\n");
     spdlog::set_level(spdlog::level::debug);
+	spdlog::set_level(spdlog::level::debug);
 
-    Configuration config{};
-    if (initConfig(argv[1], config))
-        return 1;
+	std::string inputFile{};
+	if (argc == 1)
+		inputFile = "config-files/default.conf";
+	else if (argc == 2)
+		inputFile = argv[1];
+	else
+		throw std::runtime_error("usage: webserv [path to config]\n\n\n");
 
-    run(config);
+	if (!ParserHelper::isValidConfigExtension(inputFile))
+		return 1;
 
-    return 0;
+	std::ifstream configFile;
+	if (ParserHelper::openFile(&configFile, inputFile))
+		return 1;
+
+	Configuration config{};
+	if (config.initConfig(configFile))
+	{
+		if (!config.serverSections.empty())
+			config.serverSections.clear();
+		if (!config.serversConfig.empty())
+			config.serversConfig.clear();
+		std::cout << "Configuration file failure\n";
+		return 1;
+	}
+
+	config.printConfig();
+
+#if (PARSTER) // To run only the parser and display the output
+	return 0;
+#endif
+
+	run(config);
+
+	return 0;
 }

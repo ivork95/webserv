@@ -40,10 +40,10 @@ void CGIPipeOut::forkCloseDupExec(void)
         throw StatusCodeException(500, "fork()", errno);
     if (cpid1 == 0)
     {
-        char *pythonPath = strdup(m_request.m_locationconfig.getCgiInterpreter().c_str());
+        char *pythonPath = strdup(m_request.getLocationConfig().getCgiInterpreter().c_str());
         if (pythonPath == NULL)
             throw StatusCodeException(500, "Error: strdup)");
-        char *scriptPath = strdup(m_request.m_locationconfig.getAbsCgiScript().c_str());
+        char *scriptPath = strdup(m_request.getLocationConfig().getAbsCgiScript().c_str());
         if (scriptPath == NULL)
         {
             delete[] pythonPath;
@@ -51,13 +51,13 @@ void CGIPipeOut::forkCloseDupExec(void)
         }
         char *argv[] = {pythonPath, scriptPath, NULL};
         char **env = NULL;
-        if (!m_request.m_query.empty())
+        if (!m_request.getQuery().empty())
         {
-            size_t i = m_request.m_query.size();
-            env = new char*[i + 1];
+            size_t i = m_request.getQuery().size();
+            env = new char *[i + 1];
             env[i] = NULL;
             i = 0;
-            for (const auto &query: m_request.m_query)
+            for (const auto &query : m_request.getQuery())
             {
                 env[i] = strdup(query.c_str());
                 if (scriptPath == NULL)
@@ -78,7 +78,7 @@ void CGIPipeOut::forkCloseDupExec(void)
         execve(pythonPath, argv, env);
         delete[] pythonPath;
         delete[] scriptPath;
-        for (size_t i = 0; i < m_request.m_query.size(); i++)
+        for (size_t i = 0; i < m_request.getQuery().size(); i++)
             free(env[i]);
         delete[] env;
         throw StatusCodeException(500, "Error: execve()");

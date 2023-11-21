@@ -20,7 +20,7 @@ class Server;
 
 class Client : public ASocket
 {
-public:
+private:
     const Server &m_server;
     Request m_request;
     Timer m_timer;
@@ -30,6 +30,7 @@ public:
     };
     socklen_t m_addrlen{sizeof(m_remoteaddr)};
 
+public:
     // default constructor
     Client(void) = delete;
 
@@ -40,6 +41,10 @@ public:
 
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Client &client);
+
+    const Server &getServer(void) const { return m_server; }
+    Request &getRequest(void) { return m_request; }
+    Timer &getTimer(void) { return m_timer; }
 
     // member functions
     void handleConnectedClient();

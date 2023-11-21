@@ -9,7 +9,7 @@
 #include <filesystem>
 
 #include "StatusCodeException.hpp"
-#include "ServerConfig.hpp"
+#include "ConfigServer.hpp"
 #include "Helper.hpp"
 
 class Response
@@ -25,12 +25,17 @@ public:
     int m_total{0};
     int m_bytesleft{};
 
+public:
     // outstream operator overload
     friend std::ostream &operator<<(std::ostream &out, const Response &Response);
 
     // getters/setters
-    void bodySet(const std::string &path);
+    void statusCodeSet(int statusCode) { m_statusCode = statusCode; }
     void statusLineSet(void);
+    void pathSet(std::string path) { m_path = path; }
+    const std::string &pathGet(void) const { return m_path; }
+    void headersSet(std::map<std::string, std::string> headers) { m_headers = headers; }
+    void bodySet(std::string body) { m_body = body; }
 
     // methods
     std::string responseBuild(std::vector<ErrorPageConfig> errorPages);

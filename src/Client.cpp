@@ -46,6 +46,53 @@ std::ostream &operator<<(std::ostream &out, const Client &client)
     return out;
 }
 
+// bool alpha(void)
+// {
+//     char buf[BUFSIZ]{};
+
+//     int nbytes{static_cast<int>(recv(m_socketFd, buf, BUFSIZ - 1, 0))};
+//     if (nbytes <= 0)
+//     {
+//         multiplexer.modifyEpollEvents(nullptr, 0, m_socketFd);
+//         epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_socketFd, NULL);
+
+//         multiplexer.modifyEpollEvents(nullptr, 0, m_timer.m_socketFd);
+//         epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, m_timer.m_socketFd, NULL);
+
+//         multiplexer.removeClientBySocketFd(this->m_socketFd);
+//         delete this;
+
+//         return true;
+//     }
+
+//     m_rawMessage.append(buf, buf + nbytes);
+
+//     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
+//     if (fieldLinesEndPos == std::string::npos)
+//         return false;
+
+//     if (m_requestHeaders.empty())
+//         requestHeadersSet();
+
+//     if (m_requestHeaders.contains("Content-Length"))
+//     {
+//         if (!m_isContentLengthConverted)
+//             contentLengthSet();
+//         if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
+//             return false;
+//     }
+//     else if (m_requestHeaders.contains("Transfer-Encoding"))
+//     {
+//         if (!m_isChunked)
+//             m_isChunked = true;
+//         size_t chunkEndPos = m_rawMessage.find("\r\n0\r\n\r\n");
+//         if (chunkEndPos == std::string::npos)
+//             return false;
+//     }
+
+//     return true;
+// }
+
 void Client::handleConnectedClient()
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();

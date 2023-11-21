@@ -23,7 +23,7 @@ RESET=$(tput sgr0)
 run_webserv() {
 	config_file="$1"
 	result_file="$TMP_DIR/$(basename "$config_file").result"
-	$WEBSERV_EXEC "$config_file" > "$result_file" 2>&1
+	valgrind -s --leak-check=full --show-leak-kinds=all --track-fds=yes $WEBSERV_EXEC "$config_file" > "$result_file" 2>&1
 
 	exit_status="${PIPESTATUS[0]}"
 

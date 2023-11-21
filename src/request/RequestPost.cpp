@@ -114,8 +114,8 @@ int Request::postHandler(void)
     bodySet();
     bodyToDisk("./www/" + m_fileName);
 
-    m_response.m_headers.insert({"Location", "/" + Helper::percentEncode(m_fileName)});
-    m_response.m_statusCode = 303;
+    m_response.headersSet({{"Location", "/" + Helper::percentEncode(m_fileName)}});
+    m_response.statusCodeSet(303);
 
     return 0;
 }

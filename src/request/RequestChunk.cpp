@@ -123,15 +123,13 @@ void Request::chunkHeadersParse(void)
 
 int Request::chunkHandler(void)
 {
-
     chunkHeadersParse();
     chunkBodyExtract();
     chunkBodyTokenize();
     chunkBodySet();
-
     chunkHeaderReplace();
-    m_response.m_body = m_chunkBody;
-    m_response.m_statusCode = 200;
+    m_response.bodySet(m_chunkBody);
+    m_response.statusCodeSet(200);
 
     return 0;
 }
