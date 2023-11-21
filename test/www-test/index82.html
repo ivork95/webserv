@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Welcome to ft_webserv!</title>
+    <style>
+        html {
+            color-scheme: light dark;
+        }
+
+        body {
+            width: 35em;
+            margin: 0 auto;
+            font-family: Tahoma, Verdana, Arial, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Welcome to ft_webserv! [8082]</h1>
+    <p>If you see this page, the ft_webserv web server is successfully installed and
+        working.</p>
+
+    <p>To upload some file to the server please go to
+        <a href="/upload">upload</a>.<br />
+        To try a wrong url go to
+        <a href="/wrongurl">wrongurl</a>.
+    </p>
+
+    <p>For online documentation and support please refer to
+        <a href="http://nginx.org/">nginx.org</a>.<br />
+        Commercial support is available at
+        <a href="http://nginx.com/">nginx.com</a>.
+    </p>
+
+    <form action="/cgi-bin/post" method="post">
+        <label for="name">Post CGI:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <input type="submit" value="CGI post">
+    </form>
+
+    <form action="/cgi-bin/get" method="get">
+        <label for="name">Get CGI:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        <input type="submit" value="CGI get">
+    </form>
+    <p><em>Thank you for using ft_webserv.</em></p>
+</body>
+
+</html>
