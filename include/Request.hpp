@@ -14,7 +14,7 @@
 #include "Message.hpp"
 #include "StatusCodeException.hpp"
 #include "Helper.hpp"
-#include "ServerConfig.hpp"
+#include "ConfigServer.hpp"
 #include "Response.hpp"
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
@@ -65,7 +65,7 @@ public:
     void generalHeadersSet(void);
     void fileNameSet(void);
     void bodySet(void);
-    void updatedLocationConfigSet(const std::string &methodPath);
+    void locationConfigSet(const std::string &methodPath);
     void responsePathSet(void);
 
     // methods

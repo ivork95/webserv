@@ -9,7 +9,7 @@
 #include <filesystem>
 
 #include "StatusCodeException.hpp"
-#include "ServerConfig.hpp"
+#include "ConfigServer.hpp"
 #include "Helper.hpp"
 
 class Response

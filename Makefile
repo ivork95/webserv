@@ -15,32 +15,17 @@ OBJECTS		:=	obj/main.o \
 				obj/ASocket.o \
 				obj/Timer.o \
 				obj/Server.o \
-				obj/InitConfig.o \
+				obj/ConfigInit.o \
 				obj/config/Token.o \
 				obj/config/Lexer.o \
 				obj/config/Parser.o \
-				obj/config/ServerParser.o \
-				obj/config/LocationParser.o \
+				obj/config/ParserServer.o \
+				obj/config/ParserLocation.o \
 				obj/config/Configuration.o \
-				obj/config/ServerConfig.o \
-				obj/config/LocationConfig.o \
-				obj/config/ErrorPageConfig.o \
-				obj/utils/config/hasConversionUnit.o \
-				obj/utils/config/isAlphaNum.o \
-				obj/utils/config/isNumber.o \
-				obj/utils/config/isValidCgiInterpreter.o \
-				obj/utils/config/isValidCgiScript.o \
-				obj/utils/config/isValidErrorCode.o \
-				obj/utils/config/isValidHttpMethod.o \
-				obj/utils/config/isValidIndexExtension.o \
-				obj/utils/config/isValidIpv4.o \
-				obj/utils/config/isValidPath.o \
-				obj/utils/config/isValidPortNumber.o \
-				obj/utils/config/isValidServerName.o \
-				obj/utils/config/isValidUri.o \
-				obj/utils/config/hasRequiredPermissions.o \
-				obj/utils/config/ParserUtils.o \
-				obj/utils/config/PrintConfig.o \
+				obj/config/ConfigServer.o \
+				obj/config/ConfigLocation.o \
+				obj/config/ConfigErrorPage.o \
+				obj/config/ParserHelper.o \
 				obj/request/DirectoryListing.o \
 				obj/request/RequestDelete.o \
 				obj/request/RequestChunk.o \
@@ -63,10 +48,10 @@ HEADERS		:=	include/CGIPipeIn.hpp \
 				include/Lexer.hpp \
 				include/Parser.hpp \
 				include/Configuration.hpp \
-				include/ServerConfig.hpp \
-				include/LocationConfig.hpp \
-				include/ErrorPageConfig.hpp \
-				include/UtilsConfig.hpp \
+				include/ConfigServer.hpp \
+				include/ConfigLocation.hpp \
+				include/ConfigErrorPage.hpp \
+				include/ParserHelper.hpp \
 				include/Permissions.hpp
 SPDLOGLIB	:=	./spdlog/build/libspdlog.a
 SPDLOGINCL	:=	-DSPDLOG_COMPILED_LIB -I./spdlog/include
@@ -153,6 +138,9 @@ test: all
 
 run: all
 	./webserv config-files/valid/complexe-server.conf
+
+pytest: all
+	./webserv config-files/test.conf
 
 db:
 	lldb webserv -- config-files/valid/multiple-servers.conf

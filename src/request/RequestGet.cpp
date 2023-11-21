@@ -8,7 +8,7 @@ int Request::uploadHandler(void)
     m_response.bodySet(Helper::fileToStr("./www" + m_methodPathVersion[1]));
     m_response.statusCodeSet(200);
 
-    return 0;
+	return 0;
 }
 
 int Request::getHandler(void)
@@ -34,5 +34,5 @@ int Request::getHandler(void)
     m_response.bodySet(Helper::fileToStr(m_response.pathGet()));
     m_response.statusCodeSet(200);
 
-    return 0;
+	return 0;
 }

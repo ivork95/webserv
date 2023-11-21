@@ -1,11 +1,8 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
-#include <iostream>
-#include <vector>
-
-#include "ServerConfig.hpp"
-#include "UtilsConfig.hpp"
+#include "ConfigServer.hpp"
+#include "Parser.hpp"
 
 class Configuration
 {
@@ -16,9 +13,15 @@ public:
     std::vector<ServerConfig> serversConfig;
     std::vector<std::string> serverSections;
 
+	int initConfig(std::ifstream &configFile);
+
+	int readFile(std::ifstream &configFile);
+	int createServers(void);
+	int tokenizeServers(void);
+	int parseTokens(void);
+
 	void printConfig(void);
 };
 
-int initConfig(const std::string &filePath, Configuration &config);
 
 #endif

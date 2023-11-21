@@ -15,7 +15,7 @@
 
 #include "Client.hpp"
 #include "ASocket.hpp"
-#include "ServerConfig.hpp"
+#include "ConfigServer.hpp"
 
 #define BACKLOG 150 // how many pending connections queue will hold
 

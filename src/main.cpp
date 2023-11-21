@@ -47,7 +47,7 @@ void handleHangUp(ASocket *&ePollDataPtr)
 
 void handleRead(ASocket *&ePollDataPtr)
 {
-    Multiplexer &multiplexer = Multiplexer::getInstance();
+	Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // Client is ready to read, handle incoming data
         client->handleConnectedClient();
@@ -74,42 +74,20 @@ void handleRead(ASocket *&ePollDataPtr)
         multiplexer.modifyEpollEvents(nullptr, 0, timer->m_socketFd);
         epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_socketFd, NULL);
 
-        multiplexer.modifyEpollEvents(nullptr, 0, timer->m_client.m_socketFd);
-        epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_client.m_socketFd, NULL);
+		multiplexer.modifyEpollEvents(nullptr, 0, timer->m_client.m_socketFd);
+		epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, timer->m_client.m_socketFd, NULL);
 
-        multiplexer.removeClientBySocketFd(timer->m_client.m_socketFd);
+		multiplexer.removeClientBySocketFd(timer->m_client.m_socketFd);
 
-        delete &timer->m_client;
-    }
-    else if (Signal *signal = dynamic_cast<Signal *>(ePollDataPtr))
-    {
-        struct signalfd_siginfo fdsi
-        {
-        };
-
-        ssize_t s = read(signal->m_socketFd, &fdsi, sizeof(fdsi));
-        if (s != sizeof(fdsi))
-            throw std::system_error(errno, std::generic_category(), "read()");
-        if (fdsi.ssi_signo == SIGINT)
-        {
-            for (auto &server : multiplexer.m_servers)
-                delete server;
-
-            for (auto &client : multiplexer.m_clients)
-                delete client;
-
-            multiplexer.isRunning = false;
-        }
-        else if (fdsi.ssi_signo == SIGQUIT)
-            ;
-        else
-            ;
-    }
+		delete &timer->m_client;
+	}
+	else if (Signal *signal = dynamic_cast<Signal *>(ePollDataPtr))
+		signal->readAndDelete();
 }
 
 void handleWrite(ASocket *&ePollDataPtr)
 {
-    Multiplexer &multiplexer = Multiplexer::getInstance();
+	Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
     {
@@ -118,19 +96,19 @@ void handleWrite(ASocket *&ePollDataPtr)
             multiplexer.modifyEpollEvents(nullptr, 0, client->m_socketFd);
             epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, client->m_socketFd, NULL);
 
-            multiplexer.removeClientBySocketFd(client->m_socketFd);
-            delete client;
-        }
-    }
-    else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
-    {
-        spdlog::critical("Step 2\n");
+			multiplexer.removeClientBySocketFd(client->m_socketFd);
+			delete client;
+		}
+	}
+	else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
+	{
+		spdlog::critical("Step 2\n");
 
-        try
-        {
-            epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipein->m_pipeFd[WRITE], NULL);
+		try
+		{
+			epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, pipein->m_pipeFd[WRITE], NULL);
 
-            pipein->dupCloseWrite();
+			pipein->dupCloseWrite();
 
             if (multiplexer.addToEpoll(&(pipein->m_client.getRequest().getPipeOut()), EPOLLIN, pipein->m_client.getRequest().getPipeOut().m_pipeFd[READ]) == -1)
                 throw StatusCodeException(500, "addToEpoll()", errno);
@@ -167,11 +145,11 @@ void run(const Configuration &config)
         return;
     }
 
-    while (multiplexer.isRunning)
-    {
-        epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
-        if (epollCount == -1)
-            throw std::system_error(errno, std::generic_category(), "epoll_wait()");
+	while (multiplexer.isRunning)
+	{
+		epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
+		if (epollCount == -1)
+			throw std::system_error(errno, std::generic_category(), "epoll_wait()");
 
         for (i = 0; i < epollCount; i++) // Loop through ready list
         {
@@ -215,12 +193,41 @@ int main(int argc, char *argv[])
     if (argc != 2)
         throw std::runtime_error("usage: webserv [path to config]\n\n\n");
     spdlog::set_level(spdlog::level::debug);
+	spdlog::set_level(spdlog::level::debug);
 
-    Configuration config{};
-    if (initConfig(argv[1], config))
-        return 1;
+	std::string inputFile{};
+	if (argc == 1)
+		inputFile = "config-files/default.conf";
+	else if (argc == 2)
+		inputFile = argv[1];
+	else
+		throw std::runtime_error("usage: webserv [path to config]\n\n\n");
 
-    run(config);
+	if (!ParserHelper::isValidConfigExtension(inputFile))
+		return 1;
 
-    return 0;
+	std::ifstream configFile;
+	if (ParserHelper::openFile(&configFile, inputFile))
+		return 1;
+
+	Configuration config{};
+	if (config.initConfig(configFile))
+	{
+		if (!config.serverSections.empty())
+			config.serverSections.clear();
+		if (!config.serversConfig.empty())
+			config.serversConfig.clear();
+		std::cout << "Configuration file failure\n";
+		return 1;
+	}
+
+	config.printConfig();
+
+#if (PARSTER) // To run only the parser and display the output
+	return 0;
+#endif
+
+	run(config);
+
+	return 0;
 }
