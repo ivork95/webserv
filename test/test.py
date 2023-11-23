@@ -277,29 +277,44 @@ async def async_main():
     url_get = f"{server0}/cgi-bin/get?name=value"
 
     async with aiohttp.ClientSession() as session:
-        post_tasks = [make_async_request(session, 'POST', url_post) for _ in range(10)]
-        # get_tasks = [make_async_request(session, 'GET', url_get) for _ in range(10)]
+        post_tasks = [make_async_request(session, 'POST', url_post) for _ in range(5)]
+        get_tasks = [make_async_request(session, 'GET', url_get) for _ in range(5)]
 
-        await asyncio.gather(*post_tasks, *get_tasks)
+        # await asyncio.gather(*post_tasks, *get_tasks)
+        print("GET")
+        await asyncio.gather(*get_tasks)
+        print("POST")
+        await asyncio.gather(*post_tasks)
+
+async def make_request(session, url):
+    async with session.post(url, cookies=t_cookies, headers=t_headers) as response:
+        status = response.status
+        print(status)
+
+async def async_main():
+    url = f"{server0}/cgi-bin"
+    async with aiohttp.ClientSession() as session:
+        tasks = [make_request(session, url) for i in range(5)]
+        await asyncio.gather(*tasks)
 
 ############################
 # CGI TEST
 ############################
-# def cgi_post_get():
-#     response = requests.post(
-#         f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
-#     print(response.status_code)
-#     response = requests.get(
-#         f"{server0}/cgi-bin/post", cookies=t_cookies, headers=t_headers)
-#     print(response.status_code)
+def cgi_post_get():
+    response = requests.post(
+        f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
+    print(response.status_code)
+    response = requests.get(
+        f"{server0}/cgi-bin/post", cookies=t_cookies, headers=t_headers)
+    print(response.status_code)
 
-# def cgi_error_files():
-#     response = requests.post(
-#         f"{server2}/cgi-bin/error", cookies=t_cookies, headers=t_headers) # loop
-#     print(response.status_code)
-#     response = requests.get(
-#         f"{server2}/cgi-bin/loop", cookies=t_cookies, headers=t_headers) # error
-#     print(response.status_code)
+def cgi_error_files():
+    response = requests.post(
+        f"{server2}/cgi-bin/error", cookies=t_cookies, headers=t_headers) # loop
+    print(response.status_code)
+    response = requests.get(
+        f"{server2}/cgi-bin/loop", cookies=t_cookies, headers=t_headers) # error
+    print(response.status_code)
 
 ############################
 # MAIN
@@ -307,13 +322,15 @@ async def async_main():
 if __name__ == '__main__':
 
     # Async tests
-    # print("\nASYNC tests")
-    # asyncio.run(async_main())
+    print("\nASYNC tests")
+    asyncio.run(async_main())
 
     # CGI tests
-    # print("\nCGI tests")
-    # cgi_post_get()
-    # cgi_error_files()
+    print("\nCGI tests")
+    print("POST & GET")
+    cgi_post_get()
+    print("\nERROR FILES")
+    cgi_error_files()
 
     # Response tests
     print("\nRESPONSE tests")
