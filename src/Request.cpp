@@ -154,11 +154,17 @@ int Request::parse(void)
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
     if (m_methodPathVersion[0] == "DELETE")
-        return deleteHandler();
+    {
+        deleteHandler();
+        return 0;
+    }
 
     // Nasty solution to redirect + get back upload
     if (m_methodPathVersion[0] == "GET" && Helper::isImageFormat(m_methodPathVersion[1]))
-        return uploadHandler();
+    {
+        uploadHandler();
+        return 0;
+    }
 
     locationConfigSet(m_methodPathVersion[1]);
     isMethodAllowed(); // For a certain location block, check if the request method is allowed
@@ -174,7 +180,8 @@ int Request::parse(void)
             m_pipeout.forkCloseDupExec();
             return 2;
         }
-        return getHandler();
+        getHandler();
+        return 0;
     }
     else
     {
@@ -188,8 +195,11 @@ int Request::parse(void)
             return 2;
         }
         if (m_isChunked)
-            return chunkHandler();
-
-        return postHandler();
+        {
+            chunkHandler();
+            return 0;
+        }
+        postHandler();
+        return 0;
     }
 }
