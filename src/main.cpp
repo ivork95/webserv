@@ -98,23 +98,25 @@ void run(const Configuration &config)
             events = multiplexer.m_events[i].events;
             try
             {
-                switch (events)
-                {
-                case EPOLLIN:
+
+                if (events & EPOLLIN)
                     handleRead(ePollDataPtr);
-                    break;
-                case EPOLLOUT:
+                else if (events & EPOLLOUT)
                     handleWrite(ePollDataPtr);
-                    break;
-                case EPOLLRDHUP:
-                    break;
-                case EPOLLHUP:
+                else if (events & EPOLLRDHUP)
+                {
                     multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
                     throw StatusCodeException(500, "EPOLLHUP", errno);
-                case EPOLLERR:
-                    break;
-                default:
-                    break;
+                }
+                else if (events & EPOLLHUP)
+                {
+                    multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
+                    throw StatusCodeException(500, "EPOLLHUP", errno);
+                }
+                else if (events & EPOLLERR)
+                {
+                    multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
+                    throw StatusCodeException(500, "EPOLLHUP", errno);
                 }
             }
             catch (const StatusCodeException &e)
