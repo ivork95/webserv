@@ -38,7 +38,7 @@ std::string Request::buildDeleteFilePath(void)
     return fullPath;
 }
 
-void Request::deleteHandler(void)
+int Request::deleteHandler(void)
 {
 
     std::filesystem::path requestPath(m_methodPathVersion[1]);
@@ -48,6 +48,7 @@ void Request::deleteHandler(void)
     isMethodAllowed();
     const std::string filePath = buildDeleteFilePath();
     deleteFile(filePath);
-    m_body = "Success: File deleted";
-    m_response.statusCodeSet(200);
+    m_response.statusCodeSet(204);
+
+    return 0;
 }

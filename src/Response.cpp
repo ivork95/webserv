@@ -88,7 +88,7 @@ int Response::sendAll(int sockFd, std::vector<ErrorPageConfig> errorPages)
     if (m_total < m_len)
     {
         int nbytes{static_cast<int>(send(sockFd, m_buf.data() + m_total, m_bytesleft, 0))};
-        std::cout << *this << std::endl;
+        // std::cout << *this << std::endl;
         if (nbytes == -1)
             return -1;
         m_total += nbytes;

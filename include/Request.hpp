@@ -84,22 +84,22 @@ public:
     void chunkBodyExtract(void);
     void chunkBodyTokenize(void);
     void chunkBodySet(void);
-    void chunkHandler(void);
+    int chunkHandler(void);
 
     // get method related
-    void getHandler(void);
-    void uploadHandler(void);
+    int getHandler(void);
+    int uploadHandler(void);
 
     // directory listing related
     void directoryListingBodySet(const std::string &dirPath);
     std::string directoryListingParse(void);
 
     // delete method related
-    void deleteHandler(void);
+    int deleteHandler(void);
     std::string buildDeleteFilePath(void);
 
     // post method related
-    void postHandler(void);
+    int postHandler(void);
 };
 
 #endif

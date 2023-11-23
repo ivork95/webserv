@@ -140,7 +140,7 @@ class TestServerResponse(unittest.TestCase):
 
         url = f"{server0}/delete/{filename}"
         response = requests.delete(url=url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 204)
 
     def test_delete_method_not_allowed(self):
         url = f"{server0}/no-delete/test"

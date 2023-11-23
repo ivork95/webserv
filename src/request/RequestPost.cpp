@@ -103,7 +103,7 @@ void Request::boundaryCodeSet(void)
     m_boundaryCode = boundaryCodeParse(m_requestHeaders);
 }
 
-void Request::postHandler(void)
+int Request::postHandler(void)
 {
 
     if (m_contentLength > m_locationconfig.getClientMaxBodySize())
@@ -116,4 +116,6 @@ void Request::postHandler(void)
 
     m_response.headersSet({{"Location", "/" + Helper::percentEncode(m_fileName)}});
     m_response.statusCodeSet(303);
+
+    return 0;
 }

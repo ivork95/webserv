@@ -121,6 +121,7 @@ void CGIPipeOut::forkCloseDupExec(void)
 void CGIPipeOut::readFromPipe(void)
 {
     char buf[BUFSIZ]{};
+    spdlog::info("CGI: reading form pipe");
     int nbytes{static_cast<int>(read(m_pipeFd[READ], &buf, BUFSIZ - 1))};
     if (nbytes <= 0)
         throw StatusCodeException(500, "Couldn't read from pipe", errno);

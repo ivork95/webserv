@@ -30,6 +30,7 @@ void handleRead(ASocket *&ePollDataPtr)
         pipeout->readFromPipe();
     else if (Timer *timer = dynamic_cast<Timer *>(ePollDataPtr))
     {
+        spdlog::info("Client timed out: {}", timer->m_client);
         multiplexer.removeFromEpoll(timer->m_socketFd);
         multiplexer.removeFromEpoll(timer->m_client.m_socketFd);
         multiplexer.removeClientBySocketFd(&timer->m_client);
@@ -44,8 +45,10 @@ void handleWrite(ASocket *&ePollDataPtr)
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
     {
+        spdlog::info("Generating response for {}", *client);
         if (client->getRequest().getResponse().sendAll(client->m_socketFd, client->getServer().getServerConfig().getErrorPagesConfig()) <= 0)
         {
+            spdlog::info("Response send {}:\n{}\n", *client, client->getRequest().getResponse().m_statusLine);
             if (multiplexer.modifyEpollEvents(nullptr, 0, client->m_socketFd) == -1)
                 spdlog::error("modifyEpollEvents()");
             if (epoll_ctl(multiplexer.m_epollfd, EPOLL_CTL_DEL, client->m_socketFd, NULL) == -1)
@@ -71,6 +74,7 @@ void run(const Configuration &config)
     ASocket *ePollDataPtr{};
     uint32_t events{};
 
+    spdlog::info("Webserver running");
     try
     {
         for (auto &serverConfig : config.serversConfig)
@@ -149,8 +153,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 2)
         throw std::runtime_error("usage: webserv [path to config]\n\n\n");
-    spdlog::set_level(spdlog::level::debug);
-	spdlog::set_level(spdlog::level::debug);
+    spdlog::set_level(spdlog::level::info);
 
 	std::string inputFile{};
 	if (argc == 1)
@@ -177,8 +180,6 @@ int main(int argc, char *argv[])
 		std::cout << "Configuration file failure\n";
 		return 1;
 	}
-
-	config.printConfig();
 
 #if (PARSTER) // To run only the parser and display the output
 	return 0;

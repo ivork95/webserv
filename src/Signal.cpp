@@ -1,5 +1,7 @@
 #include "Signal.hpp"
 #include "Multiplexer.hpp"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 Signal::Signal(void)
 {
@@ -29,6 +31,7 @@ void Signal::readAndDelete(void) const
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();
 
+    spdlog::info("Exiting Webserver");
     struct signalfd_siginfo fdsi
     {
     };

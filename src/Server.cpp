@@ -93,6 +93,7 @@ void Server::handleNewConnection(void) const
             throw std::system_error(errno, std::generic_category(), "addToEpoll()");
         if (multiplexer.addToEpoll(&(client->getTimer()), EPOLLIN | EPOLLRDHUP, client->getTimer().m_socketFd))
             throw std::system_error(errno, std::generic_category(), "addToEpoll()");
+        spdlog::info("New connection: {}", *client);
     }
     catch (const std::exception &e)
     {

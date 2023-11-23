@@ -93,7 +93,7 @@ void Request::responsePathSet(void)
 {
     for (const auto &index : m_locationconfig.getIndexFile())
     {
-        spdlog::info("m_locationconfig.getRootPath() + index = {}", m_locationconfig.getRootPath() + index);
+        spdlog::debug("m_locationconfig.getRootPath() + index = {}", m_locationconfig.getRootPath() + index);
         if (std::filesystem::exists(m_locationconfig.getRootPath() + index))
         {
             m_response.pathSet(m_locationconfig.getRootPath() + index);
@@ -154,17 +154,11 @@ int Request::parse(void)
     m_methodPathVersion[1] = Helper::decodePercentEncoding(m_methodPathVersion[1]);
 
     if (m_methodPathVersion[0] == "DELETE")
-    {
-        deleteHandler();
-        return 0;
-    }
+        return deleteHandler();
 
     // Nasty solution to redirect + get back upload
     if (m_methodPathVersion[0] == "GET" && Helper::isImageFormat(m_methodPathVersion[1]))
-    {
-        uploadHandler();
-        return 0;
-    }
+         return uploadHandler();
 
     locationConfigSet(m_methodPathVersion[1]);
     isMethodAllowed(); // For a certain location block, check if the request method is allowed
@@ -180,26 +174,20 @@ int Request::parse(void)
             m_pipeout.forkCloseDupExec();
             return 2;
         }
-        getHandler();
-        return 0;
+        return getHandler();
     }
     else
     {
         if (!m_methodPathVersion[1].compare(0, 8, "/cgi-bin"))
         {
             m_client.getRequest().bodySet();
-            std::cerr << "ADDING PIPEIN FD TO EPOLLOUT: " << m_pipein.m_pipeFd[WRITE] << std::endl;
             if (multiplexer.addToEpoll(&m_pipein, EPOLLOUT, m_pipein.m_pipeFd[WRITE])) // Add the WRITE end of pipein to Epoll
                 throw StatusCodeException(500, "addToEpoll()", errno);
 
             return 2;
         }
         if (m_isChunked)
-        {
-            chunkHandler();
-            return 0;
-        }
-        postHandler();
-        return 0;
+            return chunkHandler();
+        return postHandler();
     }
 }

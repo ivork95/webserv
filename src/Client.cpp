@@ -52,6 +52,7 @@ void Client::handleConnectedClient()
 
     char buf[BUFSIZ]{}; // Buffer for client data
     int nbytes{static_cast<int>(recv(m_socketFd, buf, BUFSIZ - 1, 0))};
+    spdlog::info("Received message from {}:\n{}\n", *this, buf);
     if (nbytes <= 0)
     {
         multiplexer.removeFromEpoll(m_socketFd);
@@ -61,7 +62,7 @@ void Client::handleConnectedClient()
     }
     if (m_request.tokenize(buf, nbytes))
         return;
-
+    spdlog::info("Message complete {}:\n{}\n", *this, m_request.m_rawMessage);
     multiplexer.removeFromEpoll(m_timer.m_socketFd);
     if (!m_request.parse())
     {
