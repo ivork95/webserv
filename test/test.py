@@ -242,27 +242,27 @@ class TestServerResponse(unittest.TestCase):
             # print(response.status_code)
             self.assertEqual(response.status, 200)
 
-    # def test_spam_cgi_post(self):
-    #     for _ in range(5):
-    #         response = requests.post(
-    #             f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
-    #         # print(response.status_code)
-    #         self.assertEqual(response.status_code, 200)
+    def test_spam_cgi_post(self):
+        for _ in range(5):
+            response = requests.post(
+                f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
+            # print(response.status_code)
+            self.assertEqual(response.status_code, 200)
 
-    # def test_spam_cgi_post_3(self):
-    #     for _ in range(5):
-    #         response = requests.post(
-    #             f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
-    #         # print(response.status_code)
-    #         self.assertEqual(response.status_code, 200)
-    #         response = requests.post(
-    #             f"{server1}/cgi-bin", cookies=t_cookies, headers=t_headers)
-    #         # print(response.status_code)
-    #         self.assertEqual(response.status_code, 200)
-    #         response = requests.post(
-    #             f"{server2}/cgi-bin", cookies=t_cookies, headers=t_headers)
-    #         # print(response.status_code)
-    #         self.assertEqual(response.status_code, 200)
+    def test_spam_cgi_post_3(self):
+        for _ in range(5):
+            response = requests.post(
+                f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
+            # print(response.status_code)
+            self.assertEqual(response.status_code, 200)
+            response = requests.post(
+                f"{server1}/cgi-bin", cookies=t_cookies, headers=t_headers)
+            # print(response.status_code)
+            self.assertEqual(response.status_code, 200)
+            response = requests.post(
+                f"{server2}/cgi-bin", cookies=t_cookies, headers=t_headers)
+            # print(response.status_code)
+            self.assertEqual(response.status_code, 200)
 
 ############################
 # ASYNC TESTS
