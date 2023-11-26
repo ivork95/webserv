@@ -37,7 +37,7 @@ async def make_request(session, url):
 async def main():
     url = 'http://localhost:8081/cgi-bin/post'
     async with aiohttp.ClientSession() as session:
-        tasks = [make_request(session, url) for i in range(10)]
+        tasks = [make_request(session, url) for i in range(100)]
         await asyncio.gather(*tasks)
 
 # This is the asyncio equivalent of 'if __name__ == "__main__":'
