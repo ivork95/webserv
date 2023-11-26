@@ -4,12 +4,6 @@ import http.client
 import aiohttp
 import asyncio
 
-t_cookies = {
-    '_ga': 'GA1.1.1853335373.1693823153',
-    '_ga_M78MKT6JKY': 'GS1.1.1693823153.1.1.1693823965.0.0.0',
-    '_ga_XNTP0G5VDT': 'GS1.1.1696850402.1.1.1696853451.0.0.0',
-}
-
 t_headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     'Accept-Language': 'nl-NL,nl;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -41,6 +35,8 @@ base_url2 = "localhost:8083"
 ############################
 # RESPONSE TESTS
 ############################
+
+
 class TestServerResponse(unittest.TestCase):
     ############################
     # GET TESTS
@@ -171,21 +167,21 @@ class TestServerResponse(unittest.TestCase):
     ############################
     def cgi_post_get(self):
         response = requests.post(
-            f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
+            f"{server0}/cgi-bin", headers=t_headers)
         # print(response.status_code)
         self.assertEqual(response.status_code, 200)
         response = requests.get(
-            f"{server0}/cgi-bin/post", cookies=t_cookies, headers=t_headers)
+            f"{server0}/cgi-bin/post", headers=t_headers)
         self.assertEqual(response.status_code, 500)
         # print(response.status_code)
 
     def cgi_error_files(self):
         response = requests.post(
-            f"{server2}/cgi-bin/error", cookies=t_cookies, headers=t_headers) # loop
+            f"{server2}/cgi-bin/error", headers=t_headers)  # loop
         self.assertEqual(response.status_code, 502)
         # print(response.status_code)
         response = requests.get(
-            f"{server2}/cgi-bin/loop", cookies=t_cookies, headers=t_headers) # error
+            f"{server2}/cgi-bin/loop", headers=t_headers)  # error
         self.assertEqual(response.status_code, 504)
         # print(response.status_code)
 
@@ -195,22 +191,22 @@ class TestServerResponse(unittest.TestCase):
     def test_spam_get(self):
         for _ in range(5):
             response = requests.get(
-                server0, cookies=t_cookies, headers=t_headers)
+                server0, headers=t_headers)
             # print(response.status_code)
             self.assertEqual(response.status_code, 200)
 
     def test_spam_get_3(self):
         for _ in range(5):
             response = requests.get(
-                server0, cookies=t_cookies, headers=t_headers)
+                server0, headers=t_headers)
             # print(response.status_code)
             self.assertEqual(response.status_code, 200)
             response = requests.get(
-                server1, cookies=t_cookies, headers=t_headers)
+                server1, headers=t_headers)
             # print(response.status_code)
             self.assertEqual(response.status_code, 200)
             response = requests.get(
-                server2, cookies=t_cookies, headers=t_headers)
+                server2, headers=t_headers)
             # print(response.status_code)
             self.assertEqual(response.status_code, 200)
 
@@ -224,7 +220,7 @@ class TestServerResponse(unittest.TestCase):
         response = conn.getresponse()
         conn.close()
         return response
-    
+
     def test_spam_post(self):
         for _ in range(5):
             response = self.post_request_template(base_url)
@@ -245,40 +241,45 @@ class TestServerResponse(unittest.TestCase):
     def test_spam_cgi_post(self):
         for _ in range(5):
             response = requests.post(
-                f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
+                f"{server0}/cgi-bin", headers=t_headers)
             # print(response.status_code)
             self.assertEqual(response.status_code, 200)
 
     def test_spam_cgi_post_3(self):
         for _ in range(5):
             response = requests.post(
-                f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
+                f"{server0}/cgi-bin", headers=t_headers)
             # print(response.status_code)
             self.assertEqual(response.status_code, 200)
             response = requests.post(
-                f"{server1}/cgi-bin", cookies=t_cookies, headers=t_headers)
+                f"{server1}/cgi-bin", headers=t_headers)
             # print(response.status_code)
             self.assertEqual(response.status_code, 200)
             response = requests.post(
-                f"{server2}/cgi-bin", cookies=t_cookies, headers=t_headers)
+                f"{server2}/cgi-bin", headers=t_headers)
             # print(response.status_code)
             self.assertEqual(response.status_code, 200)
 
 ############################
 # ASYNC TESTS
 ############################
+
+
 async def make_async_request(session, method, url):
-    async with session.request(method, url, cookies=t_cookies, headers=t_headers) as response:
+    async with session.request(method, url, headers=t_headers) as response:
         status = response.status
         print(status)
+
 
 async def async_main():
     url_post = f"{server0}/cgi-bin"
     url_get = f"{server0}/cgi-bin/get?name=value"
 
     async with aiohttp.ClientSession() as session:
-        post_tasks = [make_async_request(session, 'POST', url_post) for _ in range(5)]
-        get_tasks = [make_async_request(session, 'GET', url_get) for _ in range(5)]
+        post_tasks = [make_async_request(
+            session, 'POST', url_post) for _ in range(5)]
+        get_tasks = [make_async_request(
+            session, 'GET', url_get) for _ in range(5)]
 
         # await asyncio.gather(*post_tasks, *get_tasks)
         print("GET")
@@ -286,10 +287,12 @@ async def async_main():
         print("POST")
         await asyncio.gather(*post_tasks)
 
+
 async def make_request(session, url):
-    async with session.post(url, cookies=t_cookies, headers=t_headers) as response:
+    async with session.post(url, headers=t_headers) as response:
         status = response.status
         print(status)
+
 
 async def async_main():
     url = f"{server0}/cgi-bin"
@@ -300,21 +303,25 @@ async def async_main():
 ############################
 # CGI TEST
 ############################
+
+
 def cgi_post_get():
     response = requests.post(
-        f"{server0}/cgi-bin", cookies=t_cookies, headers=t_headers)
+        f"{server0}/cgi-bin", headers=t_headers)
     print(response.status_code)
     response = requests.get(
-        f"{server0}/cgi-bin/post", cookies=t_cookies, headers=t_headers)
+        f"{server0}/cgi-bin/post", headers=t_headers)
     print(response.status_code)
+
 
 def cgi_error_files():
     response = requests.post(
-        f"{server2}/cgi-bin/error", cookies=t_cookies, headers=t_headers) # loop
+        f"{server2}/cgi-bin/error", headers=t_headers)  # loop
     print(response.status_code)
     response = requests.get(
-        f"{server2}/cgi-bin/loop", cookies=t_cookies, headers=t_headers) # error
+        f"{server2}/cgi-bin/loop", headers=t_headers)  # error
     print(response.status_code)
+
 
 ############################
 # MAIN
