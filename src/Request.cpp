@@ -13,7 +13,7 @@ Request::Request(Client &client) : m_client(client), m_pipein(client), m_pipeout
 // outstream operator overload
 std::ostream &operator<<(std::ostream &out, const Request &request)
 {
-	int i{};
+    int i{};
 
     out << "Request {\n";
     for (auto item : request.m_methodPathVersion)
@@ -34,16 +34,16 @@ std::ostream &operator<<(std::ostream &out, const Request &request)
     out << "]\n";
     out << "}\n";
 
-	out << "m_response = " << request.m_response;
+    out << "m_response = " << request.m_response;
 
-	return out;
+    return out;
 }
 
 void Request::methodPathVersionSet(void)
 {
-	size_t requestLineEndPos = m_rawMessage.find("\r\n");
-	std::string requestLine = m_rawMessage.substr(0, requestLineEndPos);
-	m_methodPathVersion = Helper::split(requestLine);
+    size_t requestLineEndPos = m_rawMessage.find("\r\n");
+    std::string requestLine = m_rawMessage.substr(0, requestLineEndPos);
+    m_methodPathVersion = Helper::split(requestLine);
 }
 
 void Request::locationConfigSet(const std::string &originalMethodPath)
@@ -84,9 +84,9 @@ void Request::locationConfigSet(const std::string &originalMethodPath)
 
 void Request::isMethodAllowed(void)
 {
-	auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
-	if (it == m_locationconfig.getHttpMethods().end())
-		throw StatusCodeException(405, "Warning: method not allowed");
+    auto it = find(m_locationconfig.getHttpMethods().begin(), m_locationconfig.getHttpMethods().end(), m_methodPathVersion[0]);
+    if (it == m_locationconfig.getHttpMethods().end())
+        throw StatusCodeException(405, "Warning: method not allowed");
 }
 
 void Request::responsePathSet(void)
@@ -108,31 +108,25 @@ int Request::tokenize(const char *buf, int nbytes)
 
     size_t fieldLinesEndPos = m_rawMessage.find("\r\n\r\n");
     if (fieldLinesEndPos == std::string::npos)
-    {
         return 1;
-    }
 
-	if (m_requestHeaders.empty())
-		requestHeadersSet();
+    if (m_requestHeaders.empty())
+        requestHeadersSet();
 
-    if (m_requestHeaders.contains("Content-Length"))
-    {
-        if (!m_isContentLengthConverted)
-            contentLengthSet();
-        if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
-        {
-            return 2;
-        }
-    }
-    else if (m_requestHeaders.contains("Transfer-Encoding")) // Chunked request
+    if (m_requestHeaders.contains("Transfer-Encoding")) // Chunked request
     {
         if (!m_isChunked)
             m_isChunked = true;
         size_t chunkEndPos = m_rawMessage.find("\r\n0\r\n\r\n");
         if (chunkEndPos == std::string::npos)
-        {
             return 3;
-        }
+    }
+    else if (m_requestHeaders.contains("Content-Length"))
+    {
+        if (!m_isContentLengthConverted)
+            contentLengthSet();
+        if (m_contentLength > static_cast<int>((m_rawMessage.length() - (fieldLinesEndPos + 4))))
+            return 2;
     }
 
     spdlog::debug("HTTP Message complete:\n{}", m_rawMessage);
@@ -158,7 +152,7 @@ int Request::parse(void)
 
     // Nasty solution to redirect + get back upload
     if (m_methodPathVersion[0] == "GET" && Helper::isImageFormat(m_methodPathVersion[1]))
-         return uploadHandler();
+        return uploadHandler();
 
     locationConfigSet(m_methodPathVersion[1]);
     isMethodAllowed(); // For a certain location block, check if the request method is allowed
@@ -183,7 +177,6 @@ int Request::parse(void)
             m_client.getRequest().bodySet();
             if (multiplexer.addToEpoll(&m_pipein, EPOLLOUT, m_pipein.m_pipeFd[WRITE])) // Add the WRITE end of pipein to Epoll
                 throw StatusCodeException(500, "addToEpoll()", errno);
-
             return 2;
         }
         if (m_isChunked)
