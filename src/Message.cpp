@@ -72,13 +72,3 @@ std::map<std::string, std::string> Message::fieldLinesToHeaders(std::string &fie
 
     return headers;
 }
-
-void Message::requestHeadersPrint(const std::map<std::string, std::string> &headers) const
-{
-    int i{};
-
-    for (const auto &elem : headers)
-    {
-        i++;
-    }
-}
