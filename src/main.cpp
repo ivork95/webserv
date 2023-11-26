@@ -2,6 +2,8 @@
 #include <fstream>
 #include <filesystem>
 #include <sys/stat.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "Server.hpp"
 #include "Configuration.hpp"
@@ -13,14 +15,12 @@
 #include "CGIPipeIn.hpp"
 #include "CGIPipeOut.hpp"
 #include "Signal.hpp"
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
 
-#define PARSTER false // change this
+#define PARSTER false
 
 void handleRead(ASocket *&ePollDataPtr)
 {
-	Multiplexer &multiplexer = Multiplexer::getInstance();
+    Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr)) // Client is ready to read, handle incoming data
         client->handleConnectedClient();
@@ -41,7 +41,7 @@ void handleRead(ASocket *&ePollDataPtr)
 
 void handleWrite(ASocket *&ePollDataPtr)
 {
-	Multiplexer &multiplexer = Multiplexer::getInstance();
+    Multiplexer &multiplexer = Multiplexer::getInstance();
 
     if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
     {
@@ -88,11 +88,18 @@ void run(const Configuration &config)
         return;
     }
 
-	while (multiplexer.isRunning)
-	{
-		epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
-		if (epollCount == -1)
-			throw std::system_error(errno, std::generic_category(), "epoll_wait()");
+    while (multiplexer.isRunning)
+    {
+        epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
+        if (epollCount == -1)
+        {
+            std::cerr << "Error: epoll_wait()\n";
+            for (auto &server : multiplexer.m_servers)
+                delete server;
+            for (auto &client : multiplexer.m_clients)
+                delete client;
+            return;
+        }
 
         for (i = 0; i < epollCount; i++) // Loop through ready list
         {
@@ -102,22 +109,11 @@ void run(const Configuration &config)
             events = multiplexer.m_events[i].events;
             try
             {
-
                 if (events & EPOLLIN)
                     handleRead(ePollDataPtr);
                 else if (events & EPOLLOUT)
                     handleWrite(ePollDataPtr);
-                else if (events & EPOLLRDHUP)
-                {
-                    multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
-                    throw StatusCodeException(500, "EPOLLHUP", errno);
-                }
-                else if (events & EPOLLHUP)
-                {
-                    multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
-                    throw StatusCodeException(500, "EPOLLHUP", errno);
-                }
-                else if (events & EPOLLERR)
+                else if (events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
                 {
                     multiplexer.removeFromEpoll(ePollDataPtr->m_socketFd);
                     throw StatusCodeException(500, "EPOLLHUP", errno);
@@ -126,21 +122,19 @@ void run(const Configuration &config)
             catch (const StatusCodeException &e)
             {
                 spdlog::critical("CAUGHT ERROR");
+                std::cerr << e.what() << '\n';
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {
-                    std::cerr << e.what() << '\n';
                     client->getRequest().getResponse().statusCodeSet(e.getStatusCode());
                     multiplexer.modifyEpollEvents(client, EPOLLOUT, client->m_socketFd);
                 }
                 else if (CGIPipeOut *pipeout = dynamic_cast<CGIPipeOut *>(ePollDataPtr))
                 {
-                    std::cerr << e.what() << '\n';
                     pipeout->m_client.getRequest().getResponse().statusCodeSet(e.getStatusCode());
                     multiplexer.modifyEpollEvents(&pipeout->m_client, EPOLLOUT, pipeout->m_client.m_socketFd);
                 }
                 else if (CGIPipeIn *pipein = dynamic_cast<CGIPipeIn *>(ePollDataPtr))
                 {
-                    std::cerr << e.what() << '\n';
                     pipein->m_client.getRequest().getResponse().statusCodeSet(e.getStatusCode());
                     multiplexer.modifyEpollEvents(&pipein->m_client, EPOLLOUT, pipein->m_client.m_socketFd);
                 }
@@ -151,41 +145,42 @@ void run(const Configuration &config)
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
-        throw std::runtime_error("usage: webserv [path to config]\n\n\n");
-    spdlog::set_level(spdlog::level::info);
+    std::string inputFile{};
+    std::ifstream configFile{};
+    Configuration config{};
 
-	std::string inputFile{};
-	if (argc == 1)
-		inputFile = "config-files/default.conf";
-	else if (argc == 2)
-		inputFile = argv[1];
-	else
-		throw std::runtime_error("usage: webserv [path to config]\n\n\n");
+    if (argc == 1)
+        inputFile = "config-files/default.conf";
+    else if (argc == 2)
+        inputFile = argv[1];
+    else
+    {
+        std::cerr << "usage: webserv [path to config]\n\n\n";
+        return 1;
+    }
 
-	if (!ParserHelper::isValidConfigExtension(inputFile))
-		return 1;
+    if (!ParserHelper::isValidConfigExtension(inputFile))
+        return 1;
 
-	std::ifstream configFile;
-	if (ParserHelper::openFile(&configFile, inputFile))
-		return 1;
+    if (ParserHelper::openFile(&configFile, inputFile))
+        return 1;
 
-	Configuration config{};
-	if (config.initConfig(configFile))
-	{
-		if (!config.serverSections.empty())
-			config.serverSections.clear();
-		if (!config.serversConfig.empty())
-			config.serversConfig.clear();
-		std::cout << "Configuration file failure\n";
-		return 1;
-	}
+    if (config.initConfig(configFile))
+    {
+        if (!config.serverSections.empty())
+            config.serverSections.clear();
+        if (!config.serversConfig.empty())
+            config.serversConfig.clear();
+        std::cerr << "Configuration file failure\n";
+        return 1;
+    }
 
 #if (PARSTER) // To run only the parser and display the output
-	return 0;
+    return 0;
 #endif
 
-	run(config);
+    spdlog::set_level(spdlog::level::info);
+    run(config);
 
-	return 0;
+    return 0;
 }
