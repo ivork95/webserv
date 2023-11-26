@@ -5,7 +5,6 @@
 
 Signal::Signal(void)
 {
-
     sigset_t mask{};
 
     sigemptyset(&mask);
@@ -30,8 +29,6 @@ Signal::~Signal()
 void Signal::readAndDelete(void) const
 {
     Multiplexer &multiplexer = Multiplexer::getInstance();
-
-    spdlog::info("Exiting Webserver");
     struct signalfd_siginfo fdsi
     {
     };
@@ -39,18 +36,16 @@ void Signal::readAndDelete(void) const
     ssize_t s = read(m_socketFd, &fdsi, sizeof(fdsi));
     if (s != sizeof(fdsi))
         throw std::system_error(errno, std::generic_category(), "read()");
-    if (fdsi.ssi_signo == SIGINT)
+    if (fdsi.ssi_signo == SIGINT || fdsi.ssi_signo == SIGQUIT)
     {
+        spdlog::info("Exiting Webserver");
+
         for (auto &server : multiplexer.m_servers)
             delete server;
-
         for (auto &client : multiplexer.m_clients)
             delete client;
-
         multiplexer.isRunning = false;
     }
-    else if (fdsi.ssi_signo == SIGQUIT)
-        ;
     else
-        ;
+        std::cerr << "Unhandeled signal received. Continuing...\n";
 }
