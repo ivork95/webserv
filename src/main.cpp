@@ -120,7 +120,6 @@ void run(const Configuration &config)
             }
             catch (const StatusCodeException &e)
             {
-                spdlog::critical("CAUGHT ERROR");
                 std::cerr << e.what() << '\n';
                 if (Client *client = dynamic_cast<Client *>(ePollDataPtr))
                 {

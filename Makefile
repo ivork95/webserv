@@ -77,21 +77,6 @@ fclean : clean
 
 re : fclean all
 
-docker-pwd-san:
-	docker run \
-	-p 8081:8081 \
-	--name $(CONTAINER) \
-	-it \
-	--rm \
-	--init \
-	-v "$$PWD:/pwd" \
-	--cap-add=SYS_PTRACE \
-	--security-opt seccomp=unconfined \
-	-e CXX="clang++" \
-	-e CXXFLAGS="-Wall -Wextra -std=c++20 -O1 -g -fsanitize=address -fsanitize=leak -fno-omit-frame-pointer" \
-	-e LDFLAGS="-g3 -fsanitize=address -fsanitize=leak" \
-	$(IMAGE) sh -c "cd /pwd; bash"
-
 docker-pwd:
 	docker run \
 	-p 8081:8081 \
@@ -105,7 +90,7 @@ docker-pwd:
 	--cap-add=SYS_PTRACE \
 	--security-opt seccomp=unconfined \
 	-e CXX="clang++" \
-	-e CXXFLAGS="-Wall -Wextra -std=c++20 -g -gdwarf-4 -gstrict-dwarf" \
+	-e CXXFLAGS="-Wall -Wextra -Werror -std=c++20 -g -gdwarf-4 -gstrict-dwarf" \
 	-e LDFLAGS="-g -gdwarf-4 -gstrict-dwarf" \
 	$(IMAGE) sh -c "cd /pwd; bash"
 
@@ -120,7 +105,7 @@ docker-clean:
 	--cap-add=SYS_PTRACE \
 	--security-opt seccomp=unconfined \
 	-e CXX="clang++" \
-	-e CXXFLAGS="-Wall -Wextra -std=c++20" \
+	-e CXXFLAGS="-Wall -Wextra -Werror -std=c++20" \
 	-e LDFLAGS="" \
 	$(IMAGE) sh -c "cd /pwd; bash"
 
@@ -145,4 +130,4 @@ pytest: all
 db:
 	lldb webserv -- config-files/valid/multiple-servers.conf
 
-.PHONY	: clean fclean re docker-pwd docker-pwd-val docker-build docker-exec basic test run db
+.PHONY	: clean fclean re docker-pwd docker-build docker-exec basic test run db
