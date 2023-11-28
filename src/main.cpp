@@ -176,6 +176,7 @@ int main(int argc, char *argv[])
     }
 
 #if (PARSTER) // To run only the parser and display the output
+	config.printConfig();
     return 0;
 #endif
 
