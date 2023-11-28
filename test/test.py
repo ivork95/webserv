@@ -284,21 +284,8 @@ async def async_main():
         # await asyncio.gather(*post_tasks, *get_tasks)
         print("GET")
         await asyncio.gather(*get_tasks)
-        print("POST")
+        print("\nPOST")
         await asyncio.gather(*post_tasks)
-
-
-async def make_request(session, url):
-    async with session.post(url, headers=t_headers) as response:
-        status = response.status
-        print(status)
-
-
-async def async_main():
-    url = f"{server0}/cgi-bin"
-    async with aiohttp.ClientSession() as session:
-        tasks = [make_request(session, url) for i in range(5)]
-        await asyncio.gather(*tasks)
 
 ############################
 # CGI TEST
