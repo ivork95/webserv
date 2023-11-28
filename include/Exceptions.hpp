@@ -51,7 +51,7 @@ class ErrorCodeException : public InvalidTokenException
 {
 public:
 	ErrorCodeException(const std::string &input)
-		: InvalidTokenException("Error code: " + input + " (only 300 to 599)") {}
+		: InvalidTokenException("Error code: " + input + " (only 400 to 599)") {}
 };
 
 class ClientMaxBodySizeException : public InvalidTokenException
