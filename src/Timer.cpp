@@ -12,7 +12,10 @@ Timer::Timer(Client &client) : m_client(client)
     if (m_socketFd == -1)
         throw std::system_error(errno, std::generic_category(), "timerfd_create()");
     if (timerfd_settime(m_socketFd, 0, &m_spec, NULL) == -1)
+    {
+        close(m_socketFd);
         throw std::system_error(errno, std::generic_category(), "timerfd_settime()");
+    }
 
     spdlog::debug("{} constructor", *this);
 }
