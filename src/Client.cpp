@@ -8,7 +8,10 @@ Client::Client(const Server &server) : m_server(server), m_request(*this), m_tim
         throw std::system_error(errno, std::generic_category(), "accept()");
 
     if (Helper::setNonBlocking(m_socketFd) == -1)
+    {
+        close(m_socketFd);
         throw std::system_error(errno, std::generic_category(), "fcntl()");
+    }
 
     // different fields in IPv4 and IPv6:
     if (m_remoteaddr.ss_family == AF_INET)

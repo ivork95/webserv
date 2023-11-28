@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
-
 #include "Server.hpp"
 #include "Configuration.hpp"
 #include "Client.hpp"
@@ -88,7 +87,7 @@ void run(const Configuration &config)
         return;
     }
 
-    while (multiplexer.isRunning)
+    while (multiplexer.m_isRunning)
     {
         epollCount = epoll_wait(multiplexer.m_epollfd, multiplexer.m_events.data(), MAX_EVENTS, -1);
         if (epollCount == -1)
@@ -180,7 +179,16 @@ int main(int argc, char *argv[])
 #endif
 
     spdlog::set_level(spdlog::level::info);
-    run(config);
+
+    try
+    {
+        run(config);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
 
     return 0;
 }
