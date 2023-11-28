@@ -62,13 +62,22 @@ Server::Server(const ServerConfig &serverconfig) : m_serverconfig(serverconfig)
     freeaddrinfo(ai); // All done with this
 
     if (listen(m_socketFd, BACKLOG) == -1)
+    {
+        close(m_socketFd);
         throw std::system_error(errno, std::generic_category(), "listen()");
+    }
     if (Helper::setNonBlocking(m_socketFd) == -1)
+    {
+        close(m_socketFd);
         throw std::system_error(errno, std::generic_category(), "fcntl()");
+    }
 
     Multiplexer &multiplexer = Multiplexer::getInstance();
-    if (multiplexer.addToEpoll(this, EPOLLIN | EPOLLRDHUP, m_socketFd))
+    if (multiplexer.addToEpoll(this, EPOLLIN | EPOLLRDHUP, m_socketFd) == -1)
+    {
+        close(m_socketFd);
         throw std::system_error(errno, std::generic_category(), "addToEpoll()");
+    }
 
     spdlog::debug("{} constructor", *this);
 }
@@ -97,7 +106,7 @@ void Server::handleNewConnection(void) const
     }
     catch (const std::exception &e)
     {
-        ;
+        std::cerr << e.what() << '\n';
     }
 }
 

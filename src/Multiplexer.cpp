@@ -10,8 +10,11 @@ Multiplexer::Multiplexer(void)
     if (m_epollfd == -1)
         throw std::system_error(errno, std::generic_category(), "epoll_create()");
 
-    if (addToEpoll(&signal, EPOLLIN, signal.m_socketFd))
+    if (addToEpoll(&m_signal, EPOLLIN, m_signal.m_socketFd) == -1)
+    {
+        close(m_epollfd);
         throw std::system_error(errno, std::generic_category(), "addToEpoll()");
+    }
 
     spdlog::debug("{} constructor", *this);
 }

@@ -44,7 +44,7 @@ void Signal::readAndDelete(void) const
             delete server;
         for (auto &client : multiplexer.m_clients)
             delete client;
-        multiplexer.isRunning = false;
+        multiplexer.m_isRunning = false;
     }
     else
         std::cerr << "Unhandeled signal received. Continuing...\n";

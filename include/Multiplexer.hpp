@@ -7,7 +7,6 @@
 #include <fstream>
 #include <filesystem>
 #include <sys/stat.h>
-
 #include "Server.hpp"
 #include "StatusCodeException.hpp"
 #include "ASocket.hpp"
@@ -24,12 +23,12 @@ private:
     Multiplexer(void);
 
 public:
-    std::vector<Client *> m_clients{};
-    int m_epollfd{};
-    std::array<struct epoll_event, MAX_EVENTS> m_events{};
+    Signal m_signal;
     std::vector<Server *> m_servers{};
-    bool isRunning{true};
-    Signal signal;
+    std::vector<Client *> m_clients{};
+    std::array<struct epoll_event, MAX_EVENTS> m_events{};
+    int m_epollfd{};
+    bool m_isRunning{true};
 
     // copy constructor
     Multiplexer(const Multiplexer &source) = delete;

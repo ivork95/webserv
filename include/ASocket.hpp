@@ -16,14 +16,6 @@ public:
     const char *m_ipver{};
     int m_port{};
 
-    // default constructor
-
-    // constructor
-
-    // copy constructor
-
-    // copy assignment operator overload
-
     // destructor
     virtual ~ASocket(void) = 0;
 };

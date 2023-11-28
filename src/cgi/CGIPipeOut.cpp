@@ -9,9 +9,17 @@ CGIPipeOut::CGIPipeOut(Client &client, Request &request, Response &response) : m
     if (pipe(m_pipeFd) == -1)
         throw StatusCodeException(500, "pipe()", errno);
     if (Helper::setNonBlocking(m_pipeFd[READ]) == -1)
+    {
+        close(m_pipeFd[READ]);
+        close(m_pipeFd[WRITE]);
         throw StatusCodeException(500, "setNonBlocking()", errno);
+    }
     if (Helper::setNonBlocking(m_pipeFd[WRITE]) == -1)
+    {
+        close(m_pipeFd[READ]);
+        close(m_pipeFd[WRITE]);
         throw StatusCodeException(500, "setNonBlocking()", errno);
+    }
     m_socketFd = m_pipeFd[READ];
 }
 
